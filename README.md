@@ -4,11 +4,7 @@
 
 このプロトタイプは、単なる献立管理ではなく「計画した食事を実際に食べられたか」「睡眠や疲労と食事がどう関係しているか」「保護者やコーチへ何を共有すべきか」まで扱うことを目的にしています。
 
-## BootCamp Submission
-
-Singularity Society BootCamp #4 の応募に向けた、Vibe Coding / Engineering 枠の提出用プロダクトです。
-
-応募フォームでは、公開GitHubリポジトリ、公開Webデモ、デモ動画などのURLが1つ以上必要です。応募文面の下書きは [BOOTCAMP_APPLICATION.md](BOOTCAMP_APPLICATION.md) にまとめています。
+## Documentation
 
 仕様書、使い方、活用方法は [APP_SPEC_AND_USER_GUIDE.md](APP_SPEC_AND_USER_GUIDE.md) にまとめています。
 
