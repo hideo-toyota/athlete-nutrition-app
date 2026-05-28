@@ -10,6 +10,7 @@ import DayModeSelector from '../components/DayModeSelector'
 import CheckinPanel from '../components/CheckinPanel'
 import AiCoachPanel from '../components/AiCoachPanel'
 import SharePanel from '../components/SharePanel'
+import ObsidianExportPanel from '../components/ObsidianExportPanel'
 import SportProfilePanel from '../components/SportProfilePanel'
 import CalendarPanel from '../components/CalendarPanel'
 import EventFuelingPanel from '../components/EventFuelingPanel'
@@ -343,6 +344,7 @@ export default function Home({ onEditPlan }: { onEditPlan: (plan: EditablePlan) 
         <AnalysisPanel />
         <AiCoachPanel />
         <SharePanel />
+        <ObsidianExportPanel />
       </aside>
     </div>
   )

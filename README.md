@@ -41,6 +41,7 @@
 - `AI Coach Notes`: 体調と食事ログから簡易コーチングコメントを表示
 - `Convenience Suggestions`: 食事ごとのコンビニ代替案を表示
 - `Guardian Share Mode`: 保護者やコーチ向けの共有テキストを生成
+- `Obsidian Export`: 日次ログをMarkdown化し、コピー、`.md`保存、Obsidian起動に対応
 
 ## Why This Is Different
 
