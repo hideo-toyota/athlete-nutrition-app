@@ -328,23 +328,49 @@ export default function Home({ onEditPlan }: { onEditPlan: (plan: EditablePlan) 
           </div>
         </div>
 
-        <BuddyPanel
-          selectedDate={selectedDate}
-          self={selfSnapshot}
-          buddy={buddySnapshot}
-          pairScore={pairScore}
-        />
-        <ReminderPanel
-          targets={reminderTargets}
-          reminders={reminders}
-          onCreate={createReminder}
-          onDelete={(id) => setReminders((prev) => prev.filter((reminder) => reminder.id !== id))}
-        />
+        <details className="glass rounded-xl p-4" open>
+          <summary className="cursor-pointer list-none">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="font-semibold">CtoC 継続支援</h3>
+                <p className="mt-1 text-sm text-slate-400">仲間との確認・応援・リマインドは、必要な時にここでまとめて使います。</p>
+              </div>
+              <span className="rounded-full border border-neon-500/30 px-3 py-1 text-xs text-neon-300">Support</span>
+            </div>
+          </summary>
+          <div className="mt-4 space-y-4">
+            <BuddyPanel
+              selectedDate={selectedDate}
+              self={selfSnapshot}
+              buddy={buddySnapshot}
+              pairScore={pairScore}
+            />
+            <ReminderPanel
+              targets={reminderTargets}
+              reminders={reminders}
+              onCreate={createReminder}
+              onDelete={(id) => setReminders((prev) => prev.filter((reminder) => reminder.id !== id))}
+            />
+          </div>
+        </details>
         <CheckinPanel checkin={checkin} onChange={updateCheckin} />
         <AnalysisPanel />
         <AiCoachPanel />
-        <SharePanel />
-        <ObsidianExportPanel />
+        <details className="glass rounded-xl p-4">
+          <summary className="cursor-pointer list-none">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="font-semibold">共有・外部出力</h3>
+                <p className="mt-1 text-sm text-slate-400">保護者/コーチへの共有やObsidian保存は、提出デモ後半で開きます。</p>
+              </div>
+              <span className="rounded-full border border-cyan-300/30 px-3 py-1 text-xs text-cyan-200">Export</span>
+            </div>
+          </summary>
+          <div className="mt-4 space-y-4">
+            <SharePanel />
+            <ObsidianExportPanel />
+          </div>
+        </details>
       </aside>
     </div>
   )

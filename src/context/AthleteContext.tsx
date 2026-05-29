@@ -86,6 +86,7 @@ type ContextValue = {
   totalsForSelected: () => Totals
   updatePlan: (patch: PlanPatch) => void
   addPlan: (plan: Omit<Plan, 'id' | 'date'>) => void
+  addPlanForDate: (date: DateKey, plan: Omit<Plan, 'id' | 'date'>) => void
   deletePlan: (id: string) => void
   setPlanStatus: (id: string, status: PlanStatus) => void
   setPlanPhoto: (id: string, photoDataUrl: string | null) => void
@@ -655,22 +656,27 @@ export function AthleteProvider({ children }: { children: ReactNode }){
     }))
   }, [])
 
-  const addPlan = useCallback((plan: Omit<Plan, 'id' | 'date'>) => {
+  const addPlanForDate = useCallback((date: DateKey, plan: Omit<Plan, 'id' | 'date'>) => {
+    const normalizedDate = normalizeDateKey(date, todayDateKey)
     const newPlan = normalizePlan(
       {
         ...plan,
         id: createStableId('p'),
-        date: selectedDate
+        date: normalizedDate
       },
       {
-        fallbackDate: selectedDate,
+        fallbackDate: normalizedDate,
         fallbackAthleteId: plan.athleteId
       }
     )
 
     if (!newPlan) return
     setPlans((prev) => [...prev, newPlan])
-  }, [selectedDate])
+  }, [todayDateKey])
+
+  const addPlan = useCallback((plan: Omit<Plan, 'id' | 'date'>) => {
+    addPlanForDate(selectedDate, plan)
+  }, [addPlanForDate, selectedDate])
 
   const deletePlan = useCallback((id: string) => {
     setPlans((prev) => prev.filter((plan) => plan.id !== id))
@@ -721,6 +727,7 @@ export function AthleteProvider({ children }: { children: ReactNode }){
     totalsForSelected,
     updatePlan,
     addPlan,
+    addPlanForDate,
     deletePlan,
     setPlanStatus,
     setPlanPhoto
@@ -755,6 +762,7 @@ export function AthleteProvider({ children }: { children: ReactNode }){
     totalsForSelected,
     updatePlan,
     addPlan,
+    addPlanForDate,
     deletePlan,
     setPlanStatus,
     setPlanPhoto

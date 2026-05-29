@@ -1,5 +1,6 @@
 import React from 'react'
 import { useAthlete } from '../context/AthleteContext'
+import { useSnackbar } from '../context/SnackbarContext'
 import {
   addDaysToDateKey,
   buildEventFuelingPlan,
@@ -13,7 +14,8 @@ import {
   EVENT_PRIORITY_LABELS,
   EventDuration,
   EventFuelingDay,
-  EventPriority
+  EventPriority,
+  Plan
 } from '../types'
 import { formatDateLabel } from '../lib/date'
 
@@ -30,17 +32,81 @@ function rangeLabel(day: EventFuelingDay, key: 'carbs' | 'protein') {
   return `${grams.min}-${grams.max}g (${perKg.min}-${perKg.max}g/kg)`
 }
 
+function midpoint(min: number, max: number) {
+  return Math.round((min + max) / 2)
+}
+
+function distributedGrams(total: number, ratio: number, minimum: number) {
+  return Math.max(minimum, Math.round(total * ratio))
+}
+
+function estimatedKcal(carbs: number, protein: number) {
+  return Math.max(120, Math.round(((carbs * 4 + protein * 4) * 1.25) / 10) * 10)
+}
+
+function generatedPlanKey(plan: Pick<Plan, 'timing' | 'title'>) {
+  return `${plan.timing}:${plan.title.split(' / ')[0]}`
+}
+
+function athleteActionText(day?: EventFuelingDay) {
+  if (!day) return '本番日を登録すると、今日やることがここに出ます。'
+  if (day.dayMode === 'game') return '消化しやすい糖質を先に決め、競技中の水分・補食を携帯します。'
+  if (day.dayMode === 'pre_game') return '主食を抜かず、脂質を重くしすぎない形で糖質を積み上げます。'
+  if (day.dayMode === 'recovery') return '糖質とたんぱく質を戻し、睡眠と水分で翌日の疲労を残さないようにします。'
+  return '練習量に合わせて補食を先に確保し、夕食で不足分を戻します。'
+}
+
+function supporterActionText(day?: EventFuelingDay) {
+  if (!day) return '保護者・コーチ向けの支援ポイントもここに出ます。'
+  if (day.appetite <= 2) return '食欲が低めなので、ゼリー・ヨーグルト・おにぎりなど小分けで渡せる形を用意します。'
+  if (day.fatigue >= 4) return '疲労が高めなので、食事量の確認より「補食と早めの就寝」を声かけします。'
+  if (day.dayMode === 'game') return '試合前後に迷わないよう、補食・水分・回復食をバッグに入れておきます。'
+  return '細かい計算より、今日の主食・補食・水分が抜けていないかを一緒に確認します。'
+}
+
+function buildFuelingMealPlans(day: EventFuelingDay, athleteId: string): Array<Omit<Plan, 'id' | 'date'>> {
+  const targetCarbs = midpoint(day.carbs.min, day.carbs.max)
+  const targetProtein = midpoint(day.protein.min, day.protein.max)
+  const appetiteNote = day.appetite <= 2 ? '小分け・飲める形' : '実行しやすい形'
+  const snackTitle = day.dayMode === 'game' ? '本番逆算 補食（試合前後）' : '本番逆算 補食'
+  const dinnerTitle = day.dayMode === 'recovery' ? '本番逆算 夕食（回復）' : '本番逆算 夕食'
+  const meals: Array<{ timing: Plan['timing']; title: string; carbRatio: number; proteinRatio: number; minCarbs: number; minProtein: number }> = [
+    { timing: 'Breakfast', title: '本番逆算 朝食', carbRatio: 0.3, proteinRatio: 0.25, minCarbs: 35, minProtein: 12 },
+    { timing: 'Lunch', title: '本番逆算 昼食', carbRatio: 0.25, proteinRatio: 0.25, minCarbs: 35, minProtein: 15 },
+    { timing: 'Snack', title: snackTitle, carbRatio: 0.2, proteinRatio: 0.15, minCarbs: 20, minProtein: 6 },
+    { timing: 'Dinner', title: dinnerTitle, carbRatio: 0.25, proteinRatio: 0.35, minCarbs: 35, minProtein: 18 }
+  ]
+
+  return meals.map((meal) => {
+    const carbs = distributedGrams(targetCarbs, meal.carbRatio, meal.minCarbs)
+    const protein = distributedGrams(targetProtein, meal.proteinRatio, meal.minProtein)
+
+    return {
+      athleteId,
+      title: `${meal.title} / ${appetiteNote}`,
+      timing: meal.timing,
+      kcal: estimatedKcal(carbs, protein),
+      carbs,
+      protein,
+      status: 'planned'
+    }
+  })
+}
+
 export default function EventFuelingPanel() {
+  const { show } = useSnackbar()
   const {
     selectedAthlete,
     selectedAthleteId,
     selectedSportProfile,
     selectedDate,
     todayDateKey,
+    plans,
     checkin,
     eventsForSelected,
     upcomingEventForSelected,
     addEvent,
+    addPlanForDate,
     deleteEvent,
     checkinForAthleteOnDate,
     setSelectedDate,
@@ -97,6 +163,28 @@ export default function EventFuelingPanel() {
   const applyDay = (day: EventFuelingDay) => {
     setDayModeForDate(day.date, day.dayMode)
     setSelectedDate(day.date)
+  }
+
+  const createMealPlansFromFueling = () => {
+    if (!selectedAthleteId || !selectedFuelingDay) return
+
+    applyDay(selectedFuelingDay)
+
+    const existingKeys = new Set(
+      plans
+        .filter((plan) => plan.athleteId === selectedAthleteId && plan.date === selectedFuelingDay.date)
+        .map((plan) => generatedPlanKey(plan))
+    )
+    const mealPlans = buildFuelingMealPlans(selectedFuelingDay, selectedAthleteId)
+    const newMealPlans = mealPlans.filter((plan) => !existingKeys.has(generatedPlanKey(plan)))
+
+    if (newMealPlans.length === 0) {
+      show('この日の本番逆算プランは作成済みです')
+      return
+    }
+
+    newMealPlans.forEach((plan) => addPlanForDate(selectedFuelingDay.date, plan))
+    show(`${formatDateLabel(selectedFuelingDay.date)} に食事プランを${newMealPlans.length}件作成しました`)
   }
 
   return (
@@ -204,6 +292,28 @@ export default function EventFuelingPanel() {
         </div>
       ) : (
         <div className="mt-4 space-y-4">
+          <div className="rounded-xl border border-amber-300/20 bg-amber-300/10 p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="text-xs uppercase tracking-[0.22em] text-amber-100">Action Path</div>
+                <div className="mt-1 font-semibold text-amber-50">初めてでも迷わない3ステップ</div>
+                <div className="mt-2 grid grid-cols-1 gap-2 text-sm text-slate-300 lg:grid-cols-3">
+                  <div>1. 本番日を登録して、逆算の起点を作る</div>
+                  <div>2. 今日の糖質・たんぱく質目標を見る</div>
+                  <div>3. ボタンで食事カードに変換して実行記録する</div>
+                </div>
+              </div>
+              <button
+                className="rounded-lg bg-amber-300 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-950/20 disabled:opacity-50"
+                disabled={!selectedAthleteId || !selectedFuelingDay}
+                onClick={createMealPlansFromFueling}
+                type="button"
+              >
+                選択日の食事プランを作る
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3 lg:col-span-2">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Countdown</div>
@@ -231,6 +341,19 @@ export default function EventFuelingPanel() {
               <div className="mt-1 text-xs text-slate-400">
                 疲労が高い日は糖質下限を+0.25-0.5g/kgで補正します。
               </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="rounded-lg border border-white/10 bg-[rgba(255,255,255,0.02)] p-3 text-sm">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Athlete View</div>
+              <div className="mt-2 font-medium text-slate-100">選手本人が今日やること</div>
+              <div className="mt-2 text-slate-400">{athleteActionText(selectedFuelingDay)}</div>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-[rgba(255,255,255,0.02)] p-3 text-sm">
+              <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Supporter View</div>
+              <div className="mt-2 font-medium text-slate-100">保護者・コーチが支援すること</div>
+              <div className="mt-2 text-slate-400">{supporterActionText(selectedFuelingDay)}</div>
             </div>
           </div>
 
