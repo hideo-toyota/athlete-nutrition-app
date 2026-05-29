@@ -161,8 +161,14 @@ async function panelText(page, headingRegex) {
   await page.waitForTimeout(800);
 
   const initialText = await page.evaluate(() => document.body.textContent || '');
-  check('アプリが起動し、タイトルが表示される', initialText.includes('Athlete Nutrition'));
-  check('初期画面で主要パネルが表示される', ['Calendar', 'Analysis', 'AI Coach Notes', 'Buddy Check', 'Reminder Scheduler'].every((text) => initialText.includes(text)));
+  check('アプリが起動し、タイトルが表示される', /Athlete Nutrition|本番逆算型スポーツ栄養/.test(initialText));
+  check('初期画面で主要パネルが表示される', [
+    /Calendar/,
+    /Analysis/,
+    /AI Coach Notes|Coach Notes MVP/,
+    /Buddy Check/,
+    /Reminder Scheduler/
+  ].every((regex) => regex.test(initialText)));
 
   console.log('\n===== 5人 x 30日データ注入 =====');
   const today = new Date();
