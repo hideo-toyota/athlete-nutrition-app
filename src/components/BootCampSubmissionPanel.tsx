@@ -2,18 +2,19 @@ import React from 'react'
 
 const proofItems = [
   'React / TypeScript / Vite で実装した動作プロトタイプ',
-  '競技別の栄養目標、体調ログ、写真、カレンダー、CtoC支援を統合',
   '本番日から逆算するカーボローディングと回復栄養を体重ベースで計算',
+  '疲労、睡眠、食欲を使って当日の実行しやすさを補正',
+  '保護者、コーチ、バディへ支援ポイントを共有できる設計',
   'Playwright E2E と TypeScript / production build で検証済み'
 ]
 
 const featureItems = [
-  'Sport Profile',
   'Event Fueling',
-  'AI Coach Notes',
-  'Buddy Check',
-  'Team Food Log',
-  'Reminder'
+  'g/kg Targets',
+  'Condition Modifiers',
+  'Coach Notes MVP',
+  'Guardian Share',
+  'Buddy Support'
 ]
 
 export default function BootCampSubmissionPanel() {
@@ -25,9 +26,9 @@ export default function BootCampSubmissionPanel() {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="text-xs uppercase tracking-[0.24em] text-neon-300">SS BootCamp #4 Submission</div>
-              <h2 className="mt-2 text-2xl font-semibold text-slate-50">Athlete Nutrition App</h2>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-50">本番逆算型スポーツ栄養コンディショニング</h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-                競技・本番日・体調に合わせて、食事計画、実行チェック、振り返り、仲間や保護者との共有までを1画面で支援する
+                試合・大会・バレエ発表会から逆算し、競技・体重・疲労・睡眠・食欲に合わせて、今日の食事目標と支援ポイントを出す
                 Vibe Coding プロトタイプです。
               </p>
             </div>
@@ -39,18 +40,18 @@ export default function BootCampSubmissionPanel() {
           <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-3">
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Proof</div>
-              <div className="mt-2 text-lg font-semibold text-neon-300">中身のある成果物</div>
-              <div className="mt-1 text-xs text-slate-400">公開GitHub / 公開Web / デモ動画のURLで提示可能</div>
+              <div className="mt-2 text-lg font-semibold text-neon-300">本番逆算デモ</div>
+              <div className="mt-1 text-xs text-slate-400">5日後の試合登録から、日別の糖質・回復目標まで提示</div>
             </div>
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Scope</div>
-              <div className="mt-2 text-lg font-semibold text-neon-300">スポーツ栄養 x 行動継続</div>
-              <div className="mt-1 text-xs text-slate-400">記録だけでなく、本番前後の実行支援まで扱います。</div>
+              <div className="mt-2 text-lg font-semibold text-neon-300">スポーツ栄養 x 体調補正</div>
+              <div className="mt-1 text-xs text-slate-400">体重あたり目標を、疲労・睡眠・食欲で現場向けに調整</div>
             </div>
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Status</div>
               <div className="mt-2 text-lg font-semibold text-neon-300">Build / E2E PASS</div>
-              <div className="mt-1 text-xs text-slate-400">応募フォームに貼る説明文は SUBMISSION.md に整理済みです。</div>
+              <div className="mt-1 text-xs text-slate-400">提出用の説明文と検証結果をREADMEに整理済み</div>
             </div>
           </div>
 
@@ -76,8 +77,7 @@ export default function BootCampSubmissionPanel() {
                 ))}
               </div>
               <div className="mt-4 rounded-lg border border-amber-300/20 bg-amber-300/10 p-3 text-xs leading-5 text-amber-100">
-                応募時は、GitHubリポジトリ、公開デモURL、デモ動画URLのうち1つ以上をフォームに貼ってください。
-                ローカルファイルだけでは応募条件を満たしにくいため、公開URL化が最後の仕上げです。
+                デモでは、機能一覧ではなく「5日後の本番を登録して、今日から何を食べるかを逆算する」流れを最初に見せると伝わりやすくなります。
               </div>
             </div>
           </div>
