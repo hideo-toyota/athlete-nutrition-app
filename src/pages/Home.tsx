@@ -230,15 +230,17 @@ export default function Home({ onEditPlan }: { onEditPlan: (plan: EditablePlan) 
               </div>
               <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3 text-center">
                 <div className="text-slate-500">糖質</div>
-                <div className="mt-1 font-semibold text-neon-300">{totals.carbs}g</div>
+                <div className="mt-1 font-semibold text-amber-200">{totals.carbs}g</div>
               </div>
               <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3 text-center">
                 <div className="text-slate-500">たんぱく質</div>
-                <div className="mt-1 font-semibold text-neon-300">{totals.protein}g</div>
+                <div className="mt-1 font-semibold text-emerald-200">{totals.protein}g</div>
               </div>
             </div>
           </div>
         </div>
+
+        <EventFuelingPanel />
 
         <CalendarPanel
           selectedDate={selectedDate}
@@ -263,8 +265,6 @@ export default function Home({ onEditPlan }: { onEditPlan: (plan: EditablePlan) 
           bodyWeight={checkin.weight}
           onChange={updateSelectedAthleteSport}
         />
-
-        <EventFuelingPanel />
 
         <div className="flex items-center justify-between">
           <div className="text-sm text-slate-400">{formatDateLabel(selectedDate)} のプラン</div>

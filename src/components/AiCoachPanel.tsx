@@ -49,8 +49,8 @@ export default function AiCoachPanel(){
   return (
     <div className="glass rounded-xl p-4">
       <div className="flex items-center justify-between">
-        <h4 className="font-semibold">AI Coach Notes</h4>
-        <div className="text-xs text-neon-300">Rule-based MVP</div>
+        <h4 className="font-semibold">Coach Notes MVP</h4>
+        <div className="rounded-full border border-white/10 px-2 py-1 text-xs text-slate-300">Rule-based</div>
       </div>
       {plans.length === 0 && comments.length === 0 ? (
         <div className="mt-4 rounded-lg border border-dashed border-white/10 bg-[rgba(255,255,255,0.02)] p-4 text-sm text-slate-400">

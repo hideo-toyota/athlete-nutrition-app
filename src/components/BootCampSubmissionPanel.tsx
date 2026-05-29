@@ -19,13 +19,13 @@ const featureItems = [
 
 export default function BootCampSubmissionPanel() {
   return (
-    <div className="glass overflow-hidden rounded-xl border border-neon-500/20">
+    <div className="glass overflow-hidden rounded-xl border border-amber-300/20">
       <div className="relative p-5">
-        <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-neon-500/10" />
+        <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full bg-amber-300/10" />
         <div className="relative">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <div className="text-xs uppercase tracking-[0.24em] text-neon-300">SS BootCamp #4 Submission</div>
+              <div className="text-xs uppercase tracking-[0.24em] text-amber-200">SS BootCamp #4 Submission</div>
               <h2 className="mt-2 text-2xl font-semibold text-slate-50">本番逆算型スポーツ栄養コンディショニング</h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
                 試合・大会・バレエ発表会から逆算し、競技・体重・疲労・睡眠・食欲に合わせて、今日の食事目標と支援ポイントを出す
@@ -40,12 +40,12 @@ export default function BootCampSubmissionPanel() {
           <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-3">
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Proof</div>
-              <div className="mt-2 text-lg font-semibold text-neon-300">本番逆算デモ</div>
+              <div className="mt-2 text-lg font-semibold text-amber-200">本番逆算デモ</div>
               <div className="mt-1 text-xs text-slate-400">5日後の試合登録から、日別の糖質・回復目標まで提示</div>
             </div>
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Scope</div>
-              <div className="mt-2 text-lg font-semibold text-neon-300">スポーツ栄養 x 体調補正</div>
+              <div className="mt-2 text-lg font-semibold text-emerald-200">スポーツ栄養 x 体調補正</div>
               <div className="mt-1 text-xs text-slate-400">体重あたり目標を、疲労・睡眠・食欲で現場向けに調整</div>
             </div>
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3">
@@ -61,7 +61,7 @@ export default function BootCampSubmissionPanel() {
               <div className="mt-3 space-y-2">
                 {proofItems.map((item) => (
                   <div className="flex gap-2 text-sm text-slate-300" key={item}>
-                    <span className="mt-1 h-2 w-2 rounded-full bg-neon-400" />
+                    <span className="mt-1 h-2 w-2 rounded-full bg-amber-300" />
                     <span>{item}</span>
                   </div>
                 ))}

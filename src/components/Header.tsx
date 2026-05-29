@@ -21,8 +21,8 @@ export default function Header({
           </svg>
         </div>
         <div>
-          <h1 className="text-xl font-semibold">Athlete Nutrition</h1>
-          <p className="text-sm text-slate-400">試合日と体調に合わせて、食事実行まで支援するコンディショニングUI</p>
+          <h1 className="text-xl font-semibold">本番逆算型スポーツ栄養</h1>
+          <p className="text-sm text-slate-400">試合・大会から逆算し、体調に合わせて食事実行まで支援します</p>
         </div>
       </div>
       <div className="flex items-center gap-3">

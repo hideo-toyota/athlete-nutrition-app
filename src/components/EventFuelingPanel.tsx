@@ -100,10 +100,11 @@ export default function EventFuelingPanel() {
   }
 
   return (
-    <div className="glass rounded-xl p-4">
+    <div className="glass event-panel rounded-xl p-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h3 className="font-semibold">Event Fueling / 本番逆算</h3>
+          <div className="text-xs uppercase tracking-[0.22em] text-amber-200">Main Demo</div>
+          <h3 className="mt-1 font-semibold">Event Fueling / 本番逆算</h3>
           <div className="mt-1 text-sm text-slate-400">
             試合・大会・本番日から逆算し、体重 x g/kg/day と疲労感で1日単位の栄養目標を出します。
           </div>
@@ -174,7 +175,7 @@ export default function EventFuelingPanel() {
           </select>
         </label>
         <button
-          className="rounded bg-neon-500 px-3 py-2 text-sm font-semibold text-black disabled:opacity-50 lg:mt-5"
+          className="rounded bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50 lg:mt-5"
           disabled={!selectedAthleteId || !title.trim()}
           type="submit"
         >
@@ -186,7 +187,7 @@ export default function EventFuelingPanel() {
         <div className="mt-4 flex flex-wrap gap-2">
           {events.map((event) => (
             <button
-              className={`rounded-full border px-3 py-1 text-xs ${event.id === activeEvent?.id ? 'border-neon-500/60 bg-neon-500/10 text-neon-200' : 'border-white/10 text-slate-300'}`}
+              className={`rounded-full border px-3 py-1 text-xs ${event.id === activeEvent?.id ? 'border-amber-300/60 bg-amber-300/10 text-amber-100' : 'border-white/10 text-slate-300'}`}
               key={event.id}
               onClick={() => setActiveEventId(event.id)}
               type="button"
@@ -206,7 +207,7 @@ export default function EventFuelingPanel() {
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3 lg:col-span-2">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Countdown</div>
-              <div className="mt-2 text-xl font-semibold text-neon-300">
+              <div className="mt-2 text-xl font-semibold text-amber-200">
                 {daysUntil != null && daysUntil >= 0 ? `本番まであと${daysUntil}日` : '本番後の回復期間'}
               </div>
               <div className="mt-1 text-sm text-slate-400">
@@ -216,10 +217,10 @@ export default function EventFuelingPanel() {
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3">
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Today Target</div>
               <div className="mt-2 text-sm text-slate-300">
-                糖質 {selectedFuelingDay ? rangeLabel(selectedFuelingDay, 'carbs') : '-'}
+                糖質 <span className="font-semibold text-amber-100">{selectedFuelingDay ? rangeLabel(selectedFuelingDay, 'carbs') : '-'}</span>
               </div>
               <div className="mt-1 text-sm text-slate-300">
-                たんぱく質 {selectedFuelingDay ? rangeLabel(selectedFuelingDay, 'protein') : '-'}
+                たんぱく質 <span className="font-semibold text-emerald-100">{selectedFuelingDay ? rangeLabel(selectedFuelingDay, 'protein') : '-'}</span>
               </div>
             </div>
             <div className="rounded-lg bg-[rgba(255,255,255,0.03)] p-3">
@@ -237,7 +238,7 @@ export default function EventFuelingPanel() {
             <div className="min-w-[760px] space-y-2">
               {fuelingDays.map((day) => (
                 <div
-                  className={`grid grid-cols-12 gap-3 rounded-lg border p-3 text-sm ${day.date === selectedDate ? 'border-neon-500/50 bg-neon-500/10' : 'border-white/10 bg-[rgba(255,255,255,0.02)]'}`}
+                  className={`grid grid-cols-12 gap-3 rounded-lg border p-3 text-sm ${day.date === selectedDate ? 'border-amber-300/50 bg-amber-300/10' : 'border-white/10 bg-[rgba(255,255,255,0.02)]'}`}
                   key={day.date}
                 >
                   <div className="col-span-2">
@@ -247,11 +248,11 @@ export default function EventFuelingPanel() {
                   </div>
                   <div className="col-span-2">
                     <div className="text-xs text-slate-500">糖質</div>
-                    <div className="font-semibold text-neon-300">{rangeLabel(day, 'carbs')}</div>
+                    <div className="font-semibold text-amber-100">{rangeLabel(day, 'carbs')}</div>
                   </div>
                   <div className="col-span-2">
                     <div className="text-xs text-slate-500">たんぱく質</div>
-                    <div className="font-semibold text-neon-300">{rangeLabel(day, 'protein')}</div>
+                    <div className="font-semibold text-emerald-100">{rangeLabel(day, 'protein')}</div>
                   </div>
                   <div className="col-span-4">
                     <div className="text-slate-300">{day.focus}</div>
@@ -267,7 +268,7 @@ export default function EventFuelingPanel() {
                   <div className="col-span-2 flex flex-col gap-2">
                     <div className="text-xs text-slate-500">タイミング: {day.timing}</div>
                     <button
-                      className="rounded border border-white/10 px-2 py-1 text-xs text-slate-200 hover:border-neon-500/50"
+                      className="rounded border border-white/10 px-2 py-1 text-xs text-slate-200 hover:border-amber-300/50"
                       onClick={() => applyDay(day)}
                       type="button"
                     >
@@ -287,8 +288,8 @@ export default function EventFuelingPanel() {
                 90分以上の本番はカーボローディングを優先し、60分超は競技中補給も検討します。
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
-                <a className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 hover:text-neon-300" href="https://pubmed.ncbi.nlm.nih.gov/26920240/" rel="noreferrer" target="_blank">ACSM/AND/DC</a>
-                <a className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 hover:text-neon-300" href="https://www.dietitians.ca/DietitiansOfCanada/media/Documents/Resources/noap-position-paper.pdf" rel="noreferrer" target="_blank">Position Paper PDF</a>
+                <a className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 hover:text-amber-100" href="https://pubmed.ncbi.nlm.nih.gov/26920240/" rel="noreferrer" target="_blank">ACSM/AND/DC</a>
+                <a className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300 hover:text-amber-100" href="https://www.dietitians.ca/DietitiansOfCanada/media/Documents/Resources/noap-position-paper.pdf" rel="noreferrer" target="_blank">Position Paper PDF</a>
               </div>
             </div>
             <div className="rounded-lg border border-white/10 bg-[rgba(255,255,255,0.02)] p-3 text-sm text-slate-300">

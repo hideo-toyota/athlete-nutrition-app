@@ -9,9 +9,9 @@ module.exports = {
         neon: {
           50: '#f6f9ff',
           100: '#e6f0ff',
-          300: '#7be0ff',
-          500: '#00e5ff',
-          700: '#00c0d6'
+          300: '#8ee7f0',
+          500: '#39d6e6',
+          700: '#1faeba'
         },
         cyber: '#0f172a'
       },
