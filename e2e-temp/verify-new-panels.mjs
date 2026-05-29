@@ -121,7 +121,7 @@ function record(label, ok, detail = '') {
     console.log(`  サンプルカード: ${teamCardSample.text}`);
     console.log(`  写真あり: ${teamCardSample.hasImg}, タグ数: ${teamCardSample.tagCount}`);
     record('Team Food Log カードに kcal/糖質/たんぱく質', /kcal|糖質|たんぱく/.test(teamCardSample.text));
-    record('Team Food Log カードに選手名', /Haruka|Ren|Airi|Kenta/.test(teamCardSample.text));
+    record('Team Food Log カードに選手名', /サンプル選手|Haruka|Ren|Airi|Kenta/.test(teamCardSample.text));
   }
 
   // 「真似する」ボタンの動作

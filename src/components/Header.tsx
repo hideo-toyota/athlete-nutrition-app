@@ -12,6 +12,10 @@ export default function Header({
   dayMode: DayMode
   onNewPlan: () => void
 }){
+  const initials = athleteName.startsWith('サンプル選手')
+    ? `S${athleteName.replace('サンプル選手', '').slice(0, 1) || 'A'}`
+    : athleteName.slice(0, 2).toUpperCase()
+
   return (
     <header className="flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-4">
@@ -33,7 +37,7 @@ export default function Header({
         </div>
         <button aria-label="新しいプランを追加" className="px-3 py-2 bg-[rgba(255,255,255,0.03)] glass rounded-md text-sm" onClick={onNewPlan}>New Plan</button>
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-neon-300 to-neon-500 text-xs font-semibold text-slate-950">
-          {athleteName.slice(0, 2).toUpperCase()}
+          {initials}
         </div>
       </div>
     </header>

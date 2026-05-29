@@ -10,10 +10,10 @@ function pad(n) { return String(n).padStart(2, '0'); }
 function dateKey(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 
 const ATHLETES = [
-  { id: 'a1', name: 'Haruka Tanaka', sportId: 'track', focus: '400m', baselineWeight: 56.8 },
-  { id: 'a2', name: 'Ren Ito', sportId: 'soccer', focus: '連戦スプリント', baselineWeight: 68.2 },
-  { id: 'a3', name: 'Airi Nakamura', sportId: 'ballet', focus: 'リハーサル', baselineWeight: 50.4 },
-  { id: 'a4', name: 'Kenta Saito', sportId: 'swimming', focus: '朝練後の回復', baselineWeight: 72.4 }
+  { id: 'a1', name: 'サンプル選手A', sportId: 'track', focus: '400m', baselineWeight: 56.8 },
+  { id: 'a2', name: 'サンプル選手B', sportId: 'soccer', focus: '連戦スプリント', baselineWeight: 68.2 },
+  { id: 'a3', name: 'サンプル選手C', sportId: 'ballet', focus: 'リハーサル', baselineWeight: 50.4 },
+  { id: 'a4', name: 'サンプル選手D', sportId: 'swimming', focus: '朝練後の回復', baselineWeight: 72.4 }
 ];
 
 const results = [];

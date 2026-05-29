@@ -3,28 +3,28 @@ import { Athlete, Plan } from '../types'
 export const ATHLETES: Athlete[] = [
   {
     id: 'a1',
-    name: 'Haruka Tanaka',
+    name: 'サンプル選手A',
     sportId: 'track',
     focus: '400mの週末レースに向けてエネルギー切れを防ぐ',
     baselineWeight: 56.8
   },
   {
     id: 'a2',
-    name: 'Ren Ito',
+    name: 'サンプル選手B',
     sportId: 'soccer',
     focus: '連戦でも後半のスプリント強度を落とさない',
     baselineWeight: 68.2
   },
   {
     id: 'a3',
-    name: 'Airi Nakamura',
+    name: 'サンプル選手C',
     sportId: 'ballet',
     focus: 'リハーサル量が多い週でも回復と骨コンディションを守る',
     baselineWeight: 50.4
   },
   {
     id: 'a4',
-    name: 'Kenta Saito',
+    name: 'サンプル選手D',
     sportId: 'swimming',
     focus: '朝練後の回復と体重維持を安定させる',
     baselineWeight: 72.4
