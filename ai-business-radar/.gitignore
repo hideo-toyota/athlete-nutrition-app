@@ -1,4 +1,10 @@
-# 生成物はローカルに作られる(サンプル確認用に outputs はコミットしてもよい)
+# 認証情報
+.env
+
+# Python
 __pycache__/
 *.pyc
 .DS_Store
+
+# 実データ(サンプルCSVはコミットする。実データを置く場合は除外)
+# data/prices/REAL-*.csv

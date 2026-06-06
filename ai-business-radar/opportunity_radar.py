@@ -21,10 +21,15 @@
 from __future__ import annotations
 
 import argparse
+import csv as csv_module
 import json
 import sys
 from datetime import datetime
 from pathlib import Path
+
+import ohlcv_data
+import trend_backtest as bt
+import trend_indicators as ti
 
 ROOT = Path(__file__).resolve().parent
 INPUTS = ROOT / "inputs"
@@ -35,6 +40,11 @@ OPPORTUNITIES_FILE = INPUTS / "opportunities.json"
 RESEARCH_REPORT = OUTPUTS / "equity_research_report.md"
 PROMPT_PACK = OUTPUTS / "equity_prompt_pack.md"
 WORKFLOW_OVERVIEW = OUTPUTS / "workflow_overview.md"
+TREND_REPORT = OUTPUTS / "trend_report.md"
+TREND_RANKING = OUTPUTS / "trend_ranking.csv"
+TRADE_JOURNAL_PROMPTS = OUTPUTS / "trade_journal_prompts.md"
+TREND_BACKTEST_REPORT = OUTPUTS / "trend_backtest_report.md"
+OBSIDIAN_DIR = OUTPUTS / "obsidian"
 
 # ----------------------------------------------------------------------------
 # 採点軸: (key, 表示名, それを裏付ける入力フィールド群)
@@ -456,15 +466,479 @@ def cmd_run() -> None:
     print("（投資分析のメインは `python3 opportunity_radar.py equity`）")
 
 
+# ----------------------------------------------------------------------------
+# trend コマンド: 上昇トレンド分析
+# ----------------------------------------------------------------------------
+def fpct(x, plus=True):
+    if x is None:
+        return "—"
+    return f"{x*100:+.1f}%" if plus else f"{x*100:.1f}%"
+
+
+def fnum(x):
+    if x is None:
+        return "—"
+    return f"{x:,.0f}" if abs(x) >= 100 else f"{x:.2f}"
+
+
+def yesno(b):
+    return "○" if b else "×"
+
+
+def trend_assessment(entry: dict, r: dict, bt_params: dict) -> dict:
+    """レポートに必ず含める項目を生成して返す。"""
+    m, score, label = r["m"], r["score"], r["label"]
+    w = ti.DEFAULTS["ma_windows"]
+    ma = m["ma"]
+    stop = bt_params.get("stop_loss_pct", bt.DEFAULTS["stop_loss_pct"])
+    exit_th = bt_params.get("exit_threshold", bt.DEFAULTS["exit_threshold"])
+
+    why = [a for a, _ in r["adds"]] or ["明確な上昇根拠は乏しい"]
+
+    invalidation = [
+        f"20日線({fnum(ma[w[0]])})を終値で明確に下回る",
+        "60日線が下向きに転換する",
+        f"60日線({fnum(ma[w[1]])})を割り込む",
+        "ベンチマーク相対リターンがマイナスに転じる",
+    ]
+
+    if label == "過熱注意":
+        wait = ["20日線近辺までの押し目を待つ", "急騰の出来高が落ち着き、再度出来高を伴って上抜けるのを確認"]
+    elif label == "押し目監視":
+        wait = ["20日線の回復+陽線での反発を確認", "直近高値の更新に出来高が伴うか確認"]
+    elif label in ("強い上昇トレンド", "上昇トレンド候補"):
+        wait = ["押し目(20日線タッチ)での分割エントリー", "直近高値ブレイク+出来高増の確認"]
+    else:
+        wait = ["トレンド転換(20日線>60日線かつ両者が上向き)を確認してから"]
+
+    not_buy = [s for s, _ in r["subs"]]
+    if label in ("下落トレンド", "レンジ") and not not_buy:
+        not_buy = ["明確な上昇トレンドが確認できない"]
+
+    exits = [
+        f"取得価格から -{stop*100:.0f}% で損切り",
+        "60日線を終値で明確に割れたら撤退",
+        f"トレンドスコアが {exit_th} 未満に低下したら縮小/撤退",
+    ]
+
+    dte = m.get("days_to_earnings")
+    if dte is None:
+        earnings = "次回決算日が未入力(next_earnings_date を埋めると跨ぎリスクを表示)"
+    elif dte < 0:
+        earnings = f"直近決算は {abs(dte)} 日前。決算反応の出尽くし/織り込みに注意"
+    elif m.get("earnings_crossing_risk"):
+        earnings = f"決算まであと {dte} 日。跨ぎリスク高。ポジションを抑える/見送る判断を"
+    else:
+        earnings = f"決算まであと {dte} 日。直前はサイズ調整を検討"
+
+    rel = m.get("rel_return")
+    if rel is None:
+        rel_text = "ベンチマーク相対リターンが計算できない(データ不足)"
+    elif rel > 0.05:
+        rel_text = f"ベンチ比 {fpct(rel)} と明確に強い。市場平均を上回っている"
+    elif rel > 0:
+        rel_text = f"ベンチ比 {fpct(rel)} とやや強い。優位性は限定的"
+    else:
+        rel_text = f"ベンチ比 {fpct(rel)} で市場平均より弱い。トレンドの質に注意"
+
+    heat = None
+    if entry.get("material_or_pts"):
+        heat = {
+            "熱量(短期の盛り上がり)": [
+                f"出来高20日平均比: {fnum(m.get('volume_ratio'))}倍",
+                f"直近の急騰(押し目なし): {yesno(m.get('spike_no_pullback'))}",
+                f"ストップ高水準の単日変動(代理): {yesno(m.get('limit_up_proxy'))}",
+                f"20日線からの乖離: {fpct(m.get('dist_from_ma20'))}",
+            ],
+            "継続トレンド(構造)": [
+                f"20>60>120日線の並び: {yesno(ma[w[0]] and ma[w[1]] and ma[w[2]] and ma[w[0]]>ma[w[1]]>ma[w[2]])}",
+                f"60日線の傾き: {fpct(m['slope'][w[1]])}",
+                f"60日リターン: {fpct(m['returns'][w[1]])}",
+            ],
+            "note": "材料/PTS急騰は『熱量』が先行しがち。継続トレンド(MA構造・中期リターン)が伴うまで本格判断は保留。",
+        }
+
+    return {"why": why, "invalidation": invalidation, "wait": wait,
+            "not_buy": not_buy, "exits": exits, "earnings": earnings,
+            "rel_text": rel_text, "heat": heat}
+
+
+def build_trend_report(results: list[dict], bench: list, data_cfg: dict) -> str:
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    ok = [r for r in results if r["ok"]]
+    bench_name = data_cfg.get("benchmark_name", "ベンチマーク")
+    parts = [
+        "# 上昇トレンド分析レポート (trend)",
+        "",
+        f"_生成日時: {now} / 銘柄数: {len(results)} / ベンチマーク: {bench_name}_",
+        "",
+        f"> {DISCLAIMER}",
+        "> 上昇トレンドは「当たる手法」ではありません。余剰資金で市場平均を上回れるかを検証し、最終判断は自分で行うための整理です。",
+        "",
+        "### 心得",
+        "\n".join(f"- {c}" for c in CAUTIONS),
+        "",
+        "## ランキング(トレンドスコア順)",
+        "",
+        "| 銘柄 | 判断 | スコア | 終値 | ベンチ比60d | 20d/60d/120d超 | 出来高比 | 過熱度 |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for r in sorted(ok, key=lambda x: x["score"], reverse=True):
+        m, e = r["m"], r["entry"]
+        w = ti.DEFAULTS["ma_windows"]
+        above = f"{yesno(m['above_ma'][w[0]])}/{yesno(m['above_ma'][w[1]])}/{yesno(m['above_ma'][w[2]])}"
+        parts.append("| {tk} {nm} | {lb} | {sc} | {cl} | {rel} | {ab} | {vr}倍 | {oh} |".format(
+            tk=e.get("ticker", ""), nm=e.get("company_name", ""), lb=r["label"], sc=r["score"],
+            cl=fnum(m["close"]), rel=fpct(m.get("rel_return")), ab=above,
+            vr=fnum(m.get("volume_ratio")), oh=fpct(m.get("dist_from_ma20"))))
+    parts.append("")
+    skipped = [r for r in results if not r["ok"]]
+    if skipped:
+        parts.append("> データ不足でスキップ: " +
+                     ", ".join(f"{r['entry'].get('ticker','?')}({r['source']})" for r in skipped))
+        parts.append("")
+    parts.append("---\n")
+
+    for r in sorted(ok, key=lambda x: x["score"], reverse=True):
+        parts.append(render_trend_entry(r))
+    parts.append(f"> {DISCLAIMER}")
+    parts.append("")
+    return "\n".join(parts)
+
+
+def render_trend_entry(r: dict) -> str:
+    e, m = r["entry"], r["m"]
+    w = ti.DEFAULTS["ma_windows"]
+    a = trend_assessment(e, r, r["bt_params"])
+    o = []
+    o.append(f"## {e.get('ticker','')} {e.get('company_name','')}")
+    o.append(f"データ源: {r['source']} / 基準日: {m['date']} / 終値: {fnum(m['close'])}")
+    o.append("")
+    o.append(f"### 判断: **{r['label']}**(トレンドスコア {r['score']}/100)")
+    o.append(f"- ベンチ比(60d): {fpct(m.get('rel_return'))} / 出来高20日平均比: {fnum(m.get('volume_ratio'))}倍 "
+             f"/ 過熱度(20MA乖離): {fpct(m.get('dist_from_ma20'))}")
+    o.append("")
+
+    o.append("### なぜ上昇トレンドと判定したか")
+    o.append("\n".join(f"- {x}" for x in a["why"]))
+    o.append("")
+    o.append("### どこが崩れたら仮説が否定されるか(反証条件)")
+    o.append("\n".join(f"- {x}" for x in a["invalidation"]))
+    o.append("")
+    o.append("### 買うならどの条件を待つか")
+    o.append("\n".join(f"- {x}" for x in a["wait"]))
+    o.append("")
+    o.append("### 買わない理由 / 減点要因")
+    o.append("\n".join(f"- {x}" for x in a["not_buy"]) if a["not_buy"] else "- (目立った減点要因なし)")
+    o.append("")
+    o.append("### 損切り・撤退条件")
+    o.append("\n".join(f"- {x}" for x in a["exits"]))
+    o.append("")
+    o.append("### 決算前後の注意点")
+    o.append(f"- {a['earnings']}")
+    o.append("")
+    o.append("### 市場平均と比べて本当に強いか")
+    o.append(f"- {a['rel_text']}")
+    o.append("")
+
+    if a["heat"]:
+        o.append("### 熱量 vs 継続トレンド(材料株/PTS急騰)")
+        for k in ("熱量(短期の盛り上がり)", "継続トレンド(構造)"):
+            o.append(f"**{k}**")
+            o.append("\n".join(f"- {x}" for x in a["heat"][k]))
+        o.append(f"> {a['heat']['note']}")
+        o.append("")
+
+    o.append("### 主要指標")
+    o.append("| 指標 | 値 |")
+    o.append("|---|---|")
+    rows = [
+        ("20/60/120日線", f"{fnum(m['ma'][w[0]])} / {fnum(m['ma'][w[1]])} / {fnum(m['ma'][w[2]])}"),
+        ("20日線の傾き / 60日線の傾き", f"{fpct(m['slope'][w[0]])} / {fpct(m['slope'][w[1]])}"),
+        ("終値 > 20/60/120日線", f"{yesno(m['above_ma'][w[0]])}/{yesno(m['above_ma'][w[1]])}/{yesno(m['above_ma'][w[2]])}"),
+        ("20日高値からの距離", fpct(m['dist_high'].get(w[0]))),
+        ("60日高値からの距離", fpct(m['dist_high'].get(w[1]))),
+        ("年初来高値からの距離", fpct(m.get('dist_ytd_high'))),
+        ("20/60/120日リターン", f"{fpct(m['returns'][w[0]])} / {fpct(m['returns'][w[1]])} / {fpct(m['returns'][w[2]])}"),
+        ("ベンチ相対リターン(60d)", fpct(m.get('rel_return'))),
+        ("出来高20日平均比", f"{fnum(m.get('volume_ratio'))}倍"),
+        ("売買代金20日平均", fnum(m.get('turnover_20'))),
+        ("ATR / ATR比率", f"{fnum(m.get('atr'))} / {fpct(m.get('atr_pct'), plus=False)}"),
+        ("20日値幅率", fpct(m.get('range_pct'), plus=False)),
+        ("最大ドローダウン(120d)", fpct(m.get('max_drawdown'))),
+        ("決算まで日数", str(m.get('days_to_earnings')) if m.get('days_to_earnings') is not None else "—"),
+        ("ストップ高/安(代理)", f"{yesno(m.get('limit_up_proxy'))}/{yesno(m.get('limit_down_proxy'))}"),
+    ]
+    for k, v in rows:
+        o.append(f"| {k} | {v} |")
+    o.append("")
+    o.append("---")
+    o.append("")
+    return "\n".join(o)
+
+
+def write_trend_ranking(results: list[dict]) -> None:
+    w = ti.DEFAULTS["ma_windows"]
+    headers = ["ticker", "company_name", "label", "score", "close", "rel_return_60",
+               "ret_20", "ret_60", "ret_120", "above_20", "above_60", "above_120",
+               "slope_20", "slope_60", "dist_ma20", "volume_ratio", "turnover_20",
+               "atr_pct", "max_drawdown_120", "days_to_earnings"]
+    with TREND_RANKING.open("w", newline="", encoding="utf-8") as f:
+        wr = csv_module.writer(f)
+        wr.writerow(headers)
+        for r in sorted((x for x in results if x["ok"]),
+                        key=lambda x: x["score"], reverse=True):
+            m, e = r["m"], r["entry"]
+            wr.writerow([
+                e.get("ticker", ""), e.get("company_name", ""), r["label"], r["score"],
+                round(m["close"], 2), _r(m.get("rel_return")),
+                _r(m["returns"][w[0]]), _r(m["returns"][w[1]]), _r(m["returns"][w[2]]),
+                int(m["above_ma"][w[0]]), int(m["above_ma"][w[1]]), int(m["above_ma"][w[2]]),
+                _r(m["slope"][w[0]]), _r(m["slope"][w[1]]), _r(m.get("dist_from_ma20")),
+                _r(m.get("volume_ratio"), 2), round(m.get("turnover_20") or 0),
+                _r(m.get("atr_pct")), _r(m.get("max_drawdown")),
+                m.get("days_to_earnings") if m.get("days_to_earnings") is not None else "",
+            ])
+
+
+def _r(x, nd=4):
+    return round(x, nd) if isinstance(x, (int, float)) else ""
+
+
+def build_trade_journal_prompts(results: list[dict]) -> str:
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    parts = [
+        "# Trade Journal Prompts — 売買判断・振り返り用プロンプト",
+        "",
+        f"_生成日時: {now}_",
+        "",
+        "AI に売買を委ねるためではなく、自分の判断を言語化し、後で検証するための問いです。",
+        f"> {DISCLAIMER}",
+        "",
+        "---",
+        "",
+    ]
+    for r in sorted((x for x in results if x["ok"]), key=lambda x: x["score"], reverse=True):
+        e, m = r["entry"], r["m"]
+        tk, nm = e.get("ticker", ""), e.get("company_name", "")
+        parts.append(f"## {tk} {nm}(判断: {r['label']} / スコア {r['score']})")
+        parts.append("")
+        parts.append("### エントリー前チェック")
+        parts.append("```")
+        parts.append(f"{tk} {nm} の上昇トレンド判定は「{r['label']}」、スコア{r['score']}、")
+        parts.append(f"ベンチ相対(60d){fpct(m.get('rel_return'))}、出来高比{fnum(m.get('volume_ratio'))}倍。")
+        parts.append("この状況で、断定せずに次を整理してください:")
+        parts.append("1. このトレンドが本物である根拠と、ダマシである可能性")
+        parts.append("2. 市場平均を上回っていると言える条件は満たされているか")
+        parts.append("3. いま買うのか、押し目を待つのか。待つなら具体的な価格/条件")
+        parts.append("4. 損切りライン・撤退条件の妥当性")
+        parts.append("5. 決算など、近くにあるイベントリスク")
+        parts.append("※『買え/売れ』ではなく、判断材料の整理に徹してください。")
+        parts.append("```")
+        parts.append("")
+        parts.append("### 売買後の振り返り")
+        parts.append("```")
+        parts.append(f"{tk} {nm} を売買しました。感情と事実を分けて、再現性のある学びに整理してください。")
+        parts.append("- なぜ買ったか:")
+        parts.append("- なぜ売ったか:")
+        parts.append("- 結果(損益・想定との差):")
+        parts.append("- 学び:")
+        parts.append("- 次回改善:")
+        parts.append("```")
+        parts.append("")
+        parts.append("---")
+        parts.append("")
+    return "\n".join(parts)
+
+
+def build_obsidian_note(r: dict) -> str:
+    e, m = r["entry"], r["m"]
+    a = trend_assessment(e, r, r["bt_params"])
+    tk, nm = e.get("ticker", ""), e.get("company_name", "")
+    log = e.get("trade_log") or []
+    last = log[-1] if log else {}
+    lines = [
+        f"# {nm} / {tk}",
+        "",
+        "## 今日の判断",
+        f"- 判断: {r['label']}",
+        f"- 理由: {'; '.join(a['why'])}",
+        f"- 上昇トレンドスコア: {r['score']}/100",
+        f"- ベンチマーク比: {fpct(m.get('rel_return'))}",
+        f"- 出来高: {fnum(m.get('volume_ratio'))}倍(20日平均比)",
+        f"- 過熱度: {fpct(m.get('dist_from_ma20'))}(20日線乖離)",
+        "",
+        "## 買う理由",
+        "\n".join(f"- {x}" for x in (e.get("reason_to_buy") or a["why"]))
+        if (e.get("reason_to_buy") or a["why"]) else "- ",
+        "",
+        "## 買わない理由",
+        "\n".join(f"- {x}" for x in a["not_buy"]) if a["not_buy"] else "- ",
+        "",
+        "## 反証条件",
+        "\n".join(f"- {x}" for x in a["invalidation"]),
+        "",
+        "## 撤退条件",
+        "\n".join(f"- {x}" for x in a["exits"]),
+        "",
+        "## 決算で確認すること",
+        "\n".join(f"- {x}" for x in (e.get("kpis_to_watch") or [])) if e.get("kpis_to_watch") else f"- {a['earnings']}",
+        "",
+        "## 売買後の振り返り",
+        f"- なぜ買ったか: {last.get('reason','')}",
+        "- なぜ売ったか: ",
+        f"- 結果: {last.get('result','')}",
+        f"- 学び: {last.get('lesson','')}",
+        "- 次回改善: ",
+        "",
+        f"> {DISCLAIMER}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def cmd_trend() -> None:
+    data = load_json(WATCHLIST_FILE)
+    data_cfg = data.get("data_source", {})
+    trend_params = data.get("trend_params", {})
+    bt_params = data.get("backtest", {})
+    bench = ohlcv_data.load_benchmark(data_cfg)
+    entries = data.get("watchlist", [])
+
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
+    OBSIDIAN_DIR.mkdir(parents=True, exist_ok=True)
+
+    results = []
+    for entry in entries:
+        bars, source = ohlcv_data.load_prices(entry, data_cfg)
+        m = ti.compute_indicators(bars, bench, trend_params) if bars else None
+        if m is None:
+            results.append({"entry": entry, "source": source, "ok": False})
+            continue
+        ti.attach_earnings(m, entry.get("next_earnings_date"))
+        score, adds, subs = ti.trend_score(m, trend_params)
+        results.append({
+            "entry": entry, "source": source, "ok": True, "m": m,
+            "score": score, "adds": adds, "subs": subs,
+            "label": ti.trend_label(m, score, trend_params), "bt_params": bt_params,
+        })
+
+    TREND_REPORT.write_text(build_trend_report(results, bench, data_cfg), encoding="utf-8")
+    write_trend_ranking(results)
+    TRADE_JOURNAL_PROMPTS.write_text(build_trade_journal_prompts(results), encoding="utf-8")
+    for r in results:
+        if r["ok"]:
+            (OBSIDIAN_DIR / f"{r['entry'].get('ticker','UNKNOWN')}.md").write_text(
+                build_obsidian_note(r), encoding="utf-8")
+
+    ok_n = sum(1 for r in results if r["ok"])
+    print(f"トレンド分析を生成しました ({ok_n}/{len(results)} 銘柄):")
+    print(f"  - {TREND_REPORT.relative_to(ROOT)}")
+    print(f"  - {TREND_RANKING.relative_to(ROOT)}")
+    print(f"  - {TRADE_JOURNAL_PROMPTS.relative_to(ROOT)}")
+    print(f"  - {OBSIDIAN_DIR.relative_to(ROOT)}/<ticker>.md")
+
+
+# ----------------------------------------------------------------------------
+# backtest-trend コマンド
+# ----------------------------------------------------------------------------
+def _fmt_metrics(label: str, mtr: dict) -> list[str]:
+    if mtr.get("trades", 0) == 0:
+        return [f"**{label}**: 取引なし"]
+    return [
+        f"**{label}**(取引{mtr['trades']}回)",
+        f"- 勝率: {mtr['win_rate']*100:.1f}% / 平均利益: {fpct(mtr['avg_win'])} / 平均損失: {fpct(mtr['avg_loss'])}",
+        f"- 累積リターン(複利): {fpct(mtr['total_return'])} / 最大DD: {fpct(mtr['max_drawdown'])}",
+        f"- シャープ(取引ベース): {mtr['sharpe_per_trade']:.2f} / PF: "
+        f"{mtr['profit_factor']:.2f}" if mtr.get('profit_factor') else
+        f"- シャープ(取引ベース): {mtr['sharpe_per_trade']:.2f} / PF: —",
+        f"- 平均保有日数: {mtr['avg_hold_days']:.1f}日",
+    ]
+
+
+def cmd_backtest_trend() -> None:
+    data = load_json(WATCHLIST_FILE)
+    data_cfg = data.get("data_source", {})
+    trend_params = data.get("trend_params", {})
+    bt_params = data.get("backtest", {})
+    bench = ohlcv_data.load_benchmark(data_cfg)
+    entries = data.get("watchlist", [])
+    OUTPUTS.mkdir(parents=True, exist_ok=True)
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    parts = [
+        "# トレンド・シグナル バックテスト (backtest-trend)",
+        "",
+        f"_生成日時: {now}_",
+        "",
+        f"> {DISCLAIMER}",
+        "> シグナル発生の翌営業日に執行、未来データ不使用、手数料+スリッページ控除。"
+        "学習期間と検証期間(アウトオブサンプル)に分けて集計しています。"
+        "過去の結果は将来を保証せず、過剰最適化に注意してください。",
+        "",
+        f"前提: エントリー={bt_params.get('entry', bt.DEFAULTS['entry'])} / "
+        f"買いスコア≥{bt_params.get('entry_threshold', bt.DEFAULTS['entry_threshold'])} / "
+        f"手仕舞いスコア<{bt_params.get('exit_threshold', bt.DEFAULTS['exit_threshold'])} / "
+        f"損切り{bt_params.get('stop_loss_pct', bt.DEFAULTS['stop_loss_pct'])*100:.0f}% / "
+        f"利確{bt_params.get('take_profit_pct', bt.DEFAULTS['take_profit_pct'])*100:.0f}% / "
+        f"最大保有{bt_params.get('hold_max_days', bt.DEFAULTS['hold_max_days'])}日 / "
+        f"片道コスト{(bt_params.get('fee_rate', bt.DEFAULTS['fee_rate'])+bt_params.get('slippage_rate', bt.DEFAULTS['slippage_rate']))*100:.2f}%",
+        "",
+        "---",
+        "",
+    ]
+
+    printed = []
+    need = max(ti.DEFAULTS["ma_windows"]) + ti.DEFAULTS["slope_window"] + 5
+    for entry in entries:
+        bars, source = ohlcv_data.load_prices(entry, data_cfg)
+        tk = entry.get("ticker", "")
+        nm = entry.get("company_name", "")
+        if len(bars) < need:
+            parts.append(f"## {tk} {nm}\nデータ不足でスキップ(source={source})\n\n---\n")
+            continue
+        res = bt.run_backtest(bars, bench, trend_params, bt_params)
+        parts.append(f"## {tk} {nm}")
+        parts.append(f"期間: {res['period'][0]} 〜 {res['period'][1]} / 学習・検証の分割日: {res['train_end']}")
+        bh = res.get("benchmark_buyhold_full")
+        parts.append(f"ベンチマーク同期間バイ&ホールド: {fpct(bh)}")
+        parts.append("")
+        parts += _fmt_metrics("全期間", res["all"])
+        parts.append("")
+        parts += _fmt_metrics("学習期間 (in-sample)", res["train"])
+        parts.append("")
+        parts += _fmt_metrics("検証期間 (out-of-sample)", res["test"])
+        parts.append("")
+        parts.append("---")
+        parts.append("")
+        a = res["all"]
+        printed.append((tk, a.get("trades", 0), a.get("win_rate"), a.get("total_return")))
+
+    parts.append(f"> {DISCLAIMER}")
+    TREND_BACKTEST_REPORT.write_text("\n".join(parts), encoding="utf-8")
+    print("バックテストを生成しました:")
+    print(f"  - {TREND_BACKTEST_REPORT.relative_to(ROOT)}")
+    for tk, n, wr, tr in printed:
+        wr_s = f"{wr*100:.0f}%" if wr is not None else "—"
+        tr_s = fpct(tr) if tr is not None else "—"
+        print(f"    {tk}: 取引{n}回 / 勝率{wr_s} / 累積{tr_s}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Personal Equity Research Radar — 自分用の投資リサーチ・判断ログ")
     sub = parser.add_subparsers(dest="command")
-    sub.add_parser("equity", help="投資分析レポート + プロンプト集を生成(メイン)")
+    sub.add_parser("trend", help="上昇トレンド分析レポートを生成(メイン)")
+    sub.add_parser("backtest-trend", help="トレンド・シグナルの簡易バックテスト")
+    sub.add_parser("equity", help="投資リサーチ・判断ログのレポートを生成")
     sub.add_parser("run", help="投資分析ワークフローの概要を出力(補助)")
     args = parser.parse_args()
 
-    if args.command == "equity":
+    if args.command == "trend":
+        cmd_trend()
+    elif args.command == "backtest-trend":
+        cmd_backtest_trend()
+    elif args.command == "equity":
         cmd_equity()
     elif args.command == "run":
         cmd_run()
