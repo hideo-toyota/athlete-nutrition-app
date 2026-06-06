@@ -1,0 +1,121 @@
+{
+  "policy": {
+    "purpose": "余剰資金で個別株・ETFを勉強しながら、自分の売買判断を構造化する。AIに丸投げせず最終判断は自分で行う。",
+    "max_position_per_name_jpy": 200000,
+    "max_loss_tolerance_per_name_pct": 20,
+    "earnings_crossing_policy": "決算跨ぎは原則ポジションを半分以下に。サプライズ前提のフルポジは取らない。",
+    "cautions": "現物のみ・信用取引は使わない。集中投資と短期の煽りを避ける。生活資金は投入しない。"
+  },
+  "watchlist": [
+    {
+      "ticker": "SAMPLE-A",
+      "company_name": "サンプル株式会社A(記入例)",
+      "market": "TSE Prime",
+      "current_price": 1500,
+      "position_status": "none",
+      "thesis": "BtoBのサブスク移行で売上がストック化し、利益率が中期的に改善するという仮説。",
+      "business_summary": "中小企業向けに業務SaaSを提供。従来は売り切り型だったが、サブスク比率が上昇中。",
+      "latest_revenue_growth": "+18% YoY",
+      "latest_profit_growth": "+25% YoY",
+      "margin_trend": "営業利益率は12%→15%へ改善傾向",
+      "valuation_notes": "PER 28x。成長率対比でやや割高だが、サブスク比率次第では正当化余地。同業平均PER 22x。",
+      "catalysts": [
+        "サブスク比率が50%を超える",
+        "解約率(チャーン)の低下",
+        "新プラン投入による客単価上昇"
+      ],
+      "risks": [
+        "大手の参入による価格競争",
+        "サブスク移行が想定より遅い",
+        "景気後退で中小企業のIT投資が縮小"
+      ],
+      "bear_case": "サブスク移行が頭打ちになり、成長鈍化でバリュエーションが同業並みに収斂する。",
+      "reason_to_buy": [
+        "ストック収益化で業績の予見性が高まる",
+        "利益率の改善トレンドが継続している"
+      ],
+      "reason_not_to_buy": [
+        "現状のPERは成長を相応に織り込んでいる",
+        "サブスク比率の開示がまだ粗く、追跡精度が低い"
+      ],
+      "exit_conditions": [
+        "2四半期連続でサブスク比率が横ばい",
+        "チャーンが悪化",
+        "株価が取得から-20%"
+      ],
+      "source_notes": "決算短信(直近)・中期経営計画。数値は記入例であり実データではない。",
+      "kpis_to_watch": [
+        "サブスク売上比率",
+        "チャーン率",
+        "営業利益率",
+        "新規顧客数"
+      ],
+      "position_sizing": {
+        "planned_amount_jpy": 100000,
+        "max_loss_jpy": 20000
+      },
+      "self_scores": {
+        "business_understandability": 4,
+        "valuation_conviction": 3,
+        "competitive_moat": 3
+      },
+      "trade_log": []
+    },
+    {
+      "ticker": "SAMPLE-ETF",
+      "company_name": "サンプル全世界株ETF(記入例)",
+      "market": "TSE",
+      "current_price": 3000,
+      "position_status": "holding",
+      "thesis": "個別の当て勘ではなく、低コストで世界経済の成長に長期で乗るためのコア資産。",
+      "business_summary": "全世界株式に分散投資する低コストETF。コア・サテライト戦略のコア部分。",
+      "latest_revenue_growth": "N/A(指数連動)",
+      "latest_profit_growth": "N/A",
+      "margin_trend": "N/A",
+      "valuation_notes": "個別バリュエーションは見ない。経費率と乖離(トラッキングエラー)を確認。",
+      "catalysts": [
+        "積立による平均取得単価の平準化"
+      ],
+      "risks": [
+        "世界的な株安局面でのドローダウン",
+        "為替変動"
+      ],
+      "bear_case": "長期の世界株停滞局面では数年含み損が続く可能性。",
+      "reason_to_buy": [
+        "低コストで分散が効く",
+        "個別リスクを取らずに市場平均を取れる"
+      ],
+      "reason_not_to_buy": [
+        "短期の値上がり益は狙いにくい"
+      ],
+      "exit_conditions": [
+        "ライフプラン上の資金需要が発生した時",
+        "より低コストの代替が出た時(乗り換え検討)"
+      ],
+      "source_notes": "目論見書・経費率。記入例。",
+      "kpis_to_watch": [
+        "経費率",
+        "トラッキングエラー",
+        "純資産総額"
+      ],
+      "position_sizing": {
+        "planned_amount_jpy": 150000,
+        "max_loss_jpy": 30000
+      },
+      "self_scores": {
+        "business_understandability": 5,
+        "surplus_capital_fit": 5,
+        "downside_clarity": 4
+      },
+      "trade_log": [
+        {
+          "date": "2026-04-01",
+          "action": "buy",
+          "reason": "コア資産として積立開始",
+          "result": "",
+          "lesson": ""
+        }
+      ]
+    }
+  ]
+}
