@@ -1,0 +1,18 @@
+# 認証情報
+.env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# 取得データ・成果物(ローカルに溜める)
+data/raw/*
+data/processed/*
+reports/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!reports/.gitkeep
+
+# OS
+.DS_Store

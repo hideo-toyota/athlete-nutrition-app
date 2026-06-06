@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  毎朝 07:00 に日次バッチを実行する launchd 設定。
+  使う前に以下を自分の環境に置き換えてください:
+    - YOUR_USERNAME      → `whoami` の結果
+    - /Users/YOUR_USERNAME/ai-analyst → 実際の配置パス
+  配置:  cp このファイル ~/Library/LaunchAgents/
+  有効化: launchctl load ~/Library/LaunchAgents/com.user.ai-analyst.daily.plist
+  即時実行(テスト): launchctl start com.user.ai-analyst.daily
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.ai-analyst.daily</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/YOUR_USERNAME/ai-analyst/scripts/run_daily.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/YOUR_USERNAME/ai-analyst</string>
+
+    <!-- claude / python3 を見つけられるよう PATH を補う(環境に合わせて調整) -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <!-- 毎日 07:00 に実行 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/YOUR_USERNAME/ai-analyst/reports/logs/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/YOUR_USERNAME/ai-analyst/reports/logs/launchd.err.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>
