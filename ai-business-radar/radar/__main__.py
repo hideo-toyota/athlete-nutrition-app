@@ -7,7 +7,8 @@ from pathlib import Path
 from .concentration import look_through
 from .config import load_config
 from .data import load_portfolio
-from .report import render_mirror
+from .discipline import check
+from .report import render_check, render_mirror
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS = ROOT / "outputs"
@@ -30,8 +31,23 @@ def cmd_mirror() -> None:
              or exp['satellite']['sector_breaches']) else ""))
 
 
+def cmd_check(action_tokens: list[str]) -> None:
+    cfg = load_config()
+    pf = load_portfolio()
+    verdict = check(pf, cfg, " ".join(action_tokens))
+    OUTPUTS.mkdir(exist_ok=True)
+    out = OUTPUTS / "discipline_check.md"
+    out.write_text(render_check(verdict), encoding="utf-8")
+    head = "✅ OK" if verdict["ok"] else "⛔ 却下"
+    print(f"discipline check: {head}  (→ {out.relative_to(ROOT)})")
+    for b in verdict["breaches"]:
+        print(f"  ⛔ {b}")
+    for w in verdict["warnings"]:
+        print(f"  ⚠️ {w}")
+
+
 def _todo(name: str) -> None:
-    print(f"`{name}` は未実装(PLAN: Phase 2以降)。MVPは `mirror` から。")
+    print(f"`{name}` は未実装(PLAN後段)。実装済み: mirror / check。")
 
 
 def main() -> None:
@@ -39,13 +55,19 @@ def main() -> None:
                                  description="Personal Equity Research Radar")
     sub = ap.add_subparsers(dest="command")
     sub.add_parser("mirror", help="正直な集中度レポート(look-through)")
-    for later in ("check", "log", "score", "review"):
+    pc = sub.add_parser("check", help='規律チェック。例: check buy 7203 100000 Financials')
+    pc.add_argument("action", nargs="*", help='行動: buy/add/trim/exit <ticker> <金額> [sector]')
+    for later in ("log", "score", "review"):
         sub.add_parser(later, help=f"(未実装 / PLAN後段) {later}")
     args = ap.parse_args()
 
     if args.command == "mirror":
         cmd_mirror()
-    elif args.command in ("check", "log", "score", "review"):
+    elif args.command == "check":
+        if not args.action:
+            raise SystemExit('例: python3 -m radar check buy 7203 100000 Financials')
+        cmd_check(args.action)
+    elif args.command in ("log", "score", "review"):
         _todo(args.command)
     else:
         ap.print_help()

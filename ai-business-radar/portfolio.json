@@ -6,13 +6,13 @@
       "ticker": "NVDA", "name": "NVIDIA", "sector": "US-Tech/AI",
       "region": "US", "currency": "USD",
       "account": "self_nisa_growth", "kind": "individual_stock", "sleeve": "satellite",
-      "market_value_jpy": 400000
+      "cost_basis_jpy": 200000, "market_value_jpy": 400000
     },
     {
       "ticker": "TSLA", "name": "Tesla", "sector": "US-Tech/AI",
       "region": "US", "currency": "USD",
       "account": "self_nisa_growth", "kind": "individual_stock", "sleeve": "satellite",
-      "market_value_jpy": 400000
+      "cost_basis_jpy": 300000, "market_value_jpy": 400000
     },
     {
       "ticker": "ACWI_FUND", "name": "全世界株インデックス(つみたて)",

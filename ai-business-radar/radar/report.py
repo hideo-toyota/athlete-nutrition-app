@@ -7,6 +7,38 @@ DISCLAIMER = ("※本レポートは投資助言ではありません。集中�
               "売買は指示しません。最終判断と責任は自分にあります。")
 
 
+def render_check(verdict: dict) -> str:
+    act = verdict["action"]
+    head = "✅ 規律OK" if verdict["ok"] else "⛔ 規律により却下"
+    o = []
+    o.append("# Discipline Check — 規律の番人")
+    o.append("")
+    amt = act.get("amount")
+    o.append(f"_提案: **{act['verb']} {act.get('ticker') or ''}**"
+             + (f" {amt:,.0f}円" if amt else "")
+             + f" / セクター: {verdict['sector_used']}_")
+    o.append("")
+    o.append(f"## 判定: **{head}**")
+    o.append("")
+    if verdict["breaches"]:
+        o.append("### ⛔ 上限超過(ハード却下)")
+        o += [f"- {b}" for b in verdict["breaches"]]
+        o.append("")
+    if verdict["warnings"]:
+        o.append("### ⚠️ 警告(失敗モード)")
+        o += [f"- {w}" for w in verdict["warnings"]]
+        o.append("")
+    if verdict["notes"]:
+        o.append("### 📝 メモ")
+        o += [f"- {n}" for n in verdict["notes"]]
+        o.append("")
+    o.append("> これは規律チェック。**買え/売れの指示ではない。** 最終判断と、規律を破る場合の理由記録はあなたの仕事(原則1・2)。")
+    o.append("")
+    o.append(f"> {DISCLAIMER}")
+    o.append("")
+    return "\n".join(o)
+
+
 def _table(col: str, d: dict, top: int | None = None) -> str:
     items = sorted(d.items(), key=lambda kv: kv[1], reverse=True)
     if top:
