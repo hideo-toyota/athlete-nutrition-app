@@ -1,0 +1,9 @@
+{
+  "name": "全世界株(ACWI 概算)",
+  "as_of": "2026-05",
+  "note": "手入力の概算(D1)。ファンドの月次レポートから国・セクター・上位銘柄を転記。粗くても正直に(原則3)。",
+  "region_weights": { "US": 0.62, "JP": 0.05, "EU": 0.12, "other": 0.21 },
+  "currency_weights": { "USD": 0.62, "JPY": 0.05, "EUR": 0.12, "other": 0.21 },
+  "sector_weights": { "US-Tech/AI": 0.25, "Financials": 0.15, "Healthcare": 0.11, "Consumer": 0.12, "other": 0.37 },
+  "top_holdings": { "NVDA": 0.045, "AAPL": 0.04, "MSFT": 0.038, "AMZN": 0.03, "TSLA": 0.015 }
+}

@@ -1,0 +1,19 @@
+{
+  "principles_ref": "DESIGN_PRINCIPLES.md",
+  "measure_currency": "JPY",
+  "policy": {
+    "core_satellite": { "core_pct": 90, "satellite_pct": 10 },
+    "satellite": {
+      "max_pct_of_total": 10,
+      "min_names": 3,
+      "max_names": 5,
+      "max_pct_per_name": 2.5,
+      "max_pct_per_sector": 5,
+      "size_is_conviction_proof": true,
+      "universe": "JP_individual",
+      "data_source_satellite": "jquants"
+    }
+  },
+  "benchmark": { "type": "dca_index", "index_ref": "indices/acwi.json", "note": "同一CFのDCA" },
+  "data_source": { "index_composition_dir": "indices" }
+}
