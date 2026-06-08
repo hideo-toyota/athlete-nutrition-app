@@ -7,7 +7,7 @@
 ## 0. スコープと非目標
 - **MVPの心臓は2つ**:(1) **honest mirror**(look-through集中度=“見えない総集中度”の可視化)、(2) **decision log**(判断→結果→学びの閉ループ)。指標分析・バックテストは**後段**。
 - 非目標:自動発注 / リアルタイム株価 / 投資助言の断定 / 公開サービス。
-- 既存の `opportunity_radar.py` 等は**spike(原則発見のための試作)**。本SPECの実装は**それを参照しつつ作り直す**(レトロフィットしない)。🔸未決(下記 D8)
+- 既存の `opportunity_radar.py` 等は**spike(原則発見のための試作)**。本SPECの実装は**それを参照しつつ作り直す**(レトロフィットしない / D8決定)。
 
 ---
 
@@ -23,9 +23,11 @@
     "satellite": {
       "max_pct_of_total": 10,           // サテライト上限(総資産比)
       "min_names": 3, "max_names": 5,
-      "max_pct_per_name": 2.5,          // 1銘柄上限(総資産比)。🔸D3
-      "max_pct_per_sector": 5,          // セクター分散の上限。🔸D4
-      "size_is_conviction_proof": true  // 確信で上限を緩めない(c対策)
+      "max_pct_per_name": 2.5,          // 1銘柄上限(総資産比)
+      "max_pct_per_sector": 5,          // セクター分散の上限
+      "size_is_conviction_proof": true, // 確信で上限を緩めない(c対策)
+      "universe": "JP_individual",      // 対象=財務分析可能な日本企業。中小型(低カバレッジ)優先=エッジ②が棲む場所
+      "data_source_satellite": "jquants"// 日本株データ=J-Quants(米・USD集中の分散にも効く)
     },
     "discipline": {
       "no_chase": true,                 // 過熱/急騰時は新規・買い増し禁止(a対策)
@@ -161,12 +163,13 @@
 
 ---
 
-## 5. 🔸未決事項(あなたのゲート=ここを決めて)
-- **D1 指数のlook-throughデータ源**: 指数構成をどう得る? 案=**まず手入力の概算**(`indices/*.json`、粗くても原則3的に正直)。精緻化は後。
-- **D2 測定通貨**: **JPY(支出通貨)**で測る、で確定?(推奨: はい)
-- **D3 1銘柄上限**: 総資産比 **2.5%**(=10%÷4)で良い? 別の数字?
-- **D4 セクター分散**: サテライト内セクター上限(例 5%)を置く? 値は?
-- **D5 採点の“当たり”基準**: 期日で **DCAインデックス超過**を hit とする?(推奨)/ 絶対リターン?
-- **D6 decision_log 保存形式**: JSONLを真実とし **Obsidianへエクスポート**?(推奨)/ Obsidian直書き?
-- **D7 MVP順序**: `mirror → check → log/score → review` を先、`analyze/backtest` は後。これで良い?
-- **D8 既存コードの扱い**: spike(参照のみ・作り直し)で確定? それとも一部流用?
+## 5. 決定事項(2026-06-07 人間ゲート承認 / 実行段階で都度修正可)
+- **D1 指数look-through**: まず手入力の概算(`indices/*.json`)。精緻化は後。✅
+- **D2 測定通貨**: **JPY**(支出通貨)。✅
+- **D3 1銘柄上限**: 総資産比 **2.5%**。✅
+- **D4 セクター上限(サテライト内)**: **5%**(look-throughの合算は mirror で“表示”)。✅
+- **D5 採点の“当たり”**: 期日で **DCAインデックス超過**を hit。✅
+- **D6 decision_log**: **JSONLを真実 + Obsidianへエクスポート**。✅
+- **D7 MVP順序**: **mirror → check → log/score → review**(analyze/backtest は後)。✅
+- **D8 既存コード**: **spike(`spike/` へ退避・参照のみ)、SPECから作り直し**。✅
+- **D9 サテライト対象(本日決定)**: **財務分析可能な日本企業**(中小型=低カバレッジ優先=エッジ②の棲む場所/米・USD集中の分散)。データ源=**J-Quants**。✅
