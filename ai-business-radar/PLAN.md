@@ -27,6 +27,8 @@ ai-business-radar/
 
 ## フェーズ(各スライスは独立して価値を出し、原則準拠+検証ゲートを通す)
 
+> 実装状況(2026-06): **Phase 0–3 実装済み**(`mirror` / `check` / `log` / `score` / `review`)。`analyze` / `backtest` と J-Quants `data` 接続は後段。
+
 ### Phase 0 — 足場とデータ契約
 - `radar/config.py`:`config.json` 読込+検証(必須キー・型・合計100%等)。
 - `data.py`:`load_portfolio()` / `load_index(ref)`。サンプル `portfolio.json`(NVDA/TSLA + 全世界指数 = あなたの実状を反映)、`indices/acwi.json`(手入力概算)。

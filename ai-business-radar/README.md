@@ -21,8 +21,13 @@ python3 -m radar mirror
 python3 -m radar check buy 7203 100000 Financials
 python3 -m radar check add NVDA 100000              # 例: 既に上限 → 却下
 
-# (実装予定) log / score / review … 判断→DCA比で機械採点→較正の閉ループ
+# ③ 閉ループ:判断を反証可能な形で記録 → 期日にDCA比で機械採点 → 較正
+python3 -m radar log       # journal/decision_input.json を追記(予測必須・override理由必須)
+python3 -m radar score     # journal/prices.json の horizon終値で採点(未来不参照)
+python3 -m radar review    # outputs/journal_review.md(裁量 vs 規律 / 対DCA)
 ```
+
+判断ログ `decision_log.jsonl` は**追記専用**(decision も outcome も別行・過去は改変しない=後知恵対策)。個人データなので `.gitignore` 済み(テンプレは `journal/*.example.json`)。
 
 - 設定は宣言的: [`config.json`](config.json)(コア/サテライト・上限 2.5%/5%/10%・規律しきい値・DCAベンチ)。
 - データはファイル: [`portfolio.json`](portfolio.json)、[`indices/`](indices)(指数構成=手入力概算)。

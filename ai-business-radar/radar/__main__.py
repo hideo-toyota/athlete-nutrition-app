@@ -5,11 +5,14 @@ import argparse
 import csv as csv_module
 from pathlib import Path
 
+import json
+
 from .concentration import look_through
 from .config import load_config
 from .data import load_portfolio
 from .discipline import check
-from .report import render_check, render_mirror
+from . import journal
+from .report import render_check, render_mirror, render_review
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS = ROOT / "outputs"
@@ -55,8 +58,39 @@ def cmd_check(action_tokens: list[str]) -> None:
         print(f"  ⚠️ {w}")
 
 
-def _todo(name: str) -> None:
-    print(f"`{name}` は未実装(PLAN後段)。実装済み: mirror / check。")
+def cmd_log(path: str | None) -> None:
+    p = Path(path) if path else (ROOT / "journal" / "decision_input.json")
+    if not p.is_absolute():
+        p = ROOT / p
+    if not p.exists():
+        raise SystemExit(f"判断入力が見つかりません: {p}(journal/decision_input.example.json を参照)")
+    entry = json.loads(p.read_text(encoding="utf-8"))
+    did = journal.append_decision(entry)
+    print(f"判断を記録しました id={did} → {journal.LOG.relative_to(ROOT)}(追記専用)")
+
+
+def cmd_score(path: str | None) -> None:
+    p = Path(path) if path else (ROOT / "journal" / "prices.json")
+    if not p.is_absolute():
+        p = ROOT / p
+    prices = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    res = journal.score_due(prices)
+    print(f"採点: 新規 {len(res['scored'])} 件 / 期日前 {len(res['pending_future'])} 件 / "
+          f"価格待ち {len(res['awaiting_price'])} 件")
+    if res["awaiting_price"]:
+        print(f"  価格待ち id: {res['awaiting_price']}(journal/prices.json に horizon の終値を)")
+
+
+def cmd_review() -> None:
+    rev = journal.review()
+    OUTPUTS.mkdir(exist_ok=True)
+    out = OUTPUTS / "journal_review.md"
+    out.write_text(render_review(rev), encoding="utf-8")
+    ov = rev["overall"]
+    hr = f"{ov['hit_rate']*100:.0f}%" if isinstance(ov["hit_rate"], (int, float)) else "—"
+    print(f"較正: 判断{rev['n_decisions']}件 / 採点{rev['n_scored']}件 / 対DCA hit {hr} → {out.relative_to(ROOT)}")
+    if rev["n_scored"] < 20:
+        print("  ⚠️ サンプル不足:統計的な結論は保留(原則3)")
 
 
 def main() -> None:
@@ -67,8 +101,11 @@ def main() -> None:
     pc = sub.add_parser("check", help='規律チェック。例: check buy 7203 100000 Financials [--overheated]')
     pc.add_argument("action", nargs=argparse.REMAINDER,
                     help='行動: buy/add/trim/exit <ticker> <金額> [sector] [--overheated --thesis-intact --powder]')
-    for later in ("log", "score", "review"):
-        sub.add_parser(later, help=f"(未実装 / PLAN後段) {later}")
+    pl = sub.add_parser("log", help="判断を decision_log.jsonl に追記(反証可能な予測が必須)")
+    pl.add_argument("path", nargs="?", help="判断JSON(既定: journal/decision_input.json)")
+    ps = sub.add_parser("score", help="期日到来分をDCA比で機械採点(未来不参照)")
+    ps.add_argument("path", nargs="?", help="価格JSON(既定: journal/prices.json)")
+    sub.add_parser("review", help="較正レポート(裁量 vs 規律 / 対DCA)")
     args = ap.parse_args()
 
     if args.command == "mirror":
@@ -77,8 +114,12 @@ def main() -> None:
         if not args.action:
             raise SystemExit('例: python3 -m radar check buy 7203 100000 Financials')
         cmd_check(args.action)
-    elif args.command in ("log", "score", "review"):
-        _todo(args.command)
+    elif args.command == "log":
+        cmd_log(args.path)
+    elif args.command == "score":
+        cmd_score(args.path)
+    elif args.command == "review":
+        cmd_review()
     else:
         ap.print_help()
 

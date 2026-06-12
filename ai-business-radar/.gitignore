@@ -6,5 +6,7 @@ __pycache__/
 *.pyc
 .DS_Store
 
-# 実データ(サンプルCSVはコミットする。実データを置く場合は除外)
-# data/prices/REAL-*.csv
+# 個人の判断ログ・実データ(テンプレの *.example.json はコミット、実データは除外)
+decision_log.jsonl
+journal/decision_input.json
+journal/prices.json

@@ -7,6 +7,44 @@ DISCLAIMER = ("※本レポートは投資助言ではありません。集中�
               "売買は指示しません。最終判断と責任は自分にあります。")
 
 
+def _pct(x):
+    return f"{x*100:+.1f}%" if isinstance(x, (int, float)) else "—"
+
+
+def render_review(rev: dict) -> str:
+    o = ["# Journal Review — 較正(過程 > 結果)", ""]
+    o.append(f"_判断 {rev['n_decisions']} 件 / 採点済み {rev['n_scored']} 件_")
+    o.append("")
+    o.append(f"> {DISCLAIMER}")
+    o.append("")
+    if rev["n_scored"] < 20:
+        o.append(f"## ⚠️ サンプル不足({rev['n_scored']}件)— 統計的な結論は出せない(判断保留)")
+        o.append("- 数十件・複数の地合いが揃うまで、勝敗は運の範囲。較正は“傾向の芽”として見る(原則3)。")
+        o.append("")
+    ov = rev["overall"]
+    o.append("## 全体")
+    o.append(f"- DCAインデックスに勝った割合(hit): {_rate(ov['hit_rate'])}")
+    o.append(f"- 平均の対DCA超過: {_pct(ov['avg_excess_vs_dca'])}")
+    o.append("")
+    o.append("## 裁量 vs 規律(=この道具の検証対象)")
+    o.append("| 区分 | 採点数 | hit率 | 平均対DCA超過 |")
+    o.append("|---|---|---|---|")
+    for label, jp in (("in_discipline", "規律内"), ("override", "規律を破った(override)")):
+        a = rev["by_discipline"][label]
+        o.append(f"| {jp} | {a['n']} | {_rate(a['hit_rate'])} | {_pct(a['avg_excess_vs_dca'])} |")
+    o.append("")
+    o.append("> 検証の問い:**あなたの裁量(特にoverride)は、DCAに勝てているか?** "
+             "勝てていないと出たら、それは失敗でなく『黙ってDCA』という最も価値ある真実(原則5)。")
+    o.append("")
+    o.append(f"> {DISCLAIMER}")
+    o.append("")
+    return "\n".join(o)
+
+
+def _rate(x):
+    return f"{x*100:.0f}%" if isinstance(x, (int, float)) else "—"
+
+
 def render_check(verdict: dict) -> str:
     act = verdict["action"]
     head = "✅ 規律OK" if verdict["ok"] else "⛔ 規律により却下"

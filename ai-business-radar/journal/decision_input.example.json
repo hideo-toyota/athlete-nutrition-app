@@ -1,0 +1,19 @@
+{
+  "_comment": "これをコピーして decision_input.json にし、判断ごとに埋めて `python3 -m radar log` で追記する。反証可能な予測(claim+horizon)が無いと拒否される。見送り(pass)も記録する。",
+  "ticker": "7203",
+  "account": "self_nisa_growth",
+  "action": "buy_new",
+  "rationale": "なぜそう判断したか(事業ベースで)",
+  "prediction": {
+    "claim": "12ヶ月でインデックスを上回る(事業仮説: ...)",
+    "metric": "対TOPIX超過リターン",
+    "threshold": "+0%(=DCAに勝つ)",
+    "horizon": "2027-06-12"
+  },
+  "vs_discipline": "in_discipline",
+  "override_reason": "",
+  "size": { "amount_jpy": 100000 },
+  "ref_price": 2800,
+  "benchmark_ref": 67000,
+  "emotion_note": "今の心理状態(冷静か/高揚か)"
+}
