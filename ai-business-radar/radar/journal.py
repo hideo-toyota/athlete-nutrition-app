@@ -4,13 +4,14 @@ decision_log.jsonl は**追記専用・イベントソース**。1行=1イベン
   - type=decision : 反証可能な予測つきの判断(override は理由必須、見送りも記録)
   - type=outcome  : 期日後にツールが機械採点した結果(DCAインデックス超過が hit)
 履歴は決して書き換えない。outcome も「別行」で追記する(後知恵の防止)。
-score は horizon <= asof(厳密な日付)かつ記録済み価格のみを使う(未来データ不参照)。
-ログ品質=閉ループ品質なので、入力検証と破損検知を厳格に行う。
+score は horizon <= asof(厳密 YYYY-MM-DD)かつ記録済み価格のみを使う(未来データ不参照)。
+ログ品質=閉ループ品質。入力検証・破損検知・型検証を厳格に行う。
 """
 from __future__ import annotations
 
 import json
 import math
+import re
 import uuid
 from datetime import date, datetime
 from pathlib import Path
@@ -22,7 +23,9 @@ DECISION_FIELDS = ("ticker", "account", "action", "rationale", "prediction",
                    "vs_discipline", "override_reason", "size", "ref_price",
                    "benchmark_ref", "emotion_note")
 VALID_ACTIONS = {"buy_new", "add", "trim", "exit", "pass", "hold_review"}
+SCOREABLE_ACTIONS = {"buy_new", "add", "trim", "exit", "pass"}  # hold_review は採点しない
 VALID_DISCIPLINE = {"in_discipline", "override"}
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _finite(v):
@@ -30,15 +33,17 @@ def _finite(v):
 
 
 def _date(s):
-    """厳密に YYYY-MM-DD のみ受理。それ以外は None(部分日付・不正日付を弾く)。"""
+    """厳密に 'YYYY-MM-DD'(実在日)のみ受理。20260131 / 2026-W05-6 / 2026-02 / 2026-02-31 は None。"""
+    if not isinstance(s, str) or not _DATE_RE.match(s):
+        return None
     try:
-        return date.fromisoformat(str(s))
-    except (ValueError, TypeError):
+        return date.fromisoformat(s)
+    except ValueError:
         return None
 
 
 def _read_log() -> list[dict]:
-    """追記専用ログを読む。破損行は黙殺せず停止(ファイル=真実)。"""
+    """追記専用ログを読む。破損行・型不正は黙殺せず停止(ファイル=真実)。"""
     if not LOG.exists():
         return []
     out = []
@@ -56,6 +61,10 @@ def _read_log() -> list[dict]:
             for k in ("id", "excess_vs_dca", "hit"):
                 if k not in rec:
                     raise SystemExit(f"decision_log.jsonl の {i} 行目(outcome)に {k} がありません")
+            if not _finite(rec["excess_vs_dca"]):
+                raise SystemExit(f"decision_log.jsonl の {i} 行目(outcome): excess_vs_dca が数値でない")
+            if not isinstance(rec["hit"], bool):
+                raise SystemExit(f"decision_log.jsonl の {i} 行目(outcome): hit が真偽値でない")
         elif rec["type"] == "decision" and "id" not in rec:
             raise SystemExit(f"decision_log.jsonl の {i} 行目(decision)に id がありません")
         out.append(rec)
@@ -68,18 +77,22 @@ def _append(obj: dict) -> None:
 
 
 def append_decision(entry: dict) -> str:
-    """判断を1行追記する。品質検証(予測・必須項目・型)を満たさなければ拒否。"""
+    """判断を1行追記する。品質検証(予測・必須項目・型・有限/正)を満たさなければ拒否。"""
+    if not isinstance(entry, dict):
+        raise SystemExit("判断入力は object である必要があります")
     action = entry.get("action")
     if action not in VALID_ACTIONS:
         raise SystemExit(f"action が不正: {action}(許容: {sorted(VALID_ACTIONS)})")
     for k in ("ticker", "rationale"):
         if not entry.get(k):
             raise SystemExit(f"{k} は必須です")
-    pred = entry.get("prediction") or {}
+    pred = entry.get("prediction")
+    if not isinstance(pred, dict):
+        raise SystemExit("prediction は object で必須")
     if not pred.get("claim"):
         raise SystemExit("prediction.claim は必須(反証可能な予測が無い判断は記録しない)")
     if not _date(pred.get("horizon")):
-        raise SystemExit("prediction.horizon は実在する YYYY-MM-DD で必須")
+        raise SystemExit("prediction.horizon は実在する 'YYYY-MM-DD' で必須")
     vs = entry.get("vs_discipline") or "in_discipline"
     if vs not in VALID_DISCIPLINE:
         raise SystemExit(f"vs_discipline が不正: {vs}(許容: {sorted(VALID_DISCIPLINE)})")
@@ -87,11 +100,16 @@ def append_decision(entry: dict) -> str:
         raise SystemExit("vs_discipline=override の場合は override_reason が必須(原則2)")
     if action != "hold_review":
         for k in ("ref_price", "benchmark_ref"):
-            if not _finite(entry.get(k)):
-                raise SystemExit(f"{k} は有限の数値で必須(採点に必要)")
-    size = entry.get("size") or {}
-    if size.get("amount_jpy") is not None and not _finite(size.get("amount_jpy")):
-        raise SystemExit("size.amount_jpy が不正(有限の数値)")
+            v = entry.get(k)
+            if not _finite(v) or v <= 0:
+                raise SystemExit(f"{k} は正の有限数で必須(採点に必要)")
+    size = entry.get("size")
+    if size is not None:
+        if not isinstance(size, dict):
+            raise SystemExit("size は object である必要があります")
+        amt = size.get("amount_jpy")
+        if amt is not None and (not _finite(amt) or amt < 0):
+            raise SystemExit("size.amount_jpy は非負の有限数で指定してください")
 
     rec = {"type": "decision", "id": str(uuid.uuid4())[:12],
            "ts": datetime.now().astimezone().isoformat(timespec="seconds")}
@@ -103,14 +121,22 @@ def append_decision(entry: dict) -> str:
 
 
 def score_due(prices: dict, asof: str | None = None) -> dict:
-    """期日到来分を機械採点(DCA超過がhit)。未来・価格欠損・型不正はスキップ。"""
-    asof_d = _date(asof) or date.today()
+    """期日到来分を機械採点(DCA超過がhit)。未来・価格欠損・型不正・hold_reviewはスキップ。"""
+    if not isinstance(prices, dict):
+        raise SystemExit("価格データは object である必要があります")
+    if asof is None:
+        asof_d = date.today()
+    else:
+        asof_d = _date(asof)
+        if asof_d is None:
+            raise SystemExit(f"asof は実在する 'YYYY-MM-DD' で指定してください: {asof}")
+
     log = _read_log()
     decisions = {r["id"]: r for r in log if r.get("type") == "decision"}
     already = {r["id"] for r in log if r.get("type") == "outcome"}
     scored, pending_future, awaiting_price = [], [], []
     for did, d in decisions.items():
-        if did in already:
+        if did in already or d.get("action") not in SCOREABLE_ACTIONS:
             continue
         hd = _date((d.get("prediction") or {}).get("horizon"))
         if hd is None or hd > asof_d:   # 未来/不正日付は採点しない(look-ahead回避)
@@ -130,7 +156,7 @@ def score_due(prices: dict, asof: str | None = None) -> dict:
         excess = ar - br
         _append({"type": "outcome", "id": did, "scored_at": asof_d.isoformat(),
                  "horizon": horizon, "asset_return": ar, "benchmark_return": br,
-                 "excess_vs_dca": excess, "hit": excess > 0})
+                 "excess_vs_dca": excess, "hit": bool(excess > 0)})
         scored.append(did)
     return {"scored": scored, "pending_future": pending_future,
             "awaiting_price": awaiting_price}

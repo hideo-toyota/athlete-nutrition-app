@@ -20,7 +20,11 @@ def load_config(path: Path | None = None) -> dict:
     for k in REQUIRED:
         if k not in cfg:
             raise SystemExit(f"config に必須キーがありません: {k}")
+    if not isinstance(cfg.get("policy"), dict):
+        raise SystemExit("config: policy は object である必要があります")
     sat = cfg["policy"].get("satellite", {})
+    if not isinstance(sat, dict):
+        raise SystemExit("config: policy.satellite は object である必要があります")
     for k in ("max_pct_of_total", "max_pct_per_name", "max_pct_per_sector"):
         if isinstance(sat.get(k), bool) or not isinstance(sat.get(k), (int, float)) or sat[k] <= 0:
             raise SystemExit(f"config: policy.satellite.{k} が不正(正の数値)")

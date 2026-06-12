@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import math
+from datetime import date
 
 from .data import load_index
 
@@ -33,7 +34,9 @@ def _asof_tuple(s):
         d = int(parts[2]) if len(parts) > 2 else 1
     except (ValueError, IndexError):
         return None
-    if not (1 <= m <= 12 and 1 <= d <= 31):
+    try:
+        date(y, m, d)  # 実在日のみ(2026-02-31 / year0 は弾く)
+    except ValueError:
         return None
     return (y, m, d)
 
@@ -86,6 +89,13 @@ def look_through(portfolio: dict, cfg: dict) -> dict:
             cw = idx.get("currency_weights", {})
             top = idx.get("top_holdings", {})
             idx_as_of = idx.get("as_of")
+            for label, wd in (("sector_weights", sw), ("region_weights", rw),
+                              ("currency_weights", cw), ("top_holdings", top)):
+                if not isinstance(wd, dict):
+                    raise SystemExit(f"指数 {ref} の {label} は object である必要があります")
+                for kk, w in wd.items():
+                    if not (isinstance(w, (int, float)) and not isinstance(w, bool) and math.isfinite(w)):
+                        raise SystemExit(f"指数 {ref} の {label}[{kk}] が有限な数値でない: {w!r}")
             index_meta.append({"ref": ref, "as_of": idx_as_of,
                                "sector_sum": sum(sw.values()),
                                "region_sum": sum(rw.values()),

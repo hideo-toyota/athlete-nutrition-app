@@ -173,6 +173,8 @@ def check(portfolio: dict, cfg: dict, action_str: str) -> dict:
             notes.append(f"方針は日本企業(中小型)。{tk} は universe(JP_individual)外の可能性")
 
     elif verb in ("trim", "sell", "exit"):
+        if not tk:
+            raise SystemExit(f"{verb} には ticker が必要です(例: `exit 7203`)")
         if amt is not None or flags:
             notes.append("trim/exit では金額・フラグは判定に未使用(注記のみ)")
         notes.append("リスクを下げる方向。売り基準は『仮説崩壊 / 上限超のトリム / 資金需要』のいずれかか?")

@@ -20,4 +20,4 @@ model: sonnet
 ## 原則
 - 真実は `decision_log.jsonl`(**追記専用**)。decision も outcome も**別行で追記**し、過去行は**改変しない**(後知恵を殺す)。
 - 結果は機械が採点(DCA超過がhit)。人は結果行を触らない。
-- 見送り(pass)も予測つきで記録する。人が読む用に Obsidian へエクスポート(原則6)。
+- 見送り(pass)も予測つきで記録する。`review` は `outputs/journal_review.md` を生成(Obsidian保管庫への取り込みは手動/今後)。

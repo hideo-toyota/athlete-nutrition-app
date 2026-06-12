@@ -15,7 +15,7 @@ ai-business-radar/
 │   ├── discipline.py      # check() -> Verdict(純粋)
 │   ├── journal.py         # append / score_due(asof) / review()(追記専用)
 │   └── report.py          # render()(freshness/uncertainty/two-sided 強制)
-├── radar.py               # CLI: mirror / check / log / score / review
+├── radar/__main__.py      # CLI: python3 -m radar {mirror|check|log|score|review}
 ├── config.json            # 宣言的設定(SPEC §1.1)
 ├── portfolio.json         # 保有=真実(SPEC §1.2)
 ├── indices/*.json         # 指数構成(手入力概算 / D1)
@@ -55,8 +55,8 @@ ai-business-radar/
 - **検証**:追記専用の不変条件。score が判断日時点の価格のみ使用(look-ahead無し)。
 
 ### Phase 4 — `review`(過程>結果の較正)
-- `journal.review() -> Calibration`:`hit_rate / brier_like / excess_vs_dca / override_vs_discipline`。
-- CLI:`review` → `outputs/journal_review.md` + Obsidianエクスポート(D6)。
+- `journal.review() -> Calibration`:`n_decisions / n_scored / hit_rate / avg_excess_vs_dca / 規律内 vs override 別`。
+- CLI:`review` → `outputs/journal_review.md`(Obsidian保管庫への取り込みは手動/今後)。
 - **DoD**:十分なログがあれば「裁量はDCAに勝てているか」を提示。少なければ「サンプル不足・判断保留」と正直に表示(原則3)。
 
 ### 後段(MVP外)

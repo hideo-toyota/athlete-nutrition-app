@@ -147,7 +147,7 @@
 
 - `Exposure`: `{ by_name, by_sector, by_region, by_currency, individual_stock_pct, satellite_cap_status }`(direct + 指数look-through合算)。
 - `Verdict`: `{ ok: bool, breaches: [rule], notes }`(例: `over_cap`, `chase`, `sector_concentration`, `averaging_down_blocked`)。
-- `Calibration`: `{ n, hit_rate, brier_like, excess_vs_dca, override_vs_discipline }`(過程>結果)。
+- `Calibration`: `{ n_decisions, n_scored, hit_rate, avg_excess_vs_dca, by_discipline(in_discipline/override) }`(過程>結果)。
 
 ---
 
@@ -178,7 +178,7 @@
 - **D3 1銘柄上限**: 総資産比 **2.5%**。✅
 - **D4 セクター上限(サテライト内)**: **5%**(look-throughの合算は mirror で“表示”)。✅
 - **D5 採点の“当たり”**: 期日で **DCAインデックス超過**を hit。✅
-- **D6 decision_log**: **JSONLを真実 + Obsidianへエクスポート**。✅
+- **D6 decision_log**: **JSONLを真実**(Obsidian保管庫への取り込みは手動/今後)。✅
 - **D7 MVP順序**: **mirror → check → log/score → review**(analyze/backtest は後)。✅
 - **D8 既存コード**: **spike(`spike/` へ退避・参照のみ)、SPECから作り直し**。✅
 - **D9 サテライト対象(本日決定)**: **財務分析可能な日本企業**(中小型=低カバレッジ優先=エッジ②の棲む場所/米・USD集中の分散)。データ源=**J-Quants**。✅
