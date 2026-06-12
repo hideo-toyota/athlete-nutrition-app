@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import argparse
 import csv as csv_module
-from pathlib import Path
-
 import json
+import re
+from datetime import date
+from pathlib import Path
 
 from .concentration import look_through
 from .config import load_config
@@ -18,13 +19,26 @@ ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS = ROOT / "outputs"
 
 
-def cmd_mirror() -> None:
+def _valid_asof(asof: str | None) -> str | None:
+    if asof is None:
+        return None
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", asof):
+        raise SystemExit(f"--asof は 'YYYY-MM-DD' で指定してください: {asof}")
+    try:
+        date.fromisoformat(asof)
+    except ValueError:
+        raise SystemExit(f"--asof が実在しない日付です: {asof}")
+    return asof
+
+
+def cmd_mirror(asof: str | None = None) -> None:
+    asof = _valid_asof(asof)
     cfg = load_config()
     pf = load_portfolio()
     exp = look_through(pf, cfg)
     OUTPUTS.mkdir(exist_ok=True)
     out = OUTPUTS / "honest_mirror.md"
-    out.write_text(render_mirror(exp, pf, cfg), encoding="utf-8")
+    out.write_text(render_mirror(exp, pf, cfg, asof=asof), encoding="utf-8")
     # CSV(SPEC契約: md + csv)
     lt = exp["lookthrough"]
     csv_path = OUTPUTS / "honest_mirror.csv"
@@ -76,12 +90,12 @@ def cmd_log(path: str | None) -> None:
     print(f"判断を記録しました id={did} → {journal.LOG.relative_to(ROOT)}(追記専用)")
 
 
-def cmd_score(path: str | None) -> None:
+def cmd_score(path: str | None, asof: str | None = None) -> None:
     p = Path(path) if path else (ROOT / "journal" / "prices.json")
     if not p.is_absolute():
         p = ROOT / p
     prices = _load_json(p, "価格") if p.exists() else {}
-    res = journal.score_due(prices)
+    res = journal.score_due(prices, asof=_valid_asof(asof))
     print(f"採点: 新規 {len(res['scored'])} 件 / 期日前 {len(res['pending_future'])} 件 / "
           f"価格待ち {len(res['awaiting_price'])} 件")
     if res["awaiting_price"]:
@@ -104,7 +118,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(prog="radar",
                                  description="Personal Equity Research Radar")
     sub = ap.add_subparsers(dest="command")
-    sub.add_parser("mirror", help="正直な集中度レポート(look-through)")
+    pm = sub.add_parser("mirror", help="正直な集中度レポート(look-through)")
+    pm.add_argument("--asof", help="基準日 YYYY-MM-DD(固定すると出力が再現可能)")
     pc = sub.add_parser("check", help='規律チェック。例: check buy 7203 100000 Financials [--overheated]')
     pc.add_argument("action", nargs=argparse.REMAINDER,
                     help='行動: buy/add/trim/exit <ticker> <金額> [sector] [--overheated --thesis-intact --powder]')
@@ -112,11 +127,12 @@ def main() -> None:
     pl.add_argument("path", nargs="?", help="判断JSON(既定: journal/decision_input.json)")
     ps = sub.add_parser("score", help="期日到来分をDCA比で機械採点(未来不参照)")
     ps.add_argument("path", nargs="?", help="価格JSON(既定: journal/prices.json)")
+    ps.add_argument("--asof", help="採点基準日 YYYY-MM-DD(既定: 今日)。過去固定で監査再現可能")
     sub.add_parser("review", help="較正レポート(裁量 vs 規律 / 対DCA)")
     args = ap.parse_args()
 
     if args.command == "mirror":
-        cmd_mirror()
+        cmd_mirror(args.asof)
     elif args.command == "check":
         if not args.action:
             raise SystemExit('例: python3 -m radar check buy 7203 100000 Financials')
@@ -124,7 +140,7 @@ def main() -> None:
     elif args.command == "log":
         cmd_log(args.path)
     elif args.command == "score":
-        cmd_score(args.path)
+        cmd_score(args.path, args.asof)
     elif args.command == "review":
         cmd_review()
     else:

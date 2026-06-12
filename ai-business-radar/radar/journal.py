@@ -21,7 +21,7 @@ LOG = ROOT / "decision_log.jsonl"
 
 DECISION_FIELDS = ("ticker", "account", "action", "rationale", "prediction",
                    "vs_discipline", "override_reason", "size", "ref_price",
-                   "benchmark_ref", "emotion_note")
+                   "benchmark_ref", "emotion_note", "sources", "retrieved_at")
 VALID_ACTIONS = {"buy_new", "add", "trim", "exit", "pass", "hold_review"}
 SCOREABLE_ACTIONS = {"buy_new", "add", "trim", "exit", "pass"}  # hold_review は採点しない
 VALID_DISCIPLINE = {"in_discipline", "override"}
@@ -110,6 +110,13 @@ def append_decision(entry: dict) -> str:
         amt = size.get("amount_jpy")
         if amt is not None and (not _finite(amt) or amt < 0):
             raise SystemExit("size.amount_jpy は非負の有限数で指定してください")
+    # 監査証跡(任意だが推奨): どの出典を・いつ取得して判断したか
+    src = entry.get("sources")
+    if src is not None and not isinstance(src, list):
+        raise SystemExit("sources は配列(出典URL/名のリスト)である必要があります")
+    ra = entry.get("retrieved_at")
+    if ra is not None and not (isinstance(ra, str) and ra.strip()):
+        raise SystemExit("retrieved_at は非空の文字列(ISO日時)である必要があります")
 
     rec = {"type": "decision", "id": str(uuid.uuid4())[:12],
            "ts": datetime.now().astimezone().isoformat(timespec="seconds")}

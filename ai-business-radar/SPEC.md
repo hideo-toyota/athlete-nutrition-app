@@ -117,7 +117,9 @@
   "override_reason": "規律を破る理由(overrideなら必須)",   // 原則2
   "size": { "amount_jpy": 0 },
   "ref_price": 0, "benchmark_ref": 0,                      // 採点の基準(hold_review以外は必須)
-  "emotion_note": "任意(較正用)"
+  "emotion_note": "任意(較正用)",
+  "sources": ["出典URL/名 ..."],                          // 任意・監査証跡(何を根拠にしたか)
+  "retrieved_at": "ISO日時"                               // 任意・監査証跡(いつ取得したか)
 }
 // outcome 行(score が別行で追記。decision行は改変しない)
 {
@@ -166,7 +168,8 @@
 
 ## 4. 不変条件(原則6)
 - **未来を見ない**: 時系列計算は `asof` のみ。`score` も判断日時点で入手可能な情報だけで採点。
-- **ファイル=真実**: 状態は JSON/JSONL/MD/CSV。**二度実行で同一出力**。
+- **ファイル=真実 / 再現可能**: 状態は JSON/JSONL/MD/CSV。**二度実行で同一出力**。
+  時刻依存を排し監査再現するため、`mirror --asof` / `score --asof` で**基準日を固定**できる(既定は今日)。
 - **宣言的**: 規律・方針・配分は `config.json`。挙動変更はコードでなく設定で。
 - **依存最小**: 標準ライブラリ中心・ローカル完結。
 

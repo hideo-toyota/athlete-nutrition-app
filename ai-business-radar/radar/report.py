@@ -87,11 +87,12 @@ def _table(col: str, d: dict, top: int | None = None) -> str:
     return "\n".join(lines)
 
 
-def render_mirror(exp: dict, portfolio: dict, cfg: dict) -> str:
+def render_mirror(exp: dict, portfolio: dict, cfg: dict, asof: str | None = None) -> str:
     as_of = portfolio.get("as_of", "?")
     staleness_days = cfg.get("policy", {}).get("discipline", {}).get("staleness_days", 5)
+    ref = date.fromisoformat(asof) if asof else date.today()
     try:
-        age = (date.today() - date.fromisoformat(as_of)).days
+        age = (ref - date.fromisoformat(as_of)).days
     except ValueError:
         age = None
     stale = age is not None and age > staleness_days

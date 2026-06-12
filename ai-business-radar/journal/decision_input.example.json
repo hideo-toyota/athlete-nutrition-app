@@ -15,5 +15,7 @@
   "size": { "amount_jpy": 100000 },
   "ref_price": 2800,
   "benchmark_ref": 67000,
-  "emotion_note": "今の心理状態(冷静か/高揚か)"
+  "emotion_note": "今の心理状態(冷静か/高揚か)",
+  "sources": ["決算短信 2026Q1(URL)", "market-pulse 取得ニュース(URL)"],
+  "retrieved_at": "2026-06-12T09:00:00+09:00"
 }
