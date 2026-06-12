@@ -58,13 +58,20 @@ def cmd_check(action_tokens: list[str]) -> None:
         print(f"  ⚠️ {w}")
 
 
+def _load_json(p: Path, what: str) -> dict:
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise SystemExit(f"{what} の JSON が不正です({p}): {e}")
+
+
 def cmd_log(path: str | None) -> None:
     p = Path(path) if path else (ROOT / "journal" / "decision_input.json")
     if not p.is_absolute():
         p = ROOT / p
     if not p.exists():
         raise SystemExit(f"判断入力が見つかりません: {p}(journal/decision_input.example.json を参照)")
-    entry = json.loads(p.read_text(encoding="utf-8"))
+    entry = _load_json(p, "判断入力")
     did = journal.append_decision(entry)
     print(f"判断を記録しました id={did} → {journal.LOG.relative_to(ROOT)}(追記専用)")
 
@@ -73,7 +80,7 @@ def cmd_score(path: str | None) -> None:
     p = Path(path) if path else (ROOT / "journal" / "prices.json")
     if not p.is_absolute():
         p = ROOT / p
-    prices = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+    prices = _load_json(p, "価格") if p.exists() else {}
     res = journal.score_due(prices)
     print(f"採点: 新規 {len(res['scored'])} 件 / 期日前 {len(res['pending_future'])} 件 / "
           f"価格待ち {len(res['awaiting_price'])} 件")

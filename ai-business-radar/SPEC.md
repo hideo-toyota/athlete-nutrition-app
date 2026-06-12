@@ -101,20 +101,29 @@
 }
 ```
 
-### 1.5 `decision_log.jsonl`(追記専用・心臓 / 原則2・5)
-**不変条件**: 1行=1判断、**追記のみ・編集/削除不可**。`prediction` は結果が出る前に書く。`outcome` は**期日にツールが機械記入**(人は触らない)。**見送り(pass)も記録**(後知恵対策)。
+### 1.5 `decision_log.jsonl`(追記専用・イベントソース・心臓 / 原則2・5)
+**不変条件**: 1行=1イベント、**追記のみ・既存行は編集/削除しない**。`prediction` は結果が出る前に書く。
+**outcome は別フィールドで後埋めせず、別行(type=outcome)として追記**する(=履歴不変・後知恵防止。実装の改良)。
+**見送り(pass)も記録**(後知恵対策)。`horizon` は実在の `YYYY-MM-DD`。
 ```jsonc
+// decision 行
 {
-  "id": "uuid", "ts": "ISO8601(書込時刻=固定)",
-  "ticker": "NVDA", "account": "self_nisa_growth",
-  "action": "buy_new|add|trim|exit|pass|hold_review|override",
+  "type": "decision", "id": "短縮uuid", "ts": "ISO8601(tz付・固定)",
+  "ticker": "7203", "account": "self_nisa_growth",
+  "action": "buy_new|add|trim|exit|pass|hold_review",   // override は action でなく vs_discipline で表す
   "rationale": "...",
   "prediction": { "claim": "...", "metric": "...", "threshold": "...", "horizon": "YYYY-MM-DD" },
   "vs_discipline": "in_discipline|override",
   "override_reason": "規律を破る理由(overrideなら必須)",   // 原則2
-  "size": { "amount_jpy": 0, "resulting_total_pct": 0, "within_cap": true },
-  "emotion_note": "任意(較正用の心理状態)",
-  "outcome": null   // 後でツールが {scored_at, realized_return, benchmark_return, excess_vs_dca, hit:bool, thesis_status} を機械記入
+  "size": { "amount_jpy": 0 },
+  "ref_price": 0, "benchmark_ref": 0,                      // 採点の基準(hold_review以外は必須)
+  "emotion_note": "任意(較正用)"
+}
+// outcome 行(score が別行で追記。decision行は改変しない)
+{
+  "type": "outcome", "id": "対応するdecisionのid", "scored_at": "YYYY-MM-DD",
+  "horizon": "YYYY-MM-DD", "asset_return": 0.0, "benchmark_return": 0.0,
+  "excess_vs_dca": 0.0, "hit": true
 }
 ```
 

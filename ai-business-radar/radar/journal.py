@@ -1,10 +1,11 @@
 """判断ログ(閉ループの心臓 / 原則2・5・6)。
 
-decision_log.jsonl は**追記専用**。1行=1イベント:
+decision_log.jsonl は**追記専用・イベントソース**。1行=1イベント:
   - type=decision : 反証可能な予測つきの判断(override は理由必須、見送りも記録)
   - type=outcome  : 期日後にツールが機械採点した結果(DCAインデックス超過が hit)
 履歴は決して書き換えない。outcome も「別行」で追記する(後知恵の防止)。
-score は horizon <= asof かつ記録済み価格のみを使う(未来データ不参照)。
+score は horizon <= asof(厳密な日付)かつ記録済み価格のみを使う(未来データ不参照)。
+ログ品質=閉ループ品質なので、入力検証と破損検知を厳格に行う。
 """
 from __future__ import annotations
 
@@ -21,20 +22,43 @@ DECISION_FIELDS = ("ticker", "account", "action", "rationale", "prediction",
                    "vs_discipline", "override_reason", "size", "ref_price",
                    "benchmark_ref", "emotion_note")
 VALID_ACTIONS = {"buy_new", "add", "trim", "exit", "pass", "hold_review"}
+VALID_DISCIPLINE = {"in_discipline", "override"}
+
+
+def _finite(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def _date(s):
+    """厳密に YYYY-MM-DD のみ受理。それ以外は None(部分日付・不正日付を弾く)。"""
+    try:
+        return date.fromisoformat(str(s))
+    except (ValueError, TypeError):
+        return None
 
 
 def _read_log() -> list[dict]:
+    """追記専用ログを読む。破損行は黙殺せず停止(ファイル=真実)。"""
     if not LOG.exists():
         return []
     out = []
-    for ln in LOG.read_text(encoding="utf-8").splitlines():
+    for i, ln in enumerate(LOG.read_text(encoding="utf-8").splitlines(), 1):
         ln = ln.strip()
         if not ln:
             continue
         try:
-            out.append(json.loads(ln))
+            rec = json.loads(ln)
         except json.JSONDecodeError:
-            continue
+            raise SystemExit(f"decision_log.jsonl の {i} 行目が壊れています(JSON不正)。手で修復を。")
+        if not isinstance(rec, dict) or "type" not in rec:
+            raise SystemExit(f"decision_log.jsonl の {i} 行目に type がありません")
+        if rec["type"] == "outcome":
+            for k in ("id", "excess_vs_dca", "hit"):
+                if k not in rec:
+                    raise SystemExit(f"decision_log.jsonl の {i} 行目(outcome)に {k} がありません")
+        elif rec["type"] == "decision" and "id" not in rec:
+            raise SystemExit(f"decision_log.jsonl の {i} 行目(decision)に id がありません")
+        out.append(rec)
     return out
 
 
@@ -43,32 +67,44 @@ def _append(obj: dict) -> None:
         f.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
 
-def _finite(v):
-    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
-
-
 def append_decision(entry: dict) -> str:
-    """判断を1行追記する。反証可能な予測が無ければ拒否。"""
+    """判断を1行追記する。品質検証(予測・必須項目・型)を満たさなければ拒否。"""
     action = entry.get("action")
     if action not in VALID_ACTIONS:
         raise SystemExit(f"action が不正: {action}(許容: {sorted(VALID_ACTIONS)})")
+    for k in ("ticker", "rationale"):
+        if not entry.get(k):
+            raise SystemExit(f"{k} は必須です")
     pred = entry.get("prediction") or {}
-    if not pred.get("claim") or not pred.get("horizon"):
-        raise SystemExit("prediction.claim と prediction.horizon は必須"
-                         "(反証可能な予測が無い判断は記録しない=原則3/5)")
-    if entry.get("vs_discipline") == "override" and not entry.get("override_reason"):
+    if not pred.get("claim"):
+        raise SystemExit("prediction.claim は必須(反証可能な予測が無い判断は記録しない)")
+    if not _date(pred.get("horizon")):
+        raise SystemExit("prediction.horizon は実在する YYYY-MM-DD で必須")
+    vs = entry.get("vs_discipline") or "in_discipline"
+    if vs not in VALID_DISCIPLINE:
+        raise SystemExit(f"vs_discipline が不正: {vs}(許容: {sorted(VALID_DISCIPLINE)})")
+    if vs == "override" and not entry.get("override_reason"):
         raise SystemExit("vs_discipline=override の場合は override_reason が必須(原則2)")
-    rec = {"type": "decision", "id": str(uuid.uuid4())[:8],
-           "ts": datetime.now().isoformat(timespec="seconds")}
+    if action != "hold_review":
+        for k in ("ref_price", "benchmark_ref"):
+            if not _finite(entry.get(k)):
+                raise SystemExit(f"{k} は有限の数値で必須(採点に必要)")
+    size = entry.get("size") or {}
+    if size.get("amount_jpy") is not None and not _finite(size.get("amount_jpy")):
+        raise SystemExit("size.amount_jpy が不正(有限の数値)")
+
+    rec = {"type": "decision", "id": str(uuid.uuid4())[:12],
+           "ts": datetime.now().astimezone().isoformat(timespec="seconds")}
     for k in DECISION_FIELDS:
         rec[k] = entry.get(k)
+    rec["vs_discipline"] = vs
     _append(rec)
     return rec["id"]
 
 
 def score_due(prices: dict, asof: str | None = None) -> dict:
-    """期日到来分を機械採点(DCA超過がhit)。未来・価格欠損はスキップ。"""
-    asof = asof or date.today().isoformat()
+    """期日到来分を機械採点(DCA超過がhit)。未来・価格欠損・型不正はスキップ。"""
+    asof_d = _date(asof) or date.today()
     log = _read_log()
     decisions = {r["id"]: r for r in log if r.get("type") == "decision"}
     already = {r["id"] for r in log if r.get("type") == "outcome"}
@@ -76,20 +112,24 @@ def score_due(prices: dict, asof: str | None = None) -> dict:
     for did, d in decisions.items():
         if did in already:
             continue
-        horizon = (d.get("prediction") or {}).get("horizon")
-        if not horizon or str(horizon) > asof:   # 未来は採点しない(look-ahead回避)
+        hd = _date((d.get("prediction") or {}).get("horizon"))
+        if hd is None or hd > asof_d:   # 未来/不正日付は採点しない(look-ahead回避)
             pending_future.append(did)
             continue
+        horizon = (d.get("prediction") or {}).get("horizon")
         tk, ref, bref = d.get("ticker"), d.get("ref_price"), d.get("benchmark_ref")
-        hp = (prices.get(tk) or {}).get(horizon)
-        bhp = (prices.get("BENCHMARK") or {}).get(horizon)
+        tkp, bp = prices.get(tk), prices.get("BENCHMARK")
+        if not isinstance(tkp, dict) or not isinstance(bp, dict):
+            awaiting_price.append(did)
+            continue
+        hp, bhp = tkp.get(horizon), bp.get(horizon)
         if not all(_finite(x) for x in (ref, bref, hp, bhp)) or ref == 0 or bref == 0:
             awaiting_price.append(did)
             continue
         ar, br = hp / ref - 1, bhp / bref - 1
         excess = ar - br
-        _append({"type": "outcome", "id": did, "scored_at": asof, "horizon": horizon,
-                 "asset_return": ar, "benchmark_return": br,
+        _append({"type": "outcome", "id": did, "scored_at": asof_d.isoformat(),
+                 "horizon": horizon, "asset_return": ar, "benchmark_return": br,
                  "excess_vs_dca": excess, "hit": excess > 0})
         scored.append(did)
     return {"scored": scored, "pending_future": pending_future,
@@ -109,7 +149,7 @@ def review() -> dict:
 
     def agg(pairs):
         ex = [o["excess_vs_dca"] for _, o in pairs]
-        hits = [o["hit"] for _, o in pairs]
+        hits = [bool(o["hit"]) for _, o in pairs]
         return {"n": len(pairs),
                 "hit_rate": (sum(hits) / len(hits)) if hits else None,
                 "avg_excess_vs_dca": _mean(ex)}
@@ -119,5 +159,4 @@ def review() -> dict:
         by_disc[label] = agg([(d, o) for d, o in scored
                               if (d.get("vs_discipline") or "in_discipline") == label])
     return {"n_decisions": len(decisions), "n_scored": len(scored),
-            "overall": agg(scored), "by_discipline": by_disc,
-            "scored_pairs": scored}
+            "overall": agg(scored), "by_discipline": by_disc, "scored_pairs": scored}
