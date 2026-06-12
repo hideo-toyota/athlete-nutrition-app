@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -35,26 +36,37 @@ def _thesis_sector(ticker: str | None) -> str | None:
 
 
 def _num(v):
-    """市場価値などの数値フィールドを安全に取り出す。不正なら None。"""
+    """数値フィールドを安全に取り出す。bool/非数値/非有限(nan,inf)は None。"""
     if isinstance(v, bool):
         return None
-    return v if isinstance(v, (int, float)) else None
+    if isinstance(v, (int, float)):
+        return v if math.isfinite(v) else None
+    return None
 
 
 def _satellite_state(portfolio: dict):
+    """総額と、個別株の銘柄別・セクター別集計を返す。同一tickerが複数口座にあれば合算。"""
     total = 0.0
     names: dict = {}
     sectors: dict = {}
     for h in portfolio.get("holdings", []):
         mv = _num(h.get("market_value_jpy"))
         if mv is None:
-            raise SystemExit(f"portfolio: market_value_jpy が数値でない: {h.get('ticker')}")
+            raise SystemExit(f"portfolio: market_value_jpy が有限な数値でない: {h.get('ticker')}")
+        if mv < 0:
+            raise SystemExit(f"portfolio: market_value_jpy が負: {h.get('ticker')}")
         total += mv
         if h.get("kind") == "individual_stock":
             tk = h.get("ticker", "?")
-            names[tk] = {"value": mv, "sector": h.get("sector", "unknown"),
-                         "cost": _num(h.get("cost_basis_jpy"))}
-            sectors[h.get("sector", "unknown")] = sectors.get(h.get("sector", "unknown"), 0) + mv
+            sec = h.get("sector", "unknown")
+            cost = _num(h.get("cost_basis_jpy"))
+            if tk in names:  # 複数口座の同一銘柄を合算
+                e = names[tk]
+                e["value"] += mv
+                e["cost"] = (e["cost"] + cost) if (e["cost"] is not None and cost is not None) else None
+            else:
+                names[tk] = {"value": mv, "sector": sec, "cost": cost}
+            sectors[sec] = sectors.get(sec, 0) + mv
     return total, names, sectors
 
 
@@ -102,8 +114,8 @@ def check(portfolio: dict, cfg: dict, action_str: str) -> dict:
     if verb in ("buy", "add"):
         if amt is None:
             raise SystemExit("金額を指定: 例 `buy 7203 100000 Financials`")
-        if amt <= 0:
-            raise SystemExit(f"金額は正の数で指定してください: {amt}")
+        if not math.isfinite(amt) or amt <= 0:
+            raise SystemExit(f"金額は有限の正の数で指定してください: {amt}")
         if total <= 0:
             raise SystemExit("ポートフォリオ総額が 0 以下です(portfolio を確認)")
 
@@ -161,6 +173,8 @@ def check(portfolio: dict, cfg: dict, action_str: str) -> dict:
             notes.append(f"方針は日本企業(中小型)。{tk} は universe(JP_individual)外の可能性")
 
     elif verb in ("trim", "sell", "exit"):
+        if amt is not None or flags:
+            notes.append("trim/exit では金額・フラグは判定に未使用(注記のみ)")
         notes.append("リスクを下げる方向。売り基準は『仮説崩壊 / 上限超のトリム / 資金需要』のいずれかか?")
         if cur and cur.get("cost") and cur["value"] > cur["cost"]:
             notes.append("勝ち銘柄の売却 → 失敗d(早すぎる利確)に注意。"

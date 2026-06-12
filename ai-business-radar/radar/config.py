@@ -22,6 +22,14 @@ def load_config(path: Path | None = None) -> dict:
             raise SystemExit(f"config に必須キーがありません: {k}")
     sat = cfg["policy"].get("satellite", {})
     for k in ("max_pct_of_total", "max_pct_per_name", "max_pct_per_sector"):
-        if not isinstance(sat.get(k), (int, float)) or sat[k] <= 0:
-            raise SystemExit(f"config: policy.satellite.{k} が不正")
+        if isinstance(sat.get(k), bool) or not isinstance(sat.get(k), (int, float)) or sat[k] <= 0:
+            raise SystemExit(f"config: policy.satellite.{k} が不正(正の数値)")
+    disc = cfg["policy"].get("discipline", {})
+    if not isinstance(disc, dict):
+        raise SystemExit("config: policy.discipline は object であるべき")
+    for k in ("chase_unrealized_pct", "averaging_down_pct", "staleness_days"):
+        if k in disc and (isinstance(disc[k], bool) or not isinstance(disc[k], (int, float))):
+            raise SystemExit(f"config: policy.discipline.{k} が数値でない")
+    if isinstance(disc.get("staleness_days"), (int, float)) and disc["staleness_days"] < 0:
+        raise SystemExit("config: policy.discipline.staleness_days は非負")
     return cfg

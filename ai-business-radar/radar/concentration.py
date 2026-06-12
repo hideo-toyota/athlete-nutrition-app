@@ -5,6 +5,8 @@
 """
 from __future__ import annotations
 
+import math
+
 from .data import load_index
 
 
@@ -15,21 +17,25 @@ def _add(d: dict, k: str, v: float) -> None:
 def _num(v):
     if isinstance(v, bool):
         return None
-    return v if isinstance(v, (int, float)) else None
+    if isinstance(v, (int, float)):
+        return v if math.isfinite(v) else None
+    return None
 
 
 def _asof_tuple(s):
-    """'2026-06-06' / '2026-06' / '2026' を比較可能な (y,m,d) に。粒度欠落は月初/年初扱い。"""
+    """'2026-06-06' / '2026/06' / '2026' を比較可能な (y,m,d) に。不正値は None。"""
     if not s:
         return None
-    parts = str(s).split("-")
+    parts = str(s).replace("/", "-").split("-")
     try:
         y = int(parts[0])
         m = int(parts[1]) if len(parts) > 1 else 1
         d = int(parts[2]) if len(parts) > 2 else 1
-        return (y, m, d)
     except (ValueError, IndexError):
         return None
+    if not (1 <= m <= 12 and 1 <= d <= 31):
+        return None
+    return (y, m, d)
 
 
 def look_through(portfolio: dict, cfg: dict) -> dict:
@@ -39,7 +45,9 @@ def look_through(portfolio: dict, cfg: dict) -> dict:
     for h in holdings:
         mv = _num(h.get("market_value_jpy"))
         if mv is None:
-            raise SystemExit(f"portfolio: market_value_jpy が数値でない: {h.get('ticker')}")
+            raise SystemExit(f"portfolio: market_value_jpy が有限な数値でない: {h.get('ticker')}")
+        if mv < 0:
+            raise SystemExit(f"portfolio: market_value_jpy が負: {h.get('ticker')}")
         total += mv
     if total <= 0:
         raise SystemExit("ポートフォリオ総額が 0 以下です")
@@ -87,11 +95,18 @@ def look_through(portfolio: dict, cfg: dict) -> dict:
             if it and pt and it > pt:
                 data_warnings.append(
                     f"指数 {ref} の as_of({idx_as_of})がポートフォリオ as_of({port_as_of})より新しい(未来データの可能性)")
+            if idx_as_of and it is None:
+                data_warnings.append(f"指数 {ref} の as_of '{idx_as_of}' が解釈不能(鮮度を確認できない)")
+            if not sw and not rw and not cw and not top:
+                data_warnings.append(f"指数 {ref} の構成が空(look-through できない)")
             for label, s in (("セクター", sum(sw.values())), ("地域", sum(rw.values())),
                              ("通貨", sum(cw.values()))):
                 if s and abs(s - 1.0) > 0.05:
                     data_warnings.append(f"指数 {ref} の{label}ウェイト合計が {s:.2f}(≠1.0)")
-            if sum(top.values()) > 1.05:
+            for label, d in (("セクター", sw), ("地域", rw), ("通貨", cw), ("上位銘柄", top)):
+                if any((w is None) or (isinstance(w, (int, float)) and w < 0) for w in d.values()):
+                    data_warnings.append(f"指数 {ref} の{label}に負/不正なウェイトがある")
+            if sum(v for v in top.values() if isinstance(v, (int, float))) > 1.001:
                 data_warnings.append(
                     f"指数 {ref} の上位銘柄ウェイト合計が {sum(top.values()):.2f}(>1)→ 銘柄別exposureが過大の恐れ")
             for tk, w in top.items():
