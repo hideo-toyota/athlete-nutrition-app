@@ -12,24 +12,36 @@ def _add(d: dict, k: str, v: float) -> None:
     d[k] = d.get(k, 0.0) + v
 
 
+def _num(v):
+    if isinstance(v, bool):
+        return None
+    return v if isinstance(v, (int, float)) else None
+
+
 def look_through(portfolio: dict, cfg: dict) -> dict:
     holdings = portfolio.get("holdings", [])
-    total = sum(h.get("market_value_jpy", 0) for h in holdings)
+    port_as_of = portfolio.get("as_of")
+    total = 0.0
+    for h in holdings:
+        mv = _num(h.get("market_value_jpy"))
+        if mv is None:
+            raise SystemExit(f"portfolio: market_value_jpy が数値でない: {h.get('ticker')}")
+        total += mv
     if total <= 0:
-        raise SystemExit("ポートフォリオ総額が 0 です")
+        raise SystemExit("ポートフォリオ総額が 0 以下です")
 
     by_name: dict = {}
     by_sector: dict = {}
     by_region: dict = {}
     by_currency: dict = {}
-
-    # direct な個別株(=サテライト)。上限チェックはここに効かせる。
     sat_by_name: dict = {}
     sat_by_sector: dict = {}
     individual_total = 0.0
+    index_meta: list = []
+    data_warnings: list = []
 
     for h in holdings:
-        mv = h.get("market_value_jpy", 0)
+        mv = _num(h.get("market_value_jpy")) or 0
         kind = h.get("kind")
         if kind == "individual_stock":
             individual_total += mv
@@ -44,17 +56,34 @@ def look_through(portfolio: dict, cfg: dict) -> dict:
             if not ref:
                 _add(by_sector, "指数(構成不明)", mv)
                 _add(by_currency, h.get("currency", "JPY"), mv)
+                data_warnings.append(f"{h.get('ticker')}: 指数構成(composition_ref)が無く、look-through できない")
                 continue
             idx = load_index(ref)
+            sw = idx.get("sector_weights", {})
+            rw = idx.get("region_weights", {})
+            cw = idx.get("currency_weights", {})
             top = idx.get("top_holdings", {})
+            idx_as_of = idx.get("as_of")
+            index_meta.append({"ref": ref, "as_of": idx_as_of,
+                               "sector_sum": sum(sw.values()),
+                               "region_sum": sum(rw.values()),
+                               "currency_sum": sum(cw.values()),
+                               "top_sum": sum(top.values())})
+            if idx_as_of and port_as_of and str(idx_as_of) > str(port_as_of):
+                data_warnings.append(
+                    f"指数 {ref} の as_of({idx_as_of})がポートフォリオ as_of({port_as_of})より新しい(未来データの可能性)")
+            for label, s in (("セクター", sum(sw.values())), ("地域", sum(rw.values())),
+                             ("通貨", sum(cw.values()))):
+                if s and abs(s - 1.0) > 0.05:
+                    data_warnings.append(f"指数 {ref} の{label}ウェイト合計が {s:.2f}(≠1.0)")
             for tk, w in top.items():
                 _add(by_name, tk, mv * w)
             _add(by_name, "その他(指数・分散)", mv * max(0.0, 1 - sum(top.values())))
-            for sec, w in idx.get("sector_weights", {}).items():
+            for sec, w in sw.items():
                 _add(by_sector, sec, mv * w)
-            for reg, w in idx.get("region_weights", {}).items():
+            for reg, w in rw.items():
                 _add(by_region, reg, mv * w)
-            for cur, w in idx.get("currency_weights", {}).items():
+            for cur, w in cw.items():
                 _add(by_currency, cur, mv * w)
         else:  # cash 等
             _add(by_currency, h.get("currency", "JPY"), mv)
@@ -73,6 +102,9 @@ def look_through(portfolio: dict, cfg: dict) -> dict:
 
     return {
         "total_jpy": total,
+        "port_as_of": port_as_of,
+        "index_meta": index_meta,
+        "data_warnings": data_warnings,
         "lookthrough": {
             "by_sector": pct(by_sector),
             "by_region": pct(by_region),

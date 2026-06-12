@@ -12,6 +12,11 @@
       "size_is_conviction_proof": true,
       "universe": "JP_individual",
       "data_source_satellite": "jquants"
+    },
+    "discipline": {
+      "chase_unrealized_pct": 0.25,
+      "averaging_down_pct": -0.25,
+      "staleness_days": 5
     }
   },
   "benchmark": { "type": "dca_index", "index_ref": "indices/acwi.json", "note": "同一CFのDCA" },

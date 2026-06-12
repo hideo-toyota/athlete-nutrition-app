@@ -1,8 +1,15 @@
 """規律エンジン(純粋)。提案された行動を、宣言的ルールに照らして判定する。
 
-ハード却下(ok=False): 1銘柄上限 / セクター上限 / 個別株合計上限の超過。
-ソフト警告: 勝ち銘柄への買い増し(a/c)、ナンピン(価格でなく仮説で判断)。
-価格APIは使わず、ポートフォリオの取得原価 vs 時価で「勝ち/負けの買い増し」を判定(ファイル=真実)。
+ハード却下(ok=False): 1銘柄上限 / セクター上限 / 個別株合計上限の超過、
+                       セクター不明(評価不能)、過熱(--overheated)、
+                       ナンピンの3条件未充足、不正な金額。
+ソフト警告: 勝ち銘柄への買い増し(a/c)。
+価格APIは使わず、取得原価 vs 時価で「勝ち/負けの買い増し」を判定(ファイル=真実)。
+過熱の自動判定は価格パイプライン実装後(Phase後段)。当面は --overheated フラグで明示。
+
+行動の文法:
+  <verb> <ticker> <amount_jpy> [sector] [--overheated] [--thesis-intact] [--powder]
+  verb = buy | add | trim | exit
 """
 from __future__ import annotations
 
@@ -10,6 +17,9 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+DEFAULT_DISCIPLINE = {"chase_unrealized_pct": 0.25, "averaging_down_pct": -0.25}
+KNOWN_FLAGS = {"--overheated", "--thesis-intact", "--powder"}
 
 
 def _thesis_sector(ticker: str | None) -> str | None:
@@ -24,22 +34,35 @@ def _thesis_sector(ticker: str | None) -> str | None:
     return None
 
 
+def _num(v):
+    """市場価値などの数値フィールドを安全に取り出す。不正なら None。"""
+    if isinstance(v, bool):
+        return None
+    return v if isinstance(v, (int, float)) else None
+
+
 def _satellite_state(portfolio: dict):
-    total = sum(h.get("market_value_jpy", 0) for h in portfolio.get("holdings", []))
+    total = 0.0
     names: dict = {}
     sectors: dict = {}
     for h in portfolio.get("holdings", []):
+        mv = _num(h.get("market_value_jpy"))
+        if mv is None:
+            raise SystemExit(f"portfolio: market_value_jpy が数値でない: {h.get('ticker')}")
+        total += mv
         if h.get("kind") == "individual_stock":
-            tk = h["ticker"]
-            mv = h.get("market_value_jpy", 0)
+            tk = h.get("ticker", "?")
             names[tk] = {"value": mv, "sector": h.get("sector", "unknown"),
-                         "cost": h.get("cost_basis_jpy")}
+                         "cost": _num(h.get("cost_basis_jpy"))}
             sectors[h.get("sector", "unknown")] = sectors.get(h.get("sector", "unknown"), 0) + mv
     return total, names, sectors
 
 
 def parse_action(s: str) -> dict:
-    parts = s.split()
+    tokens = s.split()
+    flags = {t for t in tokens if t.startswith("--")}
+    parts = [t for t in tokens if not t.startswith("--")]
+    unknown_flags = flags - KNOWN_FLAGS
     if not parts:
         raise SystemExit('行動を指定: 例 `buy 7203 100000 Financials`')
     verb = parts[0].lower()
@@ -49,32 +72,44 @@ def parse_action(s: str) -> dict:
         try:
             amount = float(parts[2])
         except ValueError:
-            amount = None
+            raise SystemExit(f"金額が数値ではありません: {parts[2]}")
     sector = parts[3] if len(parts) > 3 else None
-    return {"verb": verb, "ticker": ticker, "amount": amount, "sector": sector}
+    return {"verb": verb, "ticker": ticker, "amount": amount, "sector": sector,
+            "flags": flags, "unknown_flags": unknown_flags, "extra": parts[4:]}
 
 
 def check(portfolio: dict, cfg: dict, action_str: str) -> dict:
     sat = cfg["policy"]["satellite"]
+    disc = {**DEFAULT_DISCIPLINE, **cfg["policy"].get("discipline", {})}
     act = parse_action(action_str)
-    verb, tk, amt, sec = act["verb"], act["ticker"], act["amount"], act["sector"]
+    verb, tk, amt, sec, flags = (act["verb"], act["ticker"], act["amount"],
+                                 act["sector"], act["flags"])
     total, names, sectors = _satellite_state(portfolio)
     cur = names.get(tk)
     if cur:
         sec = cur["sector"]
     elif not sec:
-        sec = _thesis_sector(tk) or "unknown"
+        sec = _thesis_sector(tk)  # None の可能性
 
     breaches: list[str] = []
     warnings: list[str] = []
     notes: list[str] = []
+    if act["extra"]:
+        notes.append(f"余分なトークンを無視: {act['extra']}")
+    if act["unknown_flags"]:
+        notes.append(f"未知のフラグを無視: {sorted(act['unknown_flags'])}")
 
     if verb in ("buy", "add"):
         if amt is None:
-            raise SystemExit("金額を指定: 例 `buy 7203 100000`")
+            raise SystemExit("金額を指定: 例 `buy 7203 100000 Financials`")
+        if amt <= 0:
+            raise SystemExit(f"金額は正の数で指定してください: {amt}")
+        if total <= 0:
+            raise SystemExit("ポートフォリオ総額が 0 以下です(portfolio を確認)")
+
         new_total = total + amt  # 新規資金の想定(分母も増える)
         new_name = (cur["value"] if cur else 0) + amt
-        new_sector = sectors.get(sec, 0) + amt
+        new_sector = (sectors.get(sec, 0) if sec else 0) + amt
         new_individual = sum(n["value"] for n in names.values()) + amt
         name_pct = new_name / new_total * 100
         sector_pct = new_sector / new_total * 100
@@ -84,21 +119,39 @@ def check(portfolio: dict, cfg: dict, action_str: str) -> dict:
             breaches.append(f"個別株合計 {ind_pct:.1f}% > 上限 {sat['max_pct_of_total']}%")
         if name_pct > sat["max_pct_per_name"]:
             breaches.append(f"{tk} {name_pct:.1f}% > 1銘柄上限 {sat['max_pct_per_name']}%")
-        if sec == "unknown":
-            notes.append("セクター不明 → セクター上限を評価不可(thesis に sector を)")
+        # セクター不明は“評価不能のまま通す”を禁止 → 却下(Codex #7)
+        if not sec or sec == "unknown":
+            breaches.append("セクター不明 → セクター上限を評価不可。sector を指定するか thesis に記入(却下)")
         elif sector_pct > sat["max_pct_per_sector"]:
             breaches.append(f"セクター {sec} {sector_pct:.1f}% > 上限 {sat['max_pct_per_sector']}%")
 
-        # 勝ち/負けへの買い増し(取得原価 vs 時価)
-        if cur and cur.get("cost"):
-            unreal = (cur["value"] - cur["cost"]) / cur["cost"]
-            if unreal > 0.25:
-                warnings.append(f"勝ち銘柄への買い増し(含み益 +{unreal*100:.0f}%)= 失敗a/c。"
-                                "『好調だから買い増し』。確信は上限を緩めない。")
-            elif unreal < -0.25:
-                warnings.append(f"ナンピン(含み損 {unreal*100:.0f}%)= 価格でなく『仮説が無傷か』で判断。"
-                                "許容は3条件: 仮説無傷 + 上限内 + 事前に確保した余力。")
-        if not cur and sec != "unknown" and sec in sectors:
+        # 過熱(失敗a): 自動判定は後段、当面はフラグで明示 → ハード却下
+        if "--overheated" in flags:
+            breaches.append("過熱(--overheated)→ 新規/買い増しを却下(失敗a: 飛びつき)。押し目・落ち着きを待つ")
+
+        # 取得原価 vs 時価(勝ち=chase / 負け=ナンピン)
+        if cur:
+            cost = cur.get("cost")
+            if not cost:  # None または 0
+                notes.append("含み損益で判定不可(cost_basis_jpy 未記入)→ 勝ち/ナンピン判定をスキップ")
+            else:
+                unreal = (cur["value"] - cost) / cost
+                if unreal > disc["chase_unrealized_pct"]:
+                    warnings.append(f"勝ち銘柄への買い増し(含み益 +{unreal*100:.0f}%)= 失敗a/c。"
+                                    "『好調だから買い増し』。確信は上限を緩めない。")
+                elif unreal < disc["averaging_down_pct"]:
+                    # ナンピンの3条件: 仮説無傷 + 事前余力 + 上限内(上限は上の breaches で担保)
+                    ok3 = ("--thesis-intact" in flags) and ("--powder" in flags)
+                    if not ok3:
+                        breaches.append(
+                            f"ナンピン(含み損 {unreal*100:.0f}%)→ 3条件未充足で却下。"
+                            "必要: 仮説無傷(--thesis-intact)+ 事前余力(--powder)+ 上限内。"
+                            "価格でなく『仮説が無傷か』で判断。")
+                    else:
+                        warnings.append(f"ナンピン(含み損 {unreal*100:.0f}%): 3条件は申告済み。"
+                                        "最終判断は『価格』でなく『仮説』で。上限は厳守。")
+
+        if not cur and sec and sec != "unknown" and sec in sectors:
             notes.append(f"同一セクター({sec})に既存保有あり → 独立した賭けか確認")
         if sat.get("universe") == "JP_individual" and tk and not tk.isdigit():
             notes.append(f"方針は日本企業(中小型)。{tk} は universe(JP_individual)外の可能性")
@@ -107,11 +160,11 @@ def check(portfolio: dict, cfg: dict, action_str: str) -> dict:
         notes.append("リスクを下げる方向。売り基準は『仮説崩壊 / 上限超のトリム / 資金需要』のいずれかか?")
         if cur and cur.get("cost") and cur["value"] > cur["cost"]:
             notes.append("勝ち銘柄の売却 → 失敗d(早すぎる利確)に注意。"
-                         "上限超のトリムならOK、ただの利確衝動なら見送り。")
+                         "上限超のトリムなら可、ただの利確衝動なら見送り。")
         if not cur:
             notes.append(f"{tk} は現在のサテライトに無い。")
     else:
         raise SystemExit(f"未知の行動: {verb}(buy / add / trim / exit)")
 
-    return {"ok": len(breaches) == 0, "action": act, "sector_used": sec,
+    return {"ok": len(breaches) == 0, "action": act, "sector_used": sec or "unknown",
             "breaches": breaches, "warnings": warnings, "notes": notes}

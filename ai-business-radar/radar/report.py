@@ -51,11 +51,12 @@ def _table(col: str, d: dict, top: int | None = None) -> str:
 
 def render_mirror(exp: dict, portfolio: dict, cfg: dict) -> str:
     as_of = portfolio.get("as_of", "?")
+    staleness_days = cfg.get("policy", {}).get("discipline", {}).get("staleness_days", 5)
     try:
         age = (date.today() - date.fromisoformat(as_of)).days
     except ValueError:
         age = None
-    stale = age is not None and age > 5
+    stale = age is not None and age > staleness_days
     if age is None:
         age_str = "不明"
     elif age <= 0:
@@ -81,6 +82,12 @@ def render_mirror(exp: dict, portfolio: dict, cfg: dict) -> str:
     o.append("## まず:分かっていないこと(不確実)")
     o.append("- 指数の構成は **手入力の概算**(`indices/*.json`)。look-through は概算値。")
     o.append("- 時価・為替は基準日時点の手入力。リアルタイムではない。")
+    for m in exp.get("index_meta", []):
+        o.append(f"- 指数 `{m['ref']}`: 構成as_of {m.get('as_of') or '不明'} / "
+                 f"ウェイト合計 セクター{m['sector_sum']:.2f}・地域{m['region_sum']:.2f}・通貨{m['currency_sum']:.2f} / "
+                 f"上位銘柄カバー {m['top_sum']*100:.0f}%(残りは『その他』)")
+    for w in exp.get("data_warnings", []):
+        o.append(f"- ⚠️ {w}")
     o.append("")
     # honest mirror headline
     sec = lt["by_sector"]
