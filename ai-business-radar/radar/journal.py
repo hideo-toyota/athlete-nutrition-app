@@ -138,11 +138,13 @@ def score_due(prices: dict, asof: str | None = None) -> dict:
     for did, d in decisions.items():
         if did in already or d.get("action") not in SCOREABLE_ACTIONS:
             continue
-        hd = _date((d.get("prediction") or {}).get("horizon"))
+        pred = d.get("prediction")
+        pred = pred if isinstance(pred, dict) else {}   # 旧/手編集ログ防御
+        hd = _date(pred.get("horizon"))
         if hd is None or hd > asof_d:   # 未来/不正日付は採点しない(look-ahead回避)
             pending_future.append(did)
             continue
-        horizon = (d.get("prediction") or {}).get("horizon")
+        horizon = pred.get("horizon")
         tk, ref, bref = d.get("ticker"), d.get("ref_price"), d.get("benchmark_ref")
         tkp, bp = prices.get(tk), prices.get("BENCHMARK")
         if not isinstance(tkp, dict) or not isinstance(bp, dict):
