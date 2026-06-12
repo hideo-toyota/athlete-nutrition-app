@@ -133,8 +133,9 @@ def render_mirror(exp: dict, portfolio: dict, cfg: dict, asof: str | None = None
     sec = lt["by_sector"]
     curex = lt["by_currency"]
     o.append("## 正直な鏡(look-through = 指数の中身まで合算)")
-    o.append(f"- **実質 US-Tech/AI に {sec.get('US-Tech/AI', 0):.0f}%** 賭けている。")
-    o.append(f"- **USD建てエクスポージャー {curex.get('USD', 0):.0f}%**(=隠れた円高/円安の賭け)。")
+    o.append("_以下は CALCULATION(指数構成は手入力概算=ASSUMPTION依存)。精密値ではなく目安。_")
+    o.append(f"- **実質 US-Tech/AI に ≈{sec.get('US-Tech/AI', 0):.0f}%**(概算)賭けている。")
+    o.append(f"- **USD建てエクスポージャー ≈{curex.get('USD', 0):.0f}%**(概算/=隠れた円高・円安の賭け)。")
     nvda = lt["by_name"].get("NVDA")
     if nvda is not None:
         o.append(f"- 例:NVDA は直接保有+指数経由の合算で **{nvda:.1f}%**(直接だけ見ると過小評価)。")

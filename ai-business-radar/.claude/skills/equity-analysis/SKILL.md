@@ -22,6 +22,8 @@ description: 個別株(米国の保有銘柄・日本の候補銘柄)を、規�
 
 ## 出力契約
 鮮度ヘッダ / uncertainty-first / 両論併記 / **断定しない** / 末尾に出典と免責。
+**主張は `CLAIMS.md` 準拠で分類**(FACT[出典+as_of]/CALCULATION/INFERENCE/ASSUMPTION/UNKNOWN)。
+出典・as_of の無い業績/価格を FACT にしない。UNSAFE(売買断定・未来予測)を出さない。
 
 ## 北極星(原則5)
 「あなたの裁量(②解釈)が **DCAインデックスに勝てるか**」を後で機械採点する前提で、判断を記録しておく。
