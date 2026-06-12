@@ -21,7 +21,7 @@ def render_check(verdict: dict) -> str:
     o.append(f"## 判定: **{head}**")
     o.append("")
     if verdict["breaches"]:
-        o.append("### ⛔ 上限超過(ハード却下)")
+        o.append("### ⛔ 却下理由(ハード)")
         o += [f"- {b}" for b in verdict["breaches"]]
         o.append("")
     if verdict["warnings"]:
@@ -80,7 +80,8 @@ def render_mirror(exp: dict, portfolio: dict, cfg: dict) -> str:
     o.append("")
     # uncertainty-first(原則3)
     o.append("## まず:分かっていないこと(不確実)")
-    o.append("- 指数の構成は **手入力の概算**(`indices/*.json`)。look-through は概算値。")
+    if exp.get("index_meta"):
+        o.append("- 指数の構成は **手入力の概算**(`indices/*.json`)。look-through は概算値。")
     o.append("- 時価・為替は基準日時点の手入力。リアルタイムではない。")
     for m in exp.get("index_meta", []):
         o.append(f"- 指数 `{m['ref']}`: 構成as_of {m.get('as_of') or '不明'} / "

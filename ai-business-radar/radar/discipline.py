@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 DEFAULT_DISCIPLINE = {"chase_unrealized_pct": 0.25, "averaging_down_pct": -0.25}
-KNOWN_FLAGS = {"--overheated", "--thesis-intact", "--powder"}
+KNOWN_FLAGS = {"--overheated", "--thesis-intact", "--powder", "--cost-unknown-ok"}
 
 
 def _thesis_sector(ticker: str | None) -> str | None:
@@ -94,10 +94,10 @@ def check(portfolio: dict, cfg: dict, action_str: str) -> dict:
     breaches: list[str] = []
     warnings: list[str] = []
     notes: list[str] = []
-    if act["extra"]:
-        notes.append(f"余分なトークンを無視: {act['extra']}")
     if act["unknown_flags"]:
-        notes.append(f"未知のフラグを無視: {sorted(act['unknown_flags'])}")
+        raise SystemExit(f"未知のフラグ: {sorted(act['unknown_flags'])}(typoの可能性。既知: {sorted(KNOWN_FLAGS)})")
+    if act["extra"]:
+        raise SystemExit(f"余分なトークン: {act['extra']}(文法: <verb> <ticker> <金額> [sector] [flags])")
 
     if verb in ("buy", "add"):
         if amt is None:
@@ -133,7 +133,11 @@ def check(portfolio: dict, cfg: dict, action_str: str) -> dict:
         if cur:
             cost = cur.get("cost")
             if not cost:  # None または 0
-                notes.append("含み損益で判定不可(cost_basis_jpy 未記入)→ 勝ち/ナンピン判定をスキップ")
+                if "--cost-unknown-ok" in flags:
+                    notes.append("cost_basis 未記入だが --cost-unknown-ok で続行(勝ち/ナンピン判定なし)")
+                else:
+                    breaches.append("cost_basis_jpy 未記入/0 → 勝ち買い増し/ナンピンを判定できず却下。"
+                                    "cost_basis_jpy を記入するか、承知の上なら --cost-unknown-ok を明示。")
             else:
                 unreal = (cur["value"] - cost) / cost
                 if unreal > disc["chase_unrealized_pct"]:

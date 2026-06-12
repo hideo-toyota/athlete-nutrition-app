@@ -26,7 +26,7 @@ python3 -m radar check add NVDA 100000              # 例: 既に上限 → 却�
 
 - 設定は宣言的: [`config.json`](config.json)(コア/サテライト・上限 2.5%/5%/10%・規律しきい値・DCAベンチ)。
 - データはファイル: [`portfolio.json`](portfolio.json)、[`indices/`](indices)(指数構成=手入力概算)。
-- 生成物は [`outputs/`](outputs)(`honest_mirror.md` / `discipline_check.md`)。
+- 生成物は [`outputs/`](outputs)(`honest_mirror.md` + `honest_mirror.csv` / `discipline_check.md`)。
 
 ## 設計ドキュメント(これが本体)
 - [DESIGN_PRINCIPLES.md](DESIGN_PRINCIPLES.md) — 憲法(背骨+6原則)

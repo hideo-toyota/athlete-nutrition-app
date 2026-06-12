@@ -18,6 +18,20 @@ def _num(v):
     return v if isinstance(v, (int, float)) else None
 
 
+def _asof_tuple(s):
+    """'2026-06-06' / '2026-06' / '2026' を比較可能な (y,m,d) に。粒度欠落は月初/年初扱い。"""
+    if not s:
+        return None
+    parts = str(s).split("-")
+    try:
+        y = int(parts[0])
+        m = int(parts[1]) if len(parts) > 1 else 1
+        d = int(parts[2]) if len(parts) > 2 else 1
+        return (y, m, d)
+    except (ValueError, IndexError):
+        return None
+
+
 def look_through(portfolio: dict, cfg: dict) -> dict:
     holdings = portfolio.get("holdings", [])
     port_as_of = portfolio.get("as_of")
@@ -69,13 +83,17 @@ def look_through(portfolio: dict, cfg: dict) -> dict:
                                "region_sum": sum(rw.values()),
                                "currency_sum": sum(cw.values()),
                                "top_sum": sum(top.values())})
-            if idx_as_of and port_as_of and str(idx_as_of) > str(port_as_of):
+            it, pt = _asof_tuple(idx_as_of), _asof_tuple(port_as_of)
+            if it and pt and it > pt:
                 data_warnings.append(
                     f"指数 {ref} の as_of({idx_as_of})がポートフォリオ as_of({port_as_of})より新しい(未来データの可能性)")
             for label, s in (("セクター", sum(sw.values())), ("地域", sum(rw.values())),
                              ("通貨", sum(cw.values()))):
                 if s and abs(s - 1.0) > 0.05:
                     data_warnings.append(f"指数 {ref} の{label}ウェイト合計が {s:.2f}(≠1.0)")
+            if sum(top.values()) > 1.05:
+                data_warnings.append(
+                    f"指数 {ref} の上位銘柄ウェイト合計が {sum(top.values()):.2f}(>1)→ 銘柄別exposureが過大の恐れ")
             for tk, w in top.items():
                 _add(by_name, tk, mv * w)
             _add(by_name, "その他(指数・分散)", mv * max(0.0, 1 - sum(top.values())))
