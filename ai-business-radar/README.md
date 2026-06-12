@@ -33,6 +33,9 @@ python3 -m radar review    # outputs/journal_review.md(裁量 vs 規律 / 対DCA
 - データはファイル: [`portfolio.json`](portfolio.json)、[`indices/`](indices)(指数構成=手入力概算)。
 - 生成物は [`outputs/`](outputs)(`honest_mirror.md` + `honest_mirror.csv` / `discipline_check.md`)。
 
+## 使い方プロンプト集
+Discordから送る分析指示の例は [PROMPTS.md](PROMPTS.md)。
+
 ## 実運用の立ち上げ
 ゼロから Discord 連携・実データ投入・日々のループまでの手順は [RUNBOOK.md](RUNBOOK.md)。
 
