@@ -114,6 +114,20 @@ def cmd_review() -> None:
         print("  ⚠️ サンプル不足:統計的な結論は保留(原則3)")
 
 
+def cmd_data_check(offline: bool) -> None:
+    """A0: ネットワーク無しのキー存在確認 + redact 動作確認。**値は表示しない・外部接続しない**。"""
+    if not offline:
+        raise SystemExit("A0: 実疎通は未実装です。`data-check --offline` で実行してください(実API疎通は A1)。")
+    import os
+    from .sources import common
+    common._load_dotenv()
+    for name in common.KEY_VARS:
+        print(f"  {name}: {'設定あり' if os.environ.get(name) else '未設定'}")  # ★値は出さない
+    sample = "Authorization: Bearer DUMMY.TOKEN.VALUE"
+    print(f"  redact動作: {common.redact(sample)}")
+    print("  ※ 外部APIには接続していません(A0)。実疎通は A1 で追加。")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="radar",
                                  description="Personal Equity Research Radar")
@@ -129,6 +143,8 @@ def main() -> None:
     ps.add_argument("path", nargs="?", help="価格JSON(既定: journal/prices.json)")
     ps.add_argument("--asof", help="採点基準日 YYYY-MM-DD(既定: 今日)。過去固定で監査再現可能")
     sub.add_parser("review", help="較正レポート(裁量 vs 規律 / 対DCA)")
+    pd = sub.add_parser("data-check", help="(A0) キー存在とredactをオフライン確認。実疎通はしない")
+    pd.add_argument("--offline", action="store_true", help="A0では必須。外部接続せずに確認")
     args = ap.parse_args()
 
     if args.command == "mirror":
@@ -143,6 +159,8 @@ def main() -> None:
         cmd_score(args.path, args.asof)
     elif args.command == "review":
         cmd_review()
+    elif args.command == "data-check":
+        cmd_data_check(args.offline)
     else:
         ap.print_help()
 

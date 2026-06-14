@@ -1,5 +1,12 @@
-# 認証情報
+# 認証情報・秘密(値は絶対にコミットしない)
 .env
+.claude/settings.local.json
+.cursor/mcp.json
+
+# データ提供元の取得物(raw/cache/derived はローカルのみ)
+data/raw/
+data/cache/
+data/derived/
 
 # Python
 __pycache__/
