@@ -16,6 +16,7 @@
 - `.env`: `JQUANTS_API_KEY` / `EDINETDB_API_KEY`。`.env.example` はキー名のみ。未設定は SystemExit(値非表示)。
 - **キーを stdout/stderr/log/例外/raw/出力に出さない**(redact 必須)。Authorization ヘッダもログ化しない。
 - **redact/gitignore 対象**: `.env`, `.claude/settings.local.json`, `.cursor/mcp.json`, その他MCPクライアント設定, `data/raw`, `data/cache`, `data/derived`(実データ)。
+- **運用パラメータは config 化**(A1前に確定・コード直書き禁止): `retry_max`(例3)/ `backoff_base_sec`(例2)/ `max_response_bytes` / `daily_request_budget`(レート上限の消費予算)。
 
 ## 3. source 層 I/F(`radar/sources/`)
 - `common.fetch(provider, endpoint, params, *, client, clock) -> (raw, meta)`。**client/clock 注入可能**(D8)。
@@ -33,10 +34,11 @@
   "provider":"jquants|edinet_db", "dataset":"prices|financials|ratios|...",
   "endpoint":"...", "params":{}, "schema_version":"1",
   "fetch_id":"uuid", "retrieved_at":"ISO8601(UTC,tz付)",
-  "raw_hash":"...", "hash_algorithm":"sha256", "normalization_version":"1",
+  "raw_hash_compressed":"sha256(取得バイト列)", "raw_hash_normalized":"sha256(正規化後)",
+  "hash_algorithm":"sha256", "normalization_version":"1",
   "raw_size":0, "content_type":"application/json|text/csv", "vendor_last_modified":"...|null",
   "period_end":"YYYY-MM-DD", "submit_date":"YYYY-MM-DD", "disclosure_date":"YYYY-MM-DD",
-  "available_at":"YYYY-MM-DD",                                  // PIT(§6)
+  "available_at":"ISO8601(datetime,tz付)",                      // PIT(§6)。日付粒度は当日終端の時刻
   "entity_id":"...", "securities_code":"7203", "edinet_code":"E0...", "company_id":"...", "isin":"...|null",
   "currency":"JPY", "unit":"円|千円|百万円",
   "accounting_standard":"JP GAAP|IFRS|US GAAP", "consolidated":true,
@@ -47,6 +49,7 @@
 ## 6. PIT(ポイントインタイム)ルール(D2・致命)
 - **build/検証は `available_at <= asof` のみ採用**。latest は evidence 本文で参考表示可・**検証(score)には使わない**。
 - 日足は **取引日の JST 引け後に available** とし、**日中時刻の asof では当日を採用しない**(時刻・tz を持つ)。
+- `available_at` は **datetime(tz付)に統一**。日付粒度の dataset は「当日終端の時刻」を入れる。`asof` が日付のみなら **当日末** を asof として比較(date/datetime 混在を排除)。
 - dataset 別 `available_at` 導出(全対象):
 
 | dataset | provider | available_at |
@@ -66,21 +69,23 @@ data/raw/<provider>/<dataset>/...      # cache・git除外
 data/cache/                            # git除外
 data/metadata/fetch_log.jsonl          # 追記専用: 1 fetch = 1 行(provenance)
 data/metadata/dataset_manifest.json    # 索引
-data/derived/<feature_set>/<asof>.json # 使用した入力フィールド+raw_hash を内包
+data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_hash_normalized + feature_registry_version + config_hash + code_commit を内包
 ```
-- **再現性モデル(修正)**: 検証に使うデータは **(a) raw を保持** または **(b) derived に“使用フィールドのスナップショット+raw_hash”を内包**。
-  `raw_hash` 単独では再計算できない。**vendor改訂/削除で再fetchは別物になり得るため、purge は (b) 完了後に限り可**。
-- 真実 = provenance + derived(snapshot入り) + manifest。raw は purgeable cache。
-- hash方針: `sha256`、**圧縮元と正規化後の両方**を記録、`normalization_version` と `content_type` を併記。
+- **再現性モデル(修正)**: 検証に使うデータは **(a) raw を保持** または **(b) derived に“使用フィールドのスナップショット + raw_hash_normalized + feature_registry_version + config_hash + code_commit”を内包**(コード・設定・式の版まで固定して初めて再現可能)。
+  raw_hash 単独では再計算できない。**vendor改訂/削除で再fetchは別物になり得るため、purge は (b) 完了後に限り可**。
+- 真実 = provenance + derived(snapshot+版情報入り) + manifest。raw は purgeable cache。
+- hash方針: `sha256`。**`raw_hash_compressed`(取得バイト列)と `raw_hash_normalized`(正規化後)の2フィールド**、`normalization_version`・`content_type` を併記。
 
 ## 8. feature 定義(`radar/features/` + レジストリ必須)
 - **feature レジストリ**(宣言的): 各 feature に `id / 分類(official|own|proxy) / 式 / 必須入力(dataset.field) / 単位 / UNKNOWN条件 / 除外ルール`。
 - 欠損 / nan / inf / 非数値は**黙殺せず当該値を UNKNOWN 保持**(計算は停止しない)。UNKNOWN は queue/score で**除外 or 明示**。
 - 最小例(式はレジストリに明記): 売上/営業利益 成長率・営業利益率・ROE・ROIC proxy・FCF・FCF利回り・自己資本比率・ネットキャッシュ proxy・配当利回り/性向/増配・株数変化・出来高/売買代金・モメンタム・過熱度・(あれば)信用倍率・セグメント依存・大株主変化・健全性リスク。
+- **代表featureの具体式(分類・入力field・UNKNOWN条件)の確定は Phase C の前提**。例: `ROE = 当期純利益 / 期中平均自己資本`(分類=own / 入力=financials.net_income, financials.equity / 欠損→UNKNOWN)。
 
 ## 9. entity マッピング
 - 主キー候補: `securities_code`(J-Quants) ↔ `edinet_code`(EDINET DB) ↔ `company_id` ↔ `isin`。
 - **コード変更・上場廃止・社名変更の履歴**を持ち、結合は as_of 時点で解決。未解決は UNKNOWN。
+- **履歴ソース(どの dataset を正とするか)・衝突時の優先規則・コード再割当の扱い**を mapping 定義に明記(Phase B の前提)。
 
 ## 10. research_queue schema(`radar/research/queue.py` / D6・語彙ロック強化)
 ```jsonc

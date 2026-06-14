@@ -7,7 +7,8 @@
 - **EDINET DB**(運営 Cabocia株式会社)。**両ドメインとも公式**:
   - REST API: `https://edinetdb.com/v1/`(12エンドポイント:企業検索/財務/比率/分析スコア/ランキング/業種 等)
   - MCP: `https://edinetdb.jp/mcp`(Streamable HTTP)/ 日本語docs `edinetdb.jp/docs/mcp-guide`
-  - FSA EDINET の有報を日次同期、JP GAAP/IFRS/US GAAP を正規化。無料枠 100req/日。
+  - FSA EDINET の有報を日次同期、JP GAAP/IFRS/US GAAP を正規化。**無料 100/日・Pro 1,000/日(Codex確認・要本人最終確認)**。
+  - **canonical/allowed domains**: REST=`edinetdb.com/v1`(開発者ページ例に `edinetdb.jp/v1` もあり=許可ドメインとして明記)/ MCP=`edinetdb.jp/mcp`。規約=`edinetdb.com/legal/terms`。
 - **J-Quants**(JPX)。有料契約済(本人)。**ToS本文は未取得=未確認**。
 
 ## マトリクス(各セル: 値 / 出典URL / 確認日。不明は「未確認」)
@@ -27,9 +28,10 @@
 | └ 第三者LLM(Claude等)へ入力 | **未確認(致命)** | **未確認** |
 | └ AI提供側の保持/学習 | 未確認(Anthropic等のデータ方針も別途) | 未確認 |
 | └ MCP(edinetdb.jp/mcp)利用 | 該当なし | 可の見込み ※原本確認 |
+| └ 送信粒度(raw / derived / 要約のみ) | 未確認(粒度別に可否確認) | 未確認(粒度別に可否確認) |
 | 再配布(一括/wrapper API) | 未確認(通常禁止想定) | 一括再配布・wrapper API は禁止の見込み ※原本確認 |
 | 社外 / 公開利用 | 未確認 | 商用可の記述あり・**公開時 attribution 要請**(個人内利用と分けて管理) |
-| rate limit | 未確認 | 無料100/日(Pro上限は原本確認) |
+| rate limit | 未確認 | 無料100/日・Pro 1,000/日(Codex確認・要本人最終確認) |
 | attribution / source表記 | 未確認 | 公開サービスで要請 ※原本確認 |
 | 禁止事項 | 未確認 | スクレイピング禁止(API/MCPのみ)・AI所見の不正確性リスク明記 |
 | 未確認事項(列挙) | ToS全般 | 規約原本テキスト(保存期間・再配布・LLM入力) |
@@ -47,5 +49,6 @@
 - 個人→公開に切り替える場合:attribution 必須化・再配布禁止を再点検(停止条件)。
 
 Sources(検証):
-- https://edinetdb.com/ , https://edinetdb.com/developers , https://edinetdb.com/docs/api , https://edinetdb.jp/docs/mcp-guide
+- https://edinetdb.com/ , https://edinetdb.com/developers , https://edinetdb.com/docs/api , https://edinetdb.com/legal/terms , https://edinetdb.jp/docs/mcp-guide
 - https://disclosure2dl.edinet-fsa.go.jp/
+- ※ `edinetdb.com/legal/terms` の各条文(商用可・一時キャッシュ・一括再配布禁止・wrapper API禁止・公開時attribution・AI所見の不正確性)は **本人が原本で最終確認**して各セルに転記すること。
