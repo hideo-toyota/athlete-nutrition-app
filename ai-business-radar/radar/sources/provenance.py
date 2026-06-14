@@ -10,6 +10,13 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+def default_metadata_dir() -> Path:
+    """source層の書込先(正)。呼び出し側はこれ(または配下)を使う。"""
+    return ROOT / "data" / "metadata"
+
 REQUIRED_FIELDS = (
     "provider", "dataset", "endpoint", "params", "schema_version", "fetch_id",
     "retrieved_at", "raw_hash_compressed", "raw_hash_normalized", "hash_algorithm",
@@ -56,7 +63,11 @@ def validate_provenance(meta: dict) -> dict:
 
 
 def append_fetch_log(metadata_dir, meta: dict) -> Path:
-    """fetch_log.jsonl に追記(追記専用)。**書き込みは渡された metadata_dir 配下のみ**。"""
+    """fetch_log.jsonl に追記(追記専用)。**書き込みは渡された metadata_dir 配下のみ**。
+
+    契約: 呼び出し側(CLI/sync, A1以降)は `default_metadata_dir()`(= data/metadata)
+    またはその配下のみを渡すこと。テストは一時dirを渡す。source層はこれ以外に書かない。
+    """
     validate_provenance(meta)
     d = Path(metadata_dir)
     d.mkdir(parents=True, exist_ok=True)

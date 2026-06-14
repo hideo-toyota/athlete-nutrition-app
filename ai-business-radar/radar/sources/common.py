@@ -47,13 +47,23 @@ def _known_secrets() -> list[str]:
 
 
 def redact(text) -> str:
-    """既知のAPIキー値・Authorization・Bearer・を含む文字列をマスクする。"""
+    """既知のAPIキー値・各種クレデンシャル表現をマスクする(漏洩防止・多重適用OK)。"""
     if not isinstance(text, str):
         text = str(text)
     for sec in _known_secrets():
         text = text.replace(sec, "***REDACTED***")
-    text = re.sub(r"(?i)(authorization\s*:\s*)(bearer\s+)?\S+", r"\1***REDACTED***", text)
-    text = re.sub(r"(?i)bearer\s+\S+", "bearer ***REDACTED***", text)
+    # JSON フィールド: "api_key":"...", "token":"...", "authorization":"...", "secret"/"password"
+    text = re.sub(r'(?i)("(?:api[_-]?key|access[_-]?token|token|authorization|secret|password)"\s*:\s*")[^"]+',
+                  r"\1***REDACTED***", text)
+    # URL クエリ: ?api_key=... &token=... key= access_token= secret= password=
+    text = re.sub(r"(?i)([?&](?:api[_-]?key|access[_-]?token|token|key|secret|password)=)[^&\s]+",
+                  r"\1***REDACTED***", text)
+    # ヘッダ: X-API-Key: ...
+    text = re.sub(r"(?i)(x-api-key\s*:\s*)\S+", r"\1***REDACTED***", text)
+    # ヘッダ: Authorization: <任意scheme> <cred>(Bearer/Basic/Token 等すべて)
+    text = re.sub(r"(?i)(authorization\s*:\s*)[^\n]+", r"\1***REDACTED***", text)
+    # 裸の Bearer トークン
+    text = re.sub(r"(?i)\bbearer\s+\S+", "bearer ***REDACTED***", text)
     return text
 
 

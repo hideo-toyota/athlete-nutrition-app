@@ -24,10 +24,14 @@ class FakeResp:
 
 class A0Tests(unittest.TestCase):
     def setUp(self):
+        # 実 .env をテストから隔離(存在しても読まない)
+        self._env_backup = common._ENV
+        common._ENV = Path("/nonexistent-radar-env-for-tests")
         for k in common.KEY_VARS:
             os.environ.pop(k, None)
 
     def tearDown(self):
+        common._ENV = self._env_backup
         for k in common.KEY_VARS:
             os.environ.pop(k, None)
 
@@ -46,6 +50,21 @@ class A0Tests(unittest.TestCase):
     def test_redact_bearer(self):
         out = common.redact("Authorization: Bearer abc.def.ghi")
         self.assertNotIn("abc.def.ghi", out)
+
+    def test_redact_url_query(self):
+        self.assertNotIn("topsecret", common.redact("https://h/v1?api_key=topsecret&a=1"))
+        self.assertNotIn("topsecret", common.redact("https://h/v1?token=topsecret"))
+
+    def test_redact_json_field(self):
+        self.assertNotIn("topsecret", common.redact('{"api_key":"topsecret","x":1}'))
+        self.assertNotIn("topsecret", common.redact('{"token": "topsecret"}'))
+
+    def test_redact_x_api_key(self):
+        self.assertNotIn("topsecret", common.redact("X-API-Key: topsecret"))
+
+    def test_redact_non_bearer_authorization(self):
+        self.assertNotIn("dXNlcjpwYXNz", common.redact("Authorization: Basic dXNlcjpwYXNz"))
+        self.assertNotIn("tok123", common.redact("Authorization: Token tok123"))
 
     def test_exception_does_not_leak_key(self):
         os.environ["JQUANTS_API_KEY"] = SECRET
@@ -125,6 +144,24 @@ class A0Tests(unittest.TestCase):
             p = provenance.append_fetch_log(td, m)
             self.assertTrue(Path(p).exists())
             self.assertEqual(Path(p).parent.resolve(), Path(td).resolve())
+
+    # --- CLI data-check (offline-only, no key value) ---
+    def test_data_check_requires_offline(self):
+        import radar.__main__ as m
+        with self.assertRaises(SystemExit):
+            m.cmd_data_check(False)
+
+    def test_data_check_offline_hides_key_value(self):
+        import io
+        import contextlib
+        import radar.__main__ as m
+        os.environ["JQUANTS_API_KEY"] = "LEAKCHECK_XYZ"
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            m.cmd_data_check(True)
+        out = buf.getvalue()
+        self.assertNotIn("LEAKCHECK_XYZ", out)
+        self.assertIn("設定あり", out)
 
     # --- non-regression: existing commands intact ---
     def test_existing_cli_commands_intact(self):
