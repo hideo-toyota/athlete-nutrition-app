@@ -1,4 +1,4 @@
-# DATA_LAYER_SPEC — J-Quants + EDINET DB データ/リサーチ層の契約(v2・実装前)
+# DATA_LAYER_SPEC — J-Quants + EDINET DB データ/リサーチ層の契約(v3・実装前)
 
 > 設計のみ。実装はこの契約の帰結。正は DESIGN_PRINCIPLES.md / SPEC.md / CLAIMS.md / CLAUDE.md。
 > ⚠️ `LICENSE_MATRIX.md` の ToS 確認が埋まるまで **A1疎通・sync 実装は NO-GO**(D1)。**A0(ネットワーク無し)のみGO**。
@@ -21,7 +21,7 @@
 ## 3. source 層 I/F(`radar/sources/`)
 - `common.fetch(provider, endpoint, params, *, client, clock) -> (raw, meta)`。**client/clock 注入可能**(D8)。
 - 失敗時の挙動は §13 の表に**一意化**(「停止 or リトライ」のような選択余地を残さない)。
-- `jquants.py` / `edinet_db.py` は common を使う薄いアダプタ。EDINET DB REST=`edinetdb.com/v1/`、MCP=`edinetdb.jp/mcp`。
+- `jquants.py` / `edinet_db.py` は common を使う薄いアダプタ。EDINET DB **canonical=`edinetdb.com`(REST `/v1/`)/ allowed=`edinetdb.com|edinetdb.jp`**、MCP=`edinetdb.jp/mcp`。
 
 ## 4. REST / MCP 役割分担(D5)
 - **REST = 記録の正**(`sync` で raw 保存 + provenance)。再現性の本線。
