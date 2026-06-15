@@ -85,7 +85,7 @@ python3 -m radar review      # outputs/journal_review.md(裁量 vs 規律)
 ## コスト・上限
 - 追加費用なし(サブスク内)。**お金でなく使用“上限”**に注意(Proで足りなければMax)。
 - 定期自動化(`claude -p`)は 2026/6/15 以降 別クレジット枠。
-- J-Quants 有料は「遅延が実害になってから」。今は無料/WebSearchで足りる。
+- J-Quants / EDINET DB 有料データ層は**別トラック**(`DATA_LAYER_SPEC.md`)。**A0=実装済・A1以降は `LICENSE_MATRIX` のToS確認後**。radarコア(mirror/check/log/score/review)・target-check は**この層なしで動く**。
 
 ## 安全
 - Botは **allowlist で自分だけ**。トークンはパスワード扱い(漏れたら再生成)。
