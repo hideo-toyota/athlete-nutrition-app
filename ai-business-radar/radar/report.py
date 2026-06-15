@@ -11,6 +11,72 @@ def _pct(x):
     return f"{x*100:+.1f}%" if isinstance(x, (int, float)) else "—"
 
 
+def render_target_check(r: dict) -> str:
+    i = r["inputs"]
+
+    def pc(x):
+        return f"{x*100:.1f}%" if isinstance(x, (int, float)) else "—"
+
+    o = []
+    o.append("# Target Check — 10x Feasibility & Ruin Guard")
+    o.append("")
+    o.append(f"_目標 {i['multiple']:.0f}倍 / {i['years']:.0f}年 / 現資産 {i['initial']:,.0f}円 "
+             f"/ 月次積立 {i['monthly']:,.0f}円 / 課税割合 {i['taxable_frac']*100:.0f}%_")
+    o.append("")
+    o.append("## まず:これは何か(不確実性)")
+    o.append("- これは**目標の難易度とリスクの可視化**。**投資助言でも予測でもなく、銘柄も出しません。**")
+    o.append("- リターンは**予測不能**。以下は「仮定の下での算術(CALCULATION)」。指数の歴史値は参考(ASSUMPTION)。")
+    o.append("")
+    o.append("## 必要リターン [CALCULATION]")
+    o.append(f"- 必要CAGR(税前): **{pc(r['cagr_pretax'])}/年**")
+    o.append(f"- 税引後 {i['multiple']:.0f}倍に必要な税前倍率: **{r['gross_multiple_posttax']:.2f}倍** "
+             f"→ 必要CAGR(税考慮): **{pc(r['cagr_posttax'])}/年**(NISA分は非課税で軽くなる)")
+    if r["r_with_contrib"] is None:
+        o.append("- 月次積立込みでも、現実的な範囲(〜1000%/年)では到達しない。")
+    else:
+        o.append(f"- 月次積立込みの必要CAGR: **{pc(r['r_with_contrib'])}/年** "
+                 f"(現資産だけなら {pc(r['r_no_contrib'])}/年)。**10xの多くは“貯蓄×時間”で来る**。")
+    o.append("")
+    o.append("## ★混合の現実(コア/サテライト)[CALCULATION]")
+    o.append(f"- 現配分 コア{i['core_w']*100:.0f}% / サテライト{i['sat_w']*100:.0f}% では:")
+    for b in r["blend_examples"]:
+        o.append(f"  - サテライトが {b['sat_mult']:.0f}倍・{b['core_label']} → **全体 ≈ {b['total_mult']:.2f}倍**")
+    if r["core_needed_for_target"] is not None:
+        o.append(f"- 全体を {i['multiple']:.0f}倍にするには、サテライト{r['sat_assumed_for_core_calc']:.0f}倍でも "
+                 f"**コアが {r['core_needed_for_target']:.1f}倍** 必要(=指数では非現実的)。")
+    o.append(f"- → **{i['sat_w']*100:.0f}%枠のサテライトだけでは、原理的に全体{i['multiple']:.0f}xは届かない。**")
+    o.append("")
+    o.append("## 破綻・回復ライン [WARNING]")
+    o.append(f"- サテライト全損時の総資産インパクト: **-{r['sat_max_loss_pct']:.1f}%**")
+    o.append("- ドローダウンからの必要回復率: " +
+             " / ".join(f"-{d}%→+{v:.0f}%" for d, v in r["recovery"].items()))
+    if r["max_dd_recovery"] is not None:
+        o.append(f"- 許容DD {i['max_dd_pct']:.0f}% を使い切ると、回復に **+{r['max_dd_recovery']:.0f}%** 必要。")
+    if r["leverage_ruin_drop_pct"] is not None:
+        o.append(f"- ⚠️ レバレッジ {i['leverage']:.1f}倍 → 約 **-{r['leverage_ruin_drop_pct']:.0f}% の下落で資本毀損(破綻ライン)**。")
+    else:
+        o.append("- レバレッジ無し(=強制ロスカットによる破綻リスクは低い)。")
+    o.append("")
+    o.append("## 必要条件(満たさないと到達しない)[INFERENCE]")
+    o.append(f"- {pc(r['cagr_posttax'])}/年 を{i['years']:.0f}年継続(税考慮)。分散インデックスの歴史的レンジでは通常困難。")
+    o.append("- 全体を動かすには、サテライト比率を上げる=集中とドローダウンを受け入れる覚悟。")
+    o.append("- 不足分は「銘柄選択の超過リターン」より「貯蓄・時間・事業/人的資本」で埋める方が現実的。")
+    o.append("")
+    o.append("## 破綻条件(これに触れたら危険)[WARNING]")
+    o.append("- 生活防衛資金を分離していない / レバレッジで破綻ラインが浅い / 1銘柄・1セクターに上限超で集中。")
+    o.append("- 価格下落での狼狽売り、上限を超えるナンピン(=`check` が止める対象)。")
+    o.append("")
+    o.append("## 規律との両立(所見)[INFERENCE]")
+    o.append("- 「余剰資金・現物・分散・上限(2.5%/5%/10%)」を守る範囲では、**純粋な銘柄選択での"
+             + f"{i['multiple']:.0f}xは極めて不利**。目標を持つなら、必要年率と破綻幾何を直視した上で、"
+             "サイズと撤退を先に決めること。")
+    o.append("")
+    o.append("> ※これは投資助言ではありません。目標の難易度とリスクを可視化する計算であり、"
+             "特定銘柄の推奨・売買指示・利益保証・将来予測ではありません。最終判断は自分にあります。")
+    o.append("")
+    return "\n".join(o)
+
+
 def render_review(rev: dict) -> str:
     o = ["# Journal Review — 較正(過程 > 結果)", ""]
     o.append(f"_判断 {rev['n_decisions']} 件 / 採点済み {rev['n_scored']} 件_")
