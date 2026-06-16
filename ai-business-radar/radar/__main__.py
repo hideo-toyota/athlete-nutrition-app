@@ -145,9 +145,10 @@ def _config_blend() -> tuple[float, float, float]:
     cs = cfg["policy"].get("core_satellite", {})
     core_pct = cs.get("core_pct", 90)
     sat_pct = cs.get("satellite_pct", 10)
+    import math
     for k, v in (("core_pct", core_pct), ("satellite_pct", sat_pct)):
-        if isinstance(v, bool) or not isinstance(v, (int, float)) or v < 0:
-            raise SystemExit(f"config: core_satellite.{k} が不正(非負の数値)")
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0:
+            raise SystemExit(f"config: core_satellite.{k} が不正(有限・非負の数値)")
     s = core_pct + sat_pct
     if s <= 0:
         raise SystemExit("config: core_satellite の合計が 0 です")
@@ -158,13 +159,22 @@ def _config_blend() -> tuple[float, float, float]:
 def cmd_target_check(args) -> None:
     """B4: 目標倍率の必要条件/破綻条件を純計算で可視化。ネット無し・銘柄無し・推奨無し・予測無し。"""
     _valid_asof(args.asof)  # 形式検証のみ(再現可能性のため受け付ける)
+    notes = []
     if args.initial is not None:
         initial = args.initial
         taxable_frac = args.taxable_frac if args.taxable_frac is not None else 1.0
+        if args.taxable_frac is None:
+            notes.append("課税割合は --taxable-frac 未指定のため 100%(全課税)を仮定。")
     else:
         initial, derived_taxable = _portfolio_defaults()
-        taxable_frac = args.taxable_frac if args.taxable_frac is not None else derived_taxable
+        if args.taxable_frac is not None:
+            taxable_frac = args.taxable_frac
+        else:
+            taxable_frac = derived_taxable
+            notes.append("課税割合は portfolio.json から導出(account に 'nisa' を含む保有を非課税、"
+                         "account 未指定を含むそれ以外は課税扱い=保守的)。正確には口座区分を明示のこと。")
     core_w, sat_w, sat_cap_pct = _config_blend()
+    notes.append("コア/サテライト比は config.json の**方針目標**であり、実保有比率ではない。")
 
     r = target_check.compute(
         args.multiple, args.years,
@@ -175,7 +185,7 @@ def cmd_target_check(args) -> None:
     )
     OUTPUTS.mkdir(exist_ok=True)
     out = OUTPUTS / "target_check.md"
-    out.write_text(render_target_check(r), encoding="utf-8")
+    out.write_text(render_target_check(r, notes=notes), encoding="utf-8")
     print(f"target check を生成しました: {out.relative_to(ROOT)}")
     print(f"  目標 {args.multiple:.0f}倍 / {args.years:.0f}年 → 必要CAGR(税前) {r['cagr_pretax']*100:.1f}%/年"
           f" / 税考慮 {r['cagr_posttax']*100:.1f}%/年")
@@ -226,7 +236,7 @@ def main() -> None:
                     help=f"譲渡益税率(既定 {target_check.DEFAULT_TAX_RATE})")
     pt.add_argument("--leverage", type=float, default=1.0, help="レバレッジ倍率(既定1.0=無)")
     pt.add_argument("--max-dd", dest="max_dd", type=float, default=None,
-                    help="最大ドローダウン許容%(任意)")
+                    help="最大ドローダウン許容%%(任意)")
     pt.add_argument("--asof", help="基準日 YYYY-MM-DD(再現可能性のため・任意)")
     pd = sub.add_parser("data-check", help="(A0) キー存在とredactをオフライン確認。実疎通はしない")
     pd.add_argument("--offline", action="store_true", help="A0では必須。外部接続せずに確認")

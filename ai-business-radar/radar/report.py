@@ -11,7 +11,7 @@ def _pct(x):
     return f"{x*100:+.1f}%" if isinstance(x, (int, float)) else "—"
 
 
-def render_target_check(r: dict) -> str:
+def render_target_check(r: dict, notes=None) -> str:
     i = r["inputs"]
 
     def pc(x):
@@ -22,10 +22,15 @@ def render_target_check(r: dict) -> str:
     o.append("")
     o.append(f"_目標 {i['multiple']:.0f}倍 / {i['years']:.0f}年 / 現資産 {i['initial']:,.0f}円 "
              f"/ 月次積立 {i['monthly']:,.0f}円 / 課税割合 {i['taxable_frac']*100:.0f}%_")
+    if notes:
+        o.append("")
+        for n in notes:
+            o.append(f"> {n}")
     o.append("")
     o.append("## まず:これは何か(不確実性)")
     o.append("- これは**目標の難易度とリスクの可視化**。**投資助言でも予測でもなく、銘柄も出しません。**")
     o.append("- リターンは**予測不能**。以下は「仮定の下での算術(CALCULATION)」。指数の歴史値は参考(ASSUMPTION)。")
+    o.append("- 数値は**仮定下の点推定を丸めたもの**(±幅のある予測ではない)。桁の精度を確実性と取り違えないこと。")
     o.append("")
     o.append("## 必要リターン [CALCULATION]")
     o.append(f"- 必要CAGR(税前): **{pc(r['cagr_pretax'])}/年**")
@@ -38,7 +43,8 @@ def render_target_check(r: dict) -> str:
                  f"(現資産だけなら {pc(r['r_no_contrib'])}/年)。**10xの多くは“貯蓄×時間”で来る**。")
     o.append("")
     o.append("## ★混合の現実(コア/サテライト)[CALCULATION]")
-    o.append(f"- 現配分 コア{i['core_w']*100:.0f}% / サテライト{i['sat_w']*100:.0f}% では:")
+    o.append(f"- **方針配分**(config の目標 コア{i['core_w']*100:.0f}% / サテライト{i['sat_w']*100:.0f}%。"
+             "実保有比率ではない)では:")
     for b in r["blend_examples"]:
         o.append(f"  - サテライトが {b['sat_mult']:.0f}倍・{b['core_label']} → **全体 ≈ {b['total_mult']:.2f}倍**")
     if r["core_needed_for_target"] is not None:
@@ -59,7 +65,8 @@ def render_target_check(r: dict) -> str:
     o.append("")
     o.append("## 必要条件(満たさないと到達しない)[INFERENCE]")
     o.append(f"- {pc(r['cagr_posttax'])}/年 を{i['years']:.0f}年継続(税考慮)。分散インデックスの歴史的レンジでは通常困難。")
-    o.append("- 全体を動かすには、サテライト比率を上げる=集中とドローダウンを受け入れる覚悟。")
+    o.append("- **規律(上限2.5%/5%/10%)を守れないなら、配分を変えるのではなく目標倍率の方を下げる**のが筋。")
+    o.append("- 仮にサテライト比率を上げれば全体は動くが、それは集中とドローダウンを引き受けること(=規律と相反)。")
     o.append("- 不足分は「銘柄選択の超過リターン」より「貯蓄・時間・事業/人的資本」で埋める方が現実的。")
     o.append("")
     o.append("## 破綻条件(これに触れたら危険)[WARNING]")

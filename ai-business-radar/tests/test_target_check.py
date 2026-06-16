@@ -182,5 +182,50 @@ class TestCLINonRegression(unittest.TestCase):
             self.assertTrue(hasattr(m, name), f"{name} が消えています")
 
 
+class TestCLISubprocess(unittest.TestCase):
+    """実CLIを subprocess で起動し、--help 展開や引数解釈の回帰を捕捉する
+    (cmd_* の存在確認だけでは argparse の help 文字列バグ等を見逃すため)。"""
+
+    def _run(self, *cli_args):
+        import subprocess
+        import sys
+        return subprocess.run([sys.executable, "-m", "radar", *cli_args],
+                              cwd=str(ROOT), capture_output=True, text=True)
+
+    def test_all_subcommand_help_ok(self):
+        # 各サブコマンドの --help が argparse の % 展開等で落ちないこと。
+        for cmd in ("mirror", "check", "log", "score", "review",
+                    "data-check", "target-check"):
+            p = self._run(cmd, "--help")
+            self.assertEqual(p.returncode, 0,
+                             f"`radar {cmd} --help` が失敗: {p.stderr}")
+        self.assertEqual(self._run("--help").returncode, 0)
+
+    def test_target_check_runs(self):
+        p = self._run("target-check", "--multiple", "10", "--years", "10")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertIn("target check", p.stdout)
+
+    def test_target_check_with_options(self):
+        p = self._run("target-check", "--multiple", "10", "--years", "7",
+                      "--monthly", "250000", "--leverage", "2", "--max-dd", "40",
+                      "--asof", "2026-06-15")
+        self.assertEqual(p.returncode, 0, p.stderr)
+
+    def test_existing_commands_non_regression(self):
+        self.assertEqual(self._run("mirror").returncode, 0)
+        self.assertEqual(self._run("data-check", "--offline").returncode, 0)
+        self.assertEqual(
+            self._run("check", "buy", "7203", "100000", "Financials").returncode, 0)
+
+    def test_target_check_rejects_bad_input(self):
+        self.assertNotEqual(self._run("target-check", "--multiple", "1",
+                                      "--years", "10").returncode, 0)
+        self.assertNotEqual(self._run("target-check", "--multiple", "10",
+                                      "--years", "0").returncode, 0)
+        self.assertNotEqual(self._run("target-check", "--multiple", "10",
+                                      "--years", "10", "--asof", "2026-13-40").returncode, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

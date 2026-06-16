@@ -84,10 +84,16 @@ def compute(multiple, years, *, initial, monthly=0.0, taxable_frac=1.0,
     initial = _finite_pos(initial, "initial")
     monthly = _finite_pos(monthly, "monthly", allow_zero=True)
     leverage = _finite_pos(leverage, "leverage")
-    if not (0.0 <= taxable_frac <= 1.0):
-        raise SystemExit(f"taxable_frac は 0〜1 で指定してください: {taxable_frac}")
-    if not (0.0 <= tax_rate < 1.0):
-        raise SystemExit(f"tax_rate は 0〜1 未満で指定してください: {tax_rate}")
+    core_w = _finite_pos(core_w, "core_w", allow_zero=True)
+    sat_w = _finite_pos(sat_w, "sat_w", allow_zero=True)
+    if core_w + sat_w <= 0:
+        raise SystemExit("core_w + sat_w は正である必要があります")
+    if (isinstance(taxable_frac, bool) or not isinstance(taxable_frac, (int, float))
+            or not math.isfinite(taxable_frac) or not (0.0 <= taxable_frac <= 1.0)):
+        raise SystemExit(f"taxable_frac は 0〜1 の有限数で指定してください: {taxable_frac!r}")
+    if (isinstance(tax_rate, bool) or not isinstance(tax_rate, (int, float))
+            or not math.isfinite(tax_rate) or not (0.0 <= tax_rate < 1.0)):
+        raise SystemExit(f"tax_rate は 0〜1 未満の有限数で指定してください: {tax_rate!r}")
     if max_dd_pct is not None:
         max_dd_pct = _finite_pos(max_dd_pct, "max_dd_pct", allow_zero=True)
 
