@@ -36,12 +36,77 @@ try:
 except ImportError as e:
     sys.exit(f"依存が必要です: pip install mediapipe opencv-python numpy （{e}）")
 
+# mediapipe は 0.10.x 後半で従来の solutions API を廃し Tasks API へ移行。
+# どちらでも動くよう両対応する。
+HAS_SOLUTIONS = hasattr(mp, "solutions")
+
 # MediaPipe Pose ランドマーク index
 L_SH, R_SH = 11, 12
 L_HIP, R_HIP = 23, 24
 L_KNEE, R_KNEE = 25, 26
 L_ANK, R_ANK = 27, 28
 L_ELB, R_ELB = 13, 14
+
+# 骨格描画用の主要セグメント（Tasks API 時の手動描画に使用）
+_EDGES = [(L_SH, R_SH), (L_HIP, R_HIP), (L_SH, L_HIP), (R_SH, R_HIP),
+          (L_HIP, L_KNEE), (L_KNEE, L_ANK), (R_HIP, R_KNEE), (R_KNEE, R_ANK),
+          (L_SH, L_ELB), (L_ELB, 15), (R_SH, R_ELB), (R_ELB, 16)]
+
+_TASKS_MODEL_URL = ("https://storage.googleapis.com/mediapipe-models/"
+                    "pose_landmarker/pose_landmarker_full/float16/latest/"
+                    "pose_landmarker_full.task")
+
+
+def _ensure_model():
+    """Tasks API 用モデルをカレント/スクリプト隣に用意（無ければDL）。"""
+    import urllib.request
+    for cand in (Path("pose_landmarker.task"),
+                 Path(__file__).parent / "pose_landmarker.task"):
+        if cand.exists():
+            return str(cand)
+    dst = Path("pose_landmarker.task")
+    print(f"[dl] モデル取得中: {_TASKS_MODEL_URL}")
+    urllib.request.urlretrieve(_TASKS_MODEL_URL, dst)
+    return str(dst)
+
+
+class PoseBackend:
+    """solutions / tasks のどちらでも、フレーム→正規化ランドマーク列を返す。"""
+
+    def __init__(self, fps):
+        self.fps = fps
+        self.api = "solutions" if HAS_SOLUTIONS else "tasks"
+        if self.api == "solutions":
+            self._pose = mp.solutions.pose.Pose(
+                model_complexity=1, min_detection_confidence=0.5,
+                min_tracking_confidence=0.5)
+        else:
+            from mediapipe.tasks import python
+            from mediapipe.tasks.python import vision
+            base = python.BaseOptions(model_asset_path=_ensure_model())
+            opts = vision.PoseLandmarkerOptions(
+                base_options=base, running_mode=vision.RunningMode.VIDEO,
+                num_poses=1)
+            self._pose = vision.PoseLandmarker.create_from_options(opts)
+
+    def landmarks(self, frame_bgr, frame_idx):
+        rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        if self.api == "solutions":
+            res = self._pose.process(rgb)
+            return res.pose_landmarks.landmark if res.pose_landmarks else None
+        img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        res = self._pose.detect_for_video(img, int(frame_idx / self.fps * 1000))
+        return res.pose_landmarks[0] if res.pose_landmarks else None
+
+
+def draw_skeleton(frame, lm, w, h):
+    """ランドマークと主要セグメントを描く（両API共通の手動描画）。"""
+    for p in lm:
+        cv2.circle(frame, (int(p.x * w), int(p.y * h)), 3, (0, 200, 255), -1)
+    for a, b in _EDGES:
+        pa = (int(lm[a].x * w), int(lm[a].y * h))
+        pb = (int(lm[b].x * w), int(lm[b].y * h))
+        cv2.line(frame, pa, pb, (0, 255, 0), 2)
 
 
 def angle_of_line(p1, p2):
@@ -132,31 +197,28 @@ def main():
         str(out / "annotated.mp4"),
         cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
-    mp_pose = mp.solutions.pose
-    mp_draw = mp.solutions.drawing_utils
+    backend = PoseBackend(fps)
+    print(f"[info] mediapipe API: {backend.api}")
     rows = []
     frame_idx = 0
-    with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5,
-                      min_tracking_confidence=0.5) as pose:
-        while True:
-            ok, frame = cap.read()
-            if not ok:
-                break
-            res = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            if res.pose_landmarks:
-                m = compute_metrics(res.pose_landmarks.landmark, w, h, args.hand)
-                m["frame"] = frame_idx
-                m["t_sec"] = round(frame_idx / fps, 3)
-                rows.append(m)
-                mp_draw.draw_landmarks(frame, res.pose_landmarks,
-                                       mp_pose.POSE_CONNECTIONS)
-                y = 30
-                for k in ("separation_deg", "lead_knee_deg", "trunk_tilt_deg"):
-                    cv2.putText(frame, f"{k}: {m[k]}", (10, y),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                    y += 28
-            writer.write(frame)
-            frame_idx += 1
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        lm = backend.landmarks(frame, frame_idx)
+        if lm is not None:
+            m = compute_metrics(lm, w, h, args.hand)
+            m["frame"] = frame_idx
+            m["t_sec"] = round(frame_idx / fps, 3)
+            rows.append(m)
+            draw_skeleton(frame, lm, w, h)
+            y = 30
+            for k in ("separation_deg", "lead_knee_deg", "trunk_tilt_deg"):
+                cv2.putText(frame, f"{k}: {m[k]}", (10, y),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                y += 28
+        writer.write(frame)
+        frame_idx += 1
     cap.release()
     writer.release()
 

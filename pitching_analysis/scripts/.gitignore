@@ -1,3 +1,6 @@
 out/
 figures/
 __pycache__/
+out_*/
+*.task
+annotated.mp4
