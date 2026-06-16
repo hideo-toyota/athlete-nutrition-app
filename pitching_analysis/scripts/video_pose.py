@@ -1,0 +1,189 @@
+#!/usr/bin/env python3
+"""
+video_pose.py — 投球動画を MediaPipe Pose で解析し、関節角の時系列CSVと
+骨格を重ねた注釈動画を出力する。
+
+できること（2D・単一カメラ）:
+    - 骨盤-肩の分離角（rear/face視点向け）   … H-B
+    - 踏み出し脚の膝角（伸展=ブロック）        … H-H
+    - 体幹の前傾/側屈                          … H-B/H-D
+    - 腕スロット（肘の肩に対する高さ）          … H-D
+    - 各指標の時系列CSV ＋ 極値サマリー（最大分離角・最小膝角 等）
+
+使い方:
+    python3 video_pose.py input.mp4 --hand right --view rear -o ./out_video
+        --hand : right / left（投球腕。踏み出し脚＝反対側を自動選択）
+        --view : side / rear / face（指標の解釈ヒント。計算自体は共通）
+
+依存: mediapipe, opencv-python, numpy
+    pip install mediapipe opencv-python numpy
+
+注意:
+    1台のスマホ=2D解析。面外（カメラに対し奥行き方向）の動きには誤差が出る。
+    分離角は rear/face、ブロック/前傾は side が読みやすい。同じ画角で撮ると比較可。
+    高フレームレート（120/240fps）推奨。
+"""
+import argparse
+import csv
+import math
+import sys
+from pathlib import Path
+
+try:
+    import cv2
+    import numpy as np
+    import mediapipe as mp
+except ImportError as e:
+    sys.exit(f"依存が必要です: pip install mediapipe opencv-python numpy （{e}）")
+
+# MediaPipe Pose ランドマーク index
+L_SH, R_SH = 11, 12
+L_HIP, R_HIP = 23, 24
+L_KNEE, R_KNEE = 25, 26
+L_ANK, R_ANK = 27, 28
+L_ELB, R_ELB = 13, 14
+
+
+def angle_of_line(p1, p2):
+    """2点を結ぶ線の画像平面上の角度(度)。"""
+    return math.degrees(math.atan2(p2[1] - p1[1], p2[0] - p1[0]))
+
+
+def joint_angle(a, b, c):
+    """点b を頂点とする ∠abc（度, 0-180）。"""
+    ba = np.array([a[0] - b[0], a[1] - b[1]])
+    bc = np.array([c[0] - b[0], c[1] - b[1]])
+    nba, nbc = np.linalg.norm(ba), np.linalg.norm(bc)
+    if nba == 0 or nbc == 0:
+        return None
+    cosv = np.clip(np.dot(ba, bc) / (nba * nbc), -1.0, 1.0)
+    return math.degrees(math.acos(cosv))
+
+
+def trunk_tilt(hip_mid, sh_mid):
+    """体幹ベクトル(腰中央→肩中央)の鉛直からの傾き(度)。0=直立。"""
+    v = np.array([sh_mid[0] - hip_mid[0], sh_mid[1] - hip_mid[1]])
+    if np.linalg.norm(v) == 0:
+        return None
+    # 画像座標はy下向き。鉛直上=(0,-1)
+    vertical = np.array([0, -1])
+    cosv = np.clip(np.dot(v, vertical) / np.linalg.norm(v), -1.0, 1.0)
+    return math.degrees(math.acos(cosv))
+
+
+def compute_metrics(lm, w, h, hand):
+    """1フレームのランドマークから指標を計算。lm は normalized landmarks。"""
+    def pt(i):
+        return (lm[i].x * w, lm[i].y * h)
+
+    sh_line = angle_of_line(pt(L_SH), pt(R_SH))
+    hip_line = angle_of_line(pt(L_HIP), pt(R_HIP))
+    separation = abs(sh_line - hip_line)
+    if separation > 180:
+        separation = 360 - separation
+
+    # 踏み出し脚 = 投球腕の反対側
+    if hand == "right":
+        knee = joint_angle(pt(L_HIP), pt(L_KNEE), pt(L_ANK))
+        elb_y, sh_y = pt(R_ELB)[1], pt(R_SH)[1]
+    else:
+        knee = joint_angle(pt(R_HIP), pt(R_KNEE), pt(R_ANK))
+        elb_y, sh_y = pt(L_ELB)[1], pt(L_SH)[1]
+
+    hip_mid = ((pt(L_HIP)[0] + pt(R_HIP)[0]) / 2, (pt(L_HIP)[1] + pt(R_HIP)[1]) / 2)
+    sh_mid = ((pt(L_SH)[0] + pt(R_SH)[0]) / 2, (pt(L_SH)[1] + pt(R_SH)[1]) / 2)
+    tilt = trunk_tilt(hip_mid, sh_mid)
+
+    # 肘が肩より上か（負=肘が高い, 画像y下向き）。腕スロットの目安
+    arm_slot = sh_y - elb_y
+
+    return {
+        "separation_deg": round(separation, 1),
+        "lead_knee_deg": round(knee, 1) if knee is not None else "",
+        "trunk_tilt_deg": round(tilt, 1) if tilt is not None else "",
+        "arm_slot_px": round(arm_slot, 1),
+    }
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("video", help="入力動画 (mp4 等)")
+    ap.add_argument("--hand", choices=["right", "left"], default="right",
+                    help="投球腕（踏み出し脚は反対側）")
+    ap.add_argument("--view", choices=["side", "rear", "face"], default="rear",
+                    help="撮影視点（解釈ヒント）")
+    ap.add_argument("-o", "--out", default="./out_video", help="出力先")
+    args = ap.parse_args()
+
+    src = Path(args.video)
+    if not src.exists():
+        sys.exit(f"動画が見つかりません: {src}")
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+
+    cap = cv2.VideoCapture(str(src))
+    if not cap.isOpened():
+        sys.exit(f"動画を開けません: {src}")
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30
+    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    writer = cv2.VideoWriter(
+        str(out / "annotated.mp4"),
+        cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
+
+    mp_pose = mp.solutions.pose
+    mp_draw = mp.solutions.drawing_utils
+    rows = []
+    frame_idx = 0
+    with mp_pose.Pose(model_complexity=1, min_detection_confidence=0.5,
+                      min_tracking_confidence=0.5) as pose:
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                break
+            res = pose.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            if res.pose_landmarks:
+                m = compute_metrics(res.pose_landmarks.landmark, w, h, args.hand)
+                m["frame"] = frame_idx
+                m["t_sec"] = round(frame_idx / fps, 3)
+                rows.append(m)
+                mp_draw.draw_landmarks(frame, res.pose_landmarks,
+                                       mp_pose.POSE_CONNECTIONS)
+                y = 30
+                for k in ("separation_deg", "lead_knee_deg", "trunk_tilt_deg"):
+                    cv2.putText(frame, f"{k}: {m[k]}", (10, y),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    y += 28
+            writer.write(frame)
+            frame_idx += 1
+    cap.release()
+    writer.release()
+
+    if not rows:
+        sys.exit("姿勢を検出できませんでした（明るさ・全身が写るか・画角を確認）")
+
+    cols = ["frame", "t_sec", "separation_deg", "lead_knee_deg",
+            "trunk_tilt_deg", "arm_slot_px"]
+    with (out / "pose_metrics.csv").open("w", newline="", encoding="utf-8") as f:
+        wcsv = csv.DictWriter(f, fieldnames=cols)
+        wcsv.writeheader()
+        wcsv.writerows(rows)
+
+    # 極値サマリー
+    def best(key, fn):
+        vals = [(r[key], r["t_sec"]) for r in rows if isinstance(r[key], (int, float))]
+        return fn(vals, default=(None, None)) if vals else (None, None)
+
+    max_sep = best("separation_deg", lambda v, default: max(v, default=default))
+    min_knee = best("lead_knee_deg", lambda v, default: min(v, default=default))
+    print(f"[ok] {len(rows)}フレーム解析 -> {out}/annotated.mp4, pose_metrics.csv")
+    print("==== 極値サマリー ====")
+    print(f"最大 骨盤-肩 分離角: {max_sep[0]}° (t={max_sep[1]}s)  ※接地付近で確認(H-B)")
+    print(f"踏み出し脚 最小膝角: {min_knee[0]}°  ※リリースで伸展(180寄り)か(H-H)")
+    print("=====================")
+    print("注: 2D解析の近似値。同一画角での相対変化・トレンドで判断を。")
+
+
+if __name__ == "__main__":
+    main()
