@@ -44,7 +44,10 @@ python3 video_pose.py input.mp4 --hand right --view rear -o ./out_video
 
 - `--hand right/left`：投球腕（踏み出し脚は反対側を自動選択）
 - `--view side/rear/face`：撮影視点（分離角はrear/face、ブロック/前傾はsideが読みやすい）
-- 出力：`out_video/annotated.mp4`（骨格＋角度オーバーレイ）、`out_video/pose_metrics.csv`（分離角・前脚膝角・体幹傾斜・腕スロットの時系列）、極値サマリー（最大分離角・最小膝角）
+- `--slowmo 3`：スロー版(1/3速)も出力（既定3、`0`で無効。ffmpeg必須）
+- 出力：`out_video/annotated.mp4`（骨格＋角度オーバーレイ。**ffmpegがあればH.264で再生互換**、無ければmp4v）、`annotated_slow.mp4`（スロー版）、`out_video/pose_metrics.csv`（分離角・前脚膝角・体幹傾斜・腕スロットの時系列）、極値サマリー（最大分離角・最小膝角）
+
+> 再生互換のため `ffmpeg` の導入を推奨（`apt install ffmpeg` / `brew install ffmpeg`）。無くても解析・CSVは動作し、動画はmp4vのまま出力されます。
 
 **取得できる指標**：骨盤-肩 分離角(H-B) / 踏み出し脚 膝角=ブロック(H-H) / 体幹前傾(H-B,H-D) / 腕スロット(H-D)
 

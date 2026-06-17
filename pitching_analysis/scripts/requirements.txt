@@ -5,3 +5,5 @@ matplotlib>=3.7
 mediapipe>=0.10
 opencv-python>=4.8
 numpy>=1.24
+# 注: 注釈動画をH.264(再生互換)で出力・スロー版生成には ffmpeg が必要
+#     (pip外: apt install ffmpeg / brew install ffmpeg)。無くても解析は可。

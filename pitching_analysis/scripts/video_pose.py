@@ -109,6 +109,35 @@ def draw_skeleton(frame, lm, w, h):
         cv2.line(frame, pa, pb, (0, 255, 0), 2)
 
 
+def reencode_h264(src_mp4, slowmo=0.0):
+    """ffmpeg があれば annotated.mp4 を H.264(yuv420p) に再エンコードし、
+    多くのプレーヤー/ブラウザで再生可能にする。OpenCV の mp4v は非互換な
+    ことが多いため。slowmo>1 で低速版(annotated_slow.mp4)も作る。
+    ffmpeg が無ければ mp4v のまま残し、警告を出すだけ。"""
+    import shutil
+    import subprocess
+    src_mp4 = Path(src_mp4)
+    if shutil.which("ffmpeg") is None:
+        print("[warn] ffmpeg未検出: annotated.mp4 は mp4v のまま。"
+              "再生できない場合は H.264 へ変換してください。")
+        return
+    tmp = src_mp4.with_name("_h264.mp4")
+    subprocess.run(["ffmpeg", "-y", "-i", str(src_mp4), "-c:v", "libx264",
+                    "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(tmp)],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    tmp.replace(src_mp4)
+    print(f"[ok] H.264へ再エンコード: {src_mp4}")
+    if slowmo and slowmo > 1.0:
+        slow = src_mp4.with_name("annotated_slow.mp4")
+        subprocess.run(["ffmpeg", "-y", "-i", str(src_mp4), "-filter:v",
+                        f"setpts={slowmo}*PTS", "-r", "30", "-c:v", "libx264",
+                        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+                        str(slow)],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       check=True)
+        print(f"[ok] スロー版({slowmo}倍遅): {slow}")
+
+
 def angle_of_line(p1, p2):
     """2点を結ぶ線の画像平面上の角度(度)。"""
     return math.degrees(math.atan2(p2[1] - p1[1], p2[0] - p1[0]))
@@ -178,6 +207,8 @@ def main():
     ap.add_argument("--view", choices=["side", "rear", "face"], default="rear",
                     help="撮影視点（解釈ヒント）")
     ap.add_argument("-o", "--out", default="./out_video", help="出力先")
+    ap.add_argument("--slowmo", type=float, default=3.0,
+                    help="スロー版の倍率(例3=1/3速)。0で無効。ffmpeg必須")
     args = ap.parse_args()
 
     src = Path(args.video)
@@ -221,6 +252,7 @@ def main():
         frame_idx += 1
     cap.release()
     writer.release()
+    reencode_h264(out / "annotated.mp4", slowmo=args.slowmo)
 
     if not rows:
         sys.exit("姿勢を検出できませんでした（明るさ・全身が写るか・画角を確認）")
