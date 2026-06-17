@@ -55,53 +55,58 @@ Sources(検証):
 
 ---
 
-## 本人記入用 ToS 転記ワークシート(空欄・FACTはあなたが原本から埋める)
+## 本人記入用 ToS 転記ワークシート(AI下書き・本人FACT化待ち)
 
 > 使い方:各設問を**規約原本の該当箇所**で確認し、`回答`/`出典URL`/`確認日`/`原文の要点(引用)` を埋める。
-> **確認できない設問は「未確認」と書く**(空欄=未着手と区別)。私(AI)は値を埋めない・キーには触れない。
+> **確認できない設問は「未確認」と書く**(空欄=未着手と区別)。この節は公開ページを読んだAI下書きであり、
+> 本人が原本で最終確認するまでFACT化しない。APIキー/.env/データAPIには触れていない。
 > 埋め終わったら、下の「## 解除ゲート(段階)」の条件に従って GO/NO-GO が自動的に決まる。
 
 ### A. J-Quants(JPX・有料契約)
-原本: 利用規約 URL =(未記入) / 契約プラン名 =(未記入)
+原本: 利用規約 URL = **未確認**(公開Helpは確認。ログイン後ToS本文は本人確認待ち) / 契約プラン名 = **未確認**(本人確認待ち)
 
 | # | 設問(Yes/No/条件) | 回答 | 出典URL+節 | 確認日 | 原文の要点 |
 |---|---|---|---|---|---|
-| J1 | API のプログラム的利用は許可されているか | (未記入) | (未記入) | (未記入) | (未記入) |
-| J2 | 取得データを**ローカルに保存(raw キャッシュ)**してよいか(=sync の前提) | (未記入) | | | |
-| J3 | 保存の**保持期間/purge 義務**はあるか(あれば期間) | (未記入) | | | |
-| J4 | 取得データから**派生指標(比率・成長率等)を生成・保存**してよいか | (未記入) | | | |
-| J5 | 取得データを**第三者(Claude等のLLM)に入力**してよいか【致命】 | (未記入) | | | |
-| J6 | 上記が条件付き可なら、**送信粒度**(raw不可/要約のみ可 等)の条件は | (未記入) | | | |
-| J7 | **再配布**(生データ/wrapper API/一括配布)は禁止か | (未記入) | | | |
-| J8 | **レート上限**(1日/1分あたり)・課金区分 | (未記入) | | | |
-| J9 | **出典表記(attribution)**の要否(個人内利用/公開時) | (未記入) | | | |
-| J10 | その他の**禁止事項**(スクレイピング・自動売買連携 等) | (未記入) | | | |
+| J1 | API のプログラム的利用は許可されているか | 条件付きYes(個人の私的利用範囲) | <https://jpx-jquants.com/en> — Deploy faster / Generative AI; <https://jpx-jquants.com/en/help/usage> — Usage & License | (本人確認待ち) | 公式ページに `requests.get("https://api.jquants.com/v2/...")` のコード例、MCP/CSV利用の説明あり。Helpは個人の私的利用に限定すると説明。 |
+| J2 | 取得データを**ローカルに保存(raw キャッシュ)**してよいか(=sync の前提) | 未確認(根拠不足) | <https://jpx-jquants.com/en/help/usage> — Usage & License | (本人確認待ち) | 契約中の個人分析利用は示されるが、rawキャッシュ保存の明示条件は公開Helpからは特定できない。解約後・上位プラン変更後は取得済みデータ削除の記述あり。 |
+| J3 | 保存の**保持期間/purge 義務**はあるか(あれば期間) | 条件あり(解約/退会・下位プラン変更時は削除)。契約中retentionは未確認 | <https://jpx-jquants.com/en/help/usage> — "Can I use the data after I cancel..." / "After changing plans..." | (本人確認待ち) | J-Quants APIはデータ利用サービスでありデータ販売ではない。解約・退会後は取得済みデータを削除、上位プランで取得したデータはプラン変更後に削除、と説明。 |
+| J4 | 取得データから**派生指標(比率・成長率等)を生成・保存**してよいか | 条件付きYes(個人の投資分析・ポートフォリオ管理の範囲) | <https://jpx-jquants.com/en/help/usage> — "What do you mean by private use?" / "Can I use ... for blogs..." | (本人確認待ち) | 私的利用は自身の投資分析・ポートフォリオ管理等。分析結果や分析手法の公開は可。ただし継続反復して第三者へ提供/配信する行為は私的利用ではない。 |
+| J5 | 取得データを**第三者(Claude等のLLM)に入力**してよいか【致命】 | 未確認(致命・根拠不足) | <https://jpx-jquants.com/en> — Generative AI; <https://jpx-jquants.com/en/help/usage> — Usage & License | (本人確認待ち) | 公式ページは生成AI/MCPでのデータアクセスを説明するが、取得データを第三者LLMへ入力すること、AI提供側の保持/学習、Claude等へのraw投入可否は公開Helpでは明示確認できない。 |
+| J6 | 上記が条件付き可なら、**送信粒度**(raw不可/要約のみ可 等)の条件は | 未確認 | <https://jpx-jquants.com/en/help/usage> — Usage & License | (本人確認待ち) | raw/derived/要約の粒度別条件は公開Helpからは確認できない。rawデータを閲覧可能な形で配布・共有することは禁止。 |
+| J7 | **再配布**(生データ/wrapper API/一括配布)は禁止か | Yes(禁止) | <https://jpx-jquants.com/en/help/usage> — "Can I use ... for blogs..." / "Can I publish or distribute an app..." | (本人確認待ち) | API取得データそのものを閲覧できる形で配布・シェアは禁止。ユーザー間でJ-Quantsデータ/分析結果を共有・公開する機能、事業者サーバでの保存/中継は私的利用でなく禁止。 |
+| J8 | **レート上限**(1日/1分あたり)・課金区分 | 条件付き確認(公開料金表: Free 5件/分, Light 60件/分, Standard 120件/分, Premium 500件/分。本人契約プランは未確認) | <https://jpx-jquants.com/en> — Pricing plan comparison | (本人確認待ち) | 公開料金表にAPIコール制限と各プランのデータ範囲が掲載。本人が契約した有料プラン名は別途確認が必要。 |
+| J9 | **出典表記(attribution)**の要否(個人内利用/公開時) | 未確認(公開Helpでは明示なし) | <https://jpx-jquants.com/en/help/usage> — "Can I publish analysis results..." | (本人確認待ち) | 分析結果/手法の公開可、raw直接配布禁止の記述はあるが、attribution必須文言は公開Helpでは確認できない。 |
+| J10 | その他の**禁止事項**(スクレイピング・自動売買連携 等) | 条件あり(法人利用・第三者配布・継続反復提供・アプリ事業者サーバ保存/中継は禁止。自動売買連携は未確認) | <https://jpx-jquants.com/en/help/usage> — Usage & License | (本人確認待ち) | 法人利用、第三者へのデータ配布、個人によるデータ利用アプリ提供、継続反復の分析結果提供は私的利用外。自動売買連携の明示条項は公開Helpでは未確認。 |
 
 ### B. EDINET DB(Cabocia・REST=edinetdb.com/v1 / MCP=edinetdb.jp/mcp)
-原本: 規約 URL = `edinetdb.com/legal/terms`(原本で要確認) / 契約プラン =(未記入・無料100 or Pro1000)
+原本: 規約 URL = `edinetdb.com/legal/terms`(AI下書き・本人確認待ち) / 契約プラン = **未確認**(本人確認待ち。公開docs上はFree 100/day・Pro 1,000/day)
 
 | # | 設問(Yes/No/条件) | 回答 | 出典URL+節 | 確認日 | 原文の要点 |
 |---|---|---|---|---|---|
-| E1 | API/MCP のプログラム的利用は許可されているか | (未記入) | (未記入) | (未記入) | (未記入) |
-| E2 | 取得データを**ローカルに保存(raw キャッシュ)**してよいか・「一時キャッシュ」の定義/期間 | (未記入) | | | |
-| E3 | **保持期間/purge 義務** | (未記入) | | | |
-| E4 | **派生指標の生成・保存**は可か(※AI所見/分析スコア=Cabocia著作物は別扱い) | (未記入) | | | |
-| E5 | 取得データを**第三者LLM(Claude/MCP経由含む)に入力**してよいか【致命】 | (未記入) | | | |
-| E6 | 送信粒度の条件(raw/要約) | (未記入) | | | |
-| E7 | **再配布**(一括/wrapper API)は禁止か | (未記入) | | | |
-| E8 | **契約プランの上限**(Pro=1,000/日 で合っているか)・課金 | (未記入) | | | |
-| E9 | **attribution**(公開時の出典表記要請)の具体文言 | (未記入) | | | |
-| E10 | AI所見/分析スコアの利用条件(=INFERENCE固定・FACT化禁止は実装側で担保済) | (未記入) | | | |
+| E1 | API/MCP のプログラム的利用は許可されているか | Yes(REST API/MCP提供。APIキー条件あり) | <https://edinetdb.com/legal/terms> — 1. Service Description / 4. API and MCP Terms; <https://edinetdb.com/docs/api> — Public REST API; <https://edinetdb.jp/docs/mcp-guide> — 技術仕様 | (本人確認待ち) | サービスはWeb/REST API/MCPで提供。REST/MCPは同じAPIキーでアクセス可。API docsはBase URL/API key header、MCP guideはClaude Code等の接続例を記載。 |
+| E2 | 取得データを**ローカルに保存(raw キャッシュ)**してよいか・「一時キャッシュ」の定義/期間 | 条件付きYes(性能目的の一時キャッシュ可。期間は未確認) | <https://edinetdb.com/legal/terms> — 5-1. Permitted Use | (本人確認待ち) | APIレスポンスを性能目的で一時キャッシュすることは可。ただし定期的にAPIから最新データを再取得する条件あり。具体的な保存期間は未記載。 |
+| E3 | **保持期間/purge 義務** | 未確認(具体期間なし。定期再取得条件のみ確認) | <https://edinetdb.com/legal/terms> — 5-1. Permitted Use / 12. Distribution of IR-Related PDFs | (本人確認待ち) | 一時キャッシュは定期再取得が条件。ユーザー側rawキャッシュの保持期間/purge義務の具体日数は未確認。IR PDFの3-5年アーカイブ方針はサービス側配布物の説明で、ユーザー保存期間ではない。 |
+| E4 | **派生指標の生成・保存**は可か(※AI所見/分析スコア=Cabocia著作物は別扱い) | Yes(条件付き。自分のアプリ/レポート等で処理・分析・利用可。Cabocia著作物は別扱い) | <https://edinetdb.com/legal/terms> — 2. Data Source and Copyright / 4. API and MCP Terms / 5-1. Permitted Use / 9. Intellectual Property and Copyright | (本人確認待ち) | API/MCPデータの商用利用、処理・分析・アプリ/ダッシュボード/レポート利用は可。分析スコア、AI要約、entity resolution等のCabocia独自著作物はCabociaに帰属。 |
+| E5 | 取得データを**第三者LLM(Claude/MCP経由含む)に入力**してよいか【致命】 | 条件付き/一部確認: 公式MCPでClaude/ChatGPT接続はdocs化。任意の第三者LLMへraw投入・AI側保持/学習は未確認 | <https://edinetdb.jp/docs/mcp-guide> — Claude Code / Claude Desktop / 技術仕様; <https://edinetdb.com/legal/terms> — 3-2. AI Summaries / 5-3. Commercial Data Provision to Third Parties | (本人確認待ち) | MCP guideはClaude Code/Claude Desktop/Cursor等の接続例を示す。TermsはユーザーのAPI/MCPリクエストpayloadをEDINET DB側の生成AIには渡さないと説明。一方、取得データを任意の第三者LLMへraw投入する一般許諾やAI側保持/学習条件は未確認。 |
+| E6 | 送信粒度の条件(raw/要約) | 未確認(公式MCP利用以外のraw/derived/要約粒度条件は不明) | <https://edinetdb.jp/docs/mcp-guide> — 使用例 / 技術仕様; <https://edinetdb.com/legal/terms> — 5-2. Prohibited Use | (本人確認待ち) | MCP tool callで企業検索/スクリーニング等をAIクライアントから利用する例はある。raw/derived/要約別の第三者LLM送信条件は未確認。Webサイトのスクレイピング/AI学習用収集は禁止。 |
+| E7 | **再配布**(一括/wrapper API)は禁止か | Yes(一括再配布・wrapper/proxy APIは禁止。B2B/第三者システム統合は別契約) | <https://edinetdb.com/legal/terms> — Point Summary / 5-2. Prohibited Use / 5-3. Commercial Data Provision to Third Parties | (本人確認待ち) | API/MCP取得データの全部または相当部分を第三者へ一括提供・再配布すること、実質同等API(wrapper/proxy)を提供することは禁止。第三者システム/DBへの直接保存・統合は別契約が必要。 |
+| E8 | **契約プランの上限**(Pro=1,000/日 で合っているか)・課金 | 条件付き確認(公開docs: Free 100/day, Pro 1,000/day, Business 10,000/day。本人契約プランは未確認) | <https://edinetdb.com/docs/api> — Public REST API / Rate Limits; <https://edinetdb.com/developers> — Pricing Plans; <https://edinetdb.com/legal/terms> — 6. Plans and Billing | (本人確認待ち) | API docsにRate Limits per accountとしてAnonymous/Free 100/day、Pro 1,000/day、Business 10,000/day。Paid plansは月額サブスクでStripe決済。 |
+| E9 | **attribution**(公開時の出典表記要請)の具体文言 | Yes(公開サービスは "Powered by EDINET DB" 等の attribution 必須) | <https://edinetdb.com/legal/terms> — Point Summary / 4. API and MCP Terms / 5-2. Prohibited Use | (本人確認待ち) | APIデータを使う公開サービスは "Powered by EDINET DB" 等の出典表記が必要。attributionなしのpublic-facing serviceは禁止事項に含まれる。 |
+| E10 | AI所見/分析スコアの利用条件(=INFERENCE固定・FACT化禁止は実装側で担保済) | 条件付き利用可。ただしCabocia著作物・不正確性リスクあり・投資/信用判断の根拠にしない | <https://edinetdb.com/legal/terms> — 2. Data Source and Copyright / 3-2. AI Summaries / 9. Intellectual Property and Copyright | (本人確認待ち) | AI summariesはLLM生成で不正確な可能性があり、投資/信用判断の基礎にしない。AI summaries/financial health score algorithms/entity resolution等はCabocia著作物。実装ではINFERENCE固定。 |
 
 ### 解除ゲート(段階・上のワークシートが埋まると自動的に決まる)
-> いまは全ゲート **NO-GO**(未確認のため)。下の条件が「可」で揃った段階だけ解除する。
+> AI下書き時点では、本人が原本で最終確認するまで **FACT化しない**。下の条件が本人確認済みで「可」になった段階だけ解除する。
 
 1. **A1(疎通のみ・raw保存しない・LLMに渡さない)** ← 解除条件: **J1 と E1 が「可」**。
    - キー存在確認 + 最小リクエストで疎通可否を返すだけ。raw を保存せず、取得本文を Claude にも渡さない。
+   - AI下書き判定: **J1=条件付きYes / E1=Yes → 本人確認後にA1 GO候補**。本人確認前は判定不能。
 2. **B(sync=raw保存)** ← 追加で **J2/J3 と E2/E3 が「可」**(保持/purge 条件を実装に反映)。
+   - AI下書き判定: **J2=未確認 / J3=条件あり / E2=条件付きYes / E3=未確認 → NO-GO/判定不能**。
 3. **第三者LLM入力(evidence/research を Claude が読む・MCP利用)** ← 追加で **J5 と E5 が「可」**【最重要】。
    - これが「不可/未確認」の間は、**取得データを分析エージェントに渡さない**(value-audit Phase B/C もここに依存)。
+   - AI下書き判定: **J5=未確認 / E5=条件付き・一般raw投入は未確認 → NO-GO/判定不能**。公式MCP利用とローカルrawをClaudeへ渡す設計は分けて再確認。
 4. **公開・配布しない前提の維持** ← **J7/E7 が「再配布禁止」**を確認し、個人内利用に留める(attribution J9/E9 はメモ)。
+   - AI下書き判定: **J7=禁止 / E7=禁止 → 個人内利用・非再配布前提は維持必須**。公開/第三者提供は別設計・別確認。
 
 > 補足: **A1 を通すだけなら J1/E1 の確認で足りる**が、実際の分析(財務を Claude に読ませる)には J5/E5(第三者LLM入力)が必須。
 > ここが本丸なので、**J5 と E5 を最優先で確認**することを勧める。
