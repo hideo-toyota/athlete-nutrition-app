@@ -6,6 +6,8 @@
 > **買い候補を作らない・銘柄を推奨しない・将来を予測しない。** research_item / evidence / score の系譜。
 > v2(2026-06-15): 設計レビュー反映(DCA UNKNOWN 構造化 / checklist 構造化 / position_intent /
 > ID・イベントソース確定 / path safety / 年率換算の極端値対策 / anti_thesis 必須 / review 表示順)。
+> v2.1(2026-06-17): Phase A 着手前の細部固定(operator 真理表 §2.6.1 / 集計 status 固定 §2.0・§4.1 /
+> ticker 正規表現 §2.5 / anti_thesis 品質ゲート §3 / Phase A 初期値 §9.0 / 価格系列方針 §9.1 / §12 最終判定)。
 
 ---
 
@@ -53,7 +55,10 @@
   "unit": "x|%|円|null", "note": "UNKNOWN の理由など(任意)" }
 ```
 - **`status:"UNKNOWN"` のとき `value` は必ず `null`**(0 や false にしない)。
-- hit率・一致率などの集計は **`status` が確定値(CALCULATION 等)の要素のみ**を分母にする(§4.1)。
+- **集計分母に入れる status = `FACT` / `CALCULATION` のみ**。
+  `INFERENCE` / `ASSUMPTION` / `UNKNOWN` は **hit率・一致率の分母から除外**(§4.1)。
+  - `INFERENCE` / `ASSUMPTION` は review で**補足表示のみ**(集計しない)。
+  - `UNKNOWN` は**「負け」「不一致」に数えない**(分母外)。
 
 ### 2.1 `value_thesis`(検証対象の仮説。research_item の subtype・**買い候補ではない**)
 DATA_LAYER §10 の **語彙ロックを継承**(`type:"research_item"` 固定、`buy_candidate` 等の語は禁止)。
@@ -181,11 +186,11 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
 ```jsonc
 "value_audit": {
   "annual_hurdle_pct": 10,           // ★ハードル(ASSUMPTION)。予測でない
-  "hurdle_basis": "pre_tax",         // 🔸未決(§9-2)。post_tax なら target-check の t=0.20315/NISA と整合
+  "hurdle_basis": "pre_tax",         // Phase A 初期値(§9.0)。post_tax なら target-check の t=0.20315/NISA と整合
   "annualization_day_base": 365,     // 年率換算の基準日数(固定・再現性)
-  "min_cycle_days": 45,              // ★これ未満は年率換算を UNKNOWN/warning(短期外れ値対策・item6)🔸値は要決定
-  "max_cycle_days": 200,             // ★これ超は同上(決算遅延・特殊サイクル)🔸値は要決定
-  "benchmark_index_ref": null,       // DCA 比較に使う指数の“価格系列”。無ければ対DCA=UNKNOWN(item1/§9-1)
+  "min_cycle_days": 45,              // Phase A 初期値(§9.0)。未満は年率換算 UNKNOWN/別枠(item6)
+  "max_cycle_days": 200,             // Phase A 初期値(§9.0)。超は同上(決算遅延・特殊サイクル)
+  "benchmark_index_ref": null,       // Phase A 初期値(§9.0)。価格系列が無ければ対DCA=UNKNOWN(item1)
   "min_metrics_for_audit": 3         // valuation のうち status が確定値の数がこの数未満なら「評価不能」と明示
 }
 ```
@@ -208,10 +213,12 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
   (既存 `decision_log.jsonl` と同様)。`*.example.jsonl` と本 SPEC のみ追跡。
 
 ### 2.5 entity / ticker / path safety(Phase A の最低限 / item5)
-- **ticker 厳格バリデーション(Phase A・必須)**:許可文字のみ(英数・`.` `_` `-`)、長さ上限(例 1–15)、
-  **空文字・空白・`/`・`\`・`..`・制御文字を拒否**(SystemExit)。
-- **path traversal 禁止**:出力ファイル名は **ticker を safe slug 化**(許可外文字を除去/置換)し、
-  `outputs/value_audit/<slug>.md` に限定。**slug が空・`.`/`..` になる入力は拒否**。ディレクトリ脱出を許さない。
+- **ticker 厳格バリデーション(Phase A・必須・一意)**:**正規表現 `^[A-Za-z0-9._-]{1,15}$` に完全一致**するもののみ許可。
+  **`/`・`\`・`..`・空白・制御文字・全角文字・空文字を拒否**(SystemExit)。
+- **safe slug**:`slug = ticker`(上記検証を通過したものに限定。許可文字のみなので追加変換は不要)。
+  **slug が空・`.`・`..` になる入力は拒否**。
+- **path traversal 禁止**:出力先は **`outputs/value_audit/<slug>.md` から外に出てはいけない**。
+  解決後の絶対パスが `outputs/value_audit/` 配下であることを確認し、外れるものは拒否(ディレクトリ脱出不可)。
 - **entity 識別子**:`ticker`(Phase A 主キー)、`securities_code`/`edinet_code`/`company_id`/`isin` は任意。
   **本格的な名寄せは DATA_LAYER §9 の entity mapping と合流(B/C)**。
 - **上場廃止 / コード変更 / 社名変更 / コード再割当**:Phase A では解決しない →
@@ -232,6 +239,26 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
   `expectation`/`why` は**判定に使わない**(主観混入の遮断)。
 - `actual` が UNKNOWN の項目、`qualitative_only:true` の項目は **一致率の分母から除外**(§4.1)。
 
+#### 2.6.1 operator 真理表(実装一意・ブレ防止)
+`matched` の決定規則。`tolerance` 未指定時は **`0.0`**。比較はすべて `actual.value`(数値)対 `threshold`。
+
+| 前提 / operator | 判定 |
+|---|---|
+| `actual.status == UNKNOWN` | `matched = null` / **集計分母から除外** |
+| `qualitative_only == true` | `matched = null` / **集計分母から除外** |
+| `actual.value` が非数値 / nan / inf | **UNKNOWN として扱う**(0 にしない)→ `matched = null` / 分母除外 |
+| `>=` | `actual.value >= threshold - tolerance` |
+| `>`  | `actual.value >  threshold - tolerance` |
+| `<=` | `actual.value <= threshold + tolerance` |
+| `<`  | `actual.value <  threshold + tolerance` |
+| `==` | `abs(actual.value - threshold) <= tolerance` |
+| `in_range`(`threshold=[lo,hi]`・境界含む) | `actual.value >= lo - tolerance && actual.value <= hi + tolerance` |
+| `out_of_range`(`threshold=[lo,hi]`) | `actual.value < lo - tolerance \|\| actual.value > hi + tolerance` |
+
+- **型整合チェック**:`operator` が `in_range`/`out_of_range` のとき `threshold` は **長さ2の `[lo,hi]`(lo<=hi)**、
+  それ以外は**スカラ数値**。型が合わなければ **register 拒否(snapshot 時) / score 停止(採点時)**(黙って通さない)。
+- `falsification_triggered` も同じ真理表で判定(発火 = 条件式が真)。UNKNOWN は発火に数えない。
+
 ---
 
 ## 3. 「割安」を曖昧にしない(定義契約)
@@ -246,6 +273,11 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
 - **反対仮説を必須**(`anti_thesis`・item7):「安いのは正当かもしれない理由」「構造劣化かもしれない理由」
   「次決算でリスクが強まる条件」を**事前に書く**。これが無ければ register 拒否。
   cheapness_reason の自己正当化(構造劣化を“一時要因”と都合よく解釈)への歯止め。
+- **anti_thesis 品質ゲート(コピペ形骸化の防止 / item6)**:
+  - `why_cheap_may_be_deserved` / `structural_risk_case` / `intensifies_if` は **いずれも空不可**(空なら register 拒否)。
+  - `intensifies_if` は **可能なら §2.6 の構造化条件に1件以上リンク**(metric/operator/threshold で表現)。
+  - **定型文・プレースホルダのみの入力は拒否または警告**(例: `...`・既定例文・cheapness_reason の丸写し)。
+  - review では **cheapness_reason だけでなく anti_thesis も表示**(両論併記・原則4)。
 - **次決算で確認する指標を事前固定**(`next_earnings_checklist`・構造化 §2.6)。snapshot 後に項目を足さない。
 - **反証条件を必須**(`falsification`・構造化 §2.6)。「これが起きたら仮説は壊れた」を事前に書く(原則3・4)。
 
@@ -267,15 +299,18 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
 ### 4.1 較正レポート(review)— 表示順は固定(ゲーミフィケーション防止 / item8)
 **この順で出す。hit率を先頭に出さない。**
 1. **サンプル不足 / UNKNOWN / データ欠損**(まず「分かっていないこと」。原則3)。
-   サンプル < 20 は「統計的結論は保留」。決算は年≈4回でサンプルが貯まるのに**数年**かかる旨を明記(§9-9)。
+   サンプル < 20 は「統計的結論は保留」。決算は年≈4回でサンプルが貯まるのに**数年**かかる旨を明記(§9.2-5)。
 2. **反証条件に触れた件数**(falsification 発火)。
 3. **規律違反・集中度・最大DD**(リスク。max DD が UNKNOWN ならそう書く)。
-4. **checklist 一致率**(構造化フィールドのみ・UNKNOWN/qualitative_only は分母から除外)。
-5. **対10%ハードル hit率**(annualized が確定値の outcome のみが分母。年率換算 UNKNOWN/範囲外は除外)。
-6. **対DCA hit率**(**benchmark が確定値の outcome のみが分母**。価格系列が無い Phase A は
-   「対DCA=UNKNOWN(未算出)」と表示し、**hit率は出さない**)。
-- **集計の鉄則**:`status` が確定値の要素だけを分母にする。**UNKNOWN を「負け」「不一致」に数えない**(§2.0)。
+4. **checklist 一致率**:分母は **`actual.status in (FACT, CALCULATION)` かつ `qualitative_only == false`** の項目のみ。
+5. **対10%ハードル hit率**:分母は **`annualized_return.status == CALCULATION`** の outcome のみ
+   (年率換算 UNKNOWN・cycle_days 範囲外は除外)。
+6. **対DCA hit率**:分母は **`benchmark.return.status == CALCULATION` かつ `beat_dca.status == CALCULATION`** の
+   outcome のみ。価格系列が無い Phase A は「対DCA=UNKNOWN(未算出)」と表示し、**hit率は出さない**。
+- **集計の鉄則**(§2.0):分母に入れる status = **`FACT` / `CALCULATION` のみ**。
+  `INFERENCE` / `ASSUMPTION` は補足表示のみ、`UNKNOWN` は**「負け」「不一致」に数えない**(分母外)。
 - **短期/長期の外れ値**(cycle_days が範囲外)は**別枠**で件数表示し、対10% hit率には混ぜない(item6)。
+- review には **cheapness_reason と anti_thesis の両方**を表示(両論併記・§3)。
 
 ---
 
@@ -294,7 +329,7 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
 ### 5.3 約定を装わない(look-ahead 回避)
 - `entry_rule = next_trading_close`:snapshot_at の **翌取引日終値**を起点価格とする(同時刻の終値で“約定”しない)。
 - これは**約定ではなく評価基準(ASSUMPTION)**と明記。サイクル終端も次決算 available_at の翌取引日終値で対称に。
-- 決算跨ぎギャップの寄り/引けの細部は**要確認(§9-5)**だが、「翌取引日終値・対称」という前提は固定。
+- 決算跨ぎギャップの寄り/引けの細部は**要確認(§9.2-3)**だが、「翌取引日終値・対称」という前提は固定。
 
 ### 5.4 採点タイミング / 凍結
 - `value-audit score` は **`next_earnings_available_at <= asof` のサイクルのみ採点**。未到来は `pending`。
@@ -354,6 +389,13 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
   が UNKNOWN(または warning)。**raw_return は出る**。対10% hit率の分母に**入らない**。review で別枠表示。
 - **checklist 構造化(item2)**:一致/発火は **operator/threshold/tolerance/actual のみ**から判定。
   `expectation`/`why` を変えても一致率が変わらない。`qualitative_only`/UNKNOWN は分母から除外。
+- **operator 真理表(§2.6.1)**:`>= > <= < == in_range out_of_range` の境界・tolerance を既知 fixture で検証。
+  `tolerance` 未指定=0.0。**型不整合(in_range に スカラ等)で register 拒否/score 停止**。
+  `actual` が非数値/nan/inf は **UNKNOWN 扱い**(matched=null・分母外、0 にしない)。
+- **集計 status(§2.0・§4.1)**:hit率/一致率の分母は **`FACT`/`CALCULATION` のみ**。
+  `INFERENCE`/`ASSUMPTION` は補足表示で集計しない。`UNKNOWN` を負け/不一致に数えない。
+- **anti_thesis 品質ゲート(item6)**:`why_cheap_may_be_deserved`/`structural_risk_case`/`intensifies_if`
+  のいずれか空で **register 拒否**。定型文・プレースホルダのみは拒否/警告。review に anti_thesis が出る。
 - **必須項目**:`cheapness_reason` / `anti_thesis` / `falsification` / `next_earnings_checklist` の
   **いずれか欠落で register 拒否**(item7 含む)。
 - **買い意思フィールド禁止(item3)**:`buy_intent`/`entry_plan`/`target_price`/`position_size` 等が
@@ -372,24 +414,42 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
 
 ---
 
-## 9. コード前に決めるべき未確定事項(🔸 / 要・人間判断)
+## 9. 確定値 / 価格系列方針 / 残る未確定事項
 
-> v2 で **DCA UNKNOWN 化(1)/ checklist 構造化(2)/ journal 分離(旧6)/ ID・保存先(旧7)/ 起点価格(旧5の前提)**
-> は**設計確定**(§2・§5.3)。残るのは下記。
+> v2 で **DCA UNKNOWN 化 / checklist 構造化 / journal 分離 / ID・保存先 / 起点価格** は設計確定(§2・§5.3)。
+> v2.1 で下記 §9.0 を **Phase A 初期値として固定**し、価格系列方針(§9.1)を追記。残未決は §9.2。
 
-1. 🔸**ハードルの税基準**(`hurdle_basis`):pre-tax(暫定)か post-tax か。post-tax にするなら target-check の
-   `t=0.20315` / NISA 非課税分岐と整合させる。**要決定**。
-2. 🔸**DCA 価格系列の入手**:`benchmark_index_ref` に入れる**指数の価格系列**をどこから持つか
-   (代替 ETF 終値の手入力 fixture か / B の sync 後か)。確定まで A は**対DCA=UNKNOWN**で進める(§4.1)。
-3. 🔸**`min_cycle_days` / `max_cycle_days` の値**:何日を外れ値とみなすか(暫定 45 / 200)。**要決定**。
-4. 🔸**進捗率(progress_rate)の入力**:会社予想(ガイダンス)が PIT で取れるか・改訂版管理。
+### 9.0 Phase A 初期値(決定済・固定。未決ではない)
+これらは Phase A 実装の**初期値として確定**。**変更可だが、変更時は `config` 値 + `schema_version` に必ず残す**
+(後から黙って書き換えない・再現性)。
+| 項目 | Phase A 初期値 | 備考 |
+|---|---|---|
+| `hurdle_basis` | **`pre_tax`** | post_tax 化は target-check の `t=0.20315`/NISA と整合させてから |
+| `min_cycle_days` | **45** | これ未満は年率換算 UNKNOWN/別枠(§2.3・§4.1) |
+| `max_cycle_days` | **200** | これ超は同上 |
+| `benchmark_index_ref` | **`null`** | 価格系列が無い |
+| 対DCA | **UNKNOWN** | benchmark/excess/beat_dca は null+UNKNOWN(§2.2) |
+| 対DCA hit率 | **Phase A では出さない** | 価格系列が入る Phase B で CALCULATION に昇格(§10) |
+| `annualization_day_base` | **365** | 固定 |
+| `min_metrics_for_audit` | **3** | 確定値 metric がこれ未満なら「評価不能」 |
+
+### 9.1 価格系列の調整方針(Phase A は手入力・実装しない / B以降の指針 / item5)
+Phase A は手入力 snapshot なので**価格系列処理は実装しない**。B 以降に向け、方針だけ固定:
+- **可能なら調整後終値(adjusted close)を使う**。
+- **株式分割・併合・配当・権利落ちの扱いを dataset 仕様で明示**(どの調整が適用済みかを provenance に持つ)。
+- **未調整価格しか無い場合**:`price_adjustment_status: "UNKNOWN"` とし、**return 計算に警告**を出す(黙って使わない)。
+- **配当込みリターンを計算できない場合**:**price return** と明記し、**total return と混同しない**(別フィールド)。
+- これらは **B/C の ToS・データ仕様確認まで実装しない**(LICENSE_MATRIX ブロッカー)。
+
+### 9.2 残る未確定事項(🔸 / B・C または人間レビュー)
+1. 🔸**進捗率(progress_rate)の入力**:会社予想(ガイダンス)が PIT で取れるか・改訂版管理。
    取れない場合は UNKNOWN 固定。**要確認**(データ層 B)。
-5. 🔸**同業相対の universe**:coverage が無いと sector_relative は常に UNKNOWN。
+2. 🔸**同業相対の universe**:coverage が無いと sector_relative は常に UNKNOWN。
    universe 構築は sync 依存(C)。A/B でどこまで「相対なし」で意味を持たせるか。**要決定**。
-6. 🔸**決算跨ぎギャップの細部**:翌取引日の寄り/引けのどちらか(§5.3 は「終値・対称」を暫定固定)。**要確認**。
-7. 🔸**feature 式の確定**:EV/EBIT・FCF・ROIC・ネットキャッシュ の**具体式・必須入力 field・UNKNOWN 条件**は
+3. 🔸**決算跨ぎギャップの細部**:翌取引日の寄り/引けのどちらか(§5.3 は「終値・対称」を暫定固定)。**要確認**。
+4. 🔸**feature 式の確定**:EV/EBIT・FCF・ROIC・ネットキャッシュ の**具体式・必須入力 field・UNKNOWN 条件**は
    DATA_LAYER §8 の feature レジストリに合流(Phase C の前提)。本 SPEC は式を**レジストリ参照**に委ねる。
-8. 🔸**検証に必要な最小 N と期間**:決算は年≈4回。意味ある hit率/一致率に必要なサンプル数と年数の目安。**要決定**。
+5. 🔸**検証に必要な最小 N と期間**:決算は年≈4回。意味ある hit率/一致率に必要なサンプル数と年数の目安。**要決定**。
 
 ---
 
@@ -439,12 +499,15 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
 ## 12. 報告(設計者所見)
 
 ### 実装 GO/NO-GO
-- **設計:GO**(v2 で前回レビューの設計穴=DCA UNKNOWN 化 / checklist 構造化 / position_intent /
-  ID・イベントソース・保存先 / path safety / 年率換算の極端値 / anti_thesis 必須 / review 表示順 を反映)。
-- **実装:Phase A は GO**(本 v2 の設計が反映された前提)。範囲は
-  **手入力 snapshot + schema + 純計算 + テスト、ネットワーク無し・stdlib**。
-  - **対DCA は UNKNOWN で進める**(価格系列が無い間は hit率を出さない・§4.1)。
-  - 着手前に **§9-1(税基準)/ §9-3(min/max_cycle_days の値)** の暫定値を確定(暫定: pre_tax / 45・200)。
+- **設計:GO**(v2 の設計穴に加え、v2.1 で operator 真理表 / 集計 status 固定 / ticker 正規表現確定 /
+  anti_thesis 品質ゲート / Phase A 初期値の固定 / 価格系列方針 を追記し、実装時のブレを除去)。
+- **実装:Phase A は GO**。前提(=この値で実装着手してよい):
+  - ネットワーク無し / **手入力 snapshot** / **stdlib のみ**。
+  - **対DCA = UNKNOWN**(価格系列が無い間は **DCA hit率を出さない**・§4.1)。
+  - **`hurdle_basis = pre_tax`** / **`min/max_cycle_days = 45 / 200`**(§9.0・config に明記、変更は version に残す)。
+  - **§2.6.1 の operator 真理表どおりに実装**(判定の一意化)。
+  - **集計分母 = `FACT`/`CALCULATION` のみ**、UNKNOWN を負け/不一致に数えない(§2.0・§4.1)。
+  - 既存 **mirror/check/log/score/review/target-check 非回帰**(subprocess で --help と実行)。
 - **Phase B / C:NO-GO**。LICENSE_MATRIX の ToS(raw 保存・第三者LLM入力・再配布)が埋まるまで凍結
   (データ層 A1/sync と同一ブロッカー)。
 
@@ -452,15 +515,13 @@ decision_log と同じ**イベントソース**思想(SPEC §1.5):snapshot を�
 - **A(オフライン閉ループ)→ B(sync で snapshot 自動構築・対DCA 昇格)→ C(feature/同業相対/EDINET text)**。
   A は B/C と独立に価値を出す(手入力でも「仮説→次決算検証→較正」が回る)。
 
-### Phase A 実装前に残る未決事項(優先順)
-1. ハードルの税基準(pre/post-tax、target-check との整合)— 暫定 pre_tax。
-2. DCA 価格系列の入手方針(無い間は対DCA=UNKNOWN で確定)。
-3. `min_cycle_days` / `max_cycle_days` の値 — 暫定 45 / 200。
-4. 進捗率・同業相対の入手可否(B/C 依存、無ければ UNKNOWN 固定)。
-5. 検証に必要な最小 N と期間の目安(年4回=数年かかる前提の明示)。
+### Phase A 実装前に残る未決事項
+- **Phase A の着手をブロックする未決は無し**(§9.0 で初期値を固定済み)。
+- 残るのは **§9.2 の B/C・人間レビュー事項**(進捗率・同業相対・決算跨ぎギャップ細部・feature 式・最小N と期間)。
+  いずれも Phase A の範囲外で、着手を妨げない。
 
 ### 実装状況
-- **本対応はコードを書いていない。** EARNINGS_CYCLE_VALUE_AUDIT_SPEC.md(設計メモ)の改訂のみ。
+- **本対応はコードを書いていない。** EARNINGS_CYCLE_VALUE_AUDIT_SPEC.md(設計メモ)の追記のみ。
   既存コード(radar/*, tests/*)・他 SPEC は変更していない。
 
 > ※本書は設計メモであり、投資助言・予測・売買指示・購入意思ではない。実装は本契約と上位原則の帰結に限る。
