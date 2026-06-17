@@ -39,6 +39,8 @@ def load_config(path: Path | None = None) -> dict:
         raise SystemExit("config: policy.discipline.staleness_days は非負")
     if "value_audit" in cfg:
         _check_value_audit(cfg["value_audit"])
+    if "data_layer" in cfg:
+        _check_data_layer(cfg["data_layer"])
     return cfg
 
 
@@ -64,3 +66,23 @@ def _check_value_audit(va: dict) -> None:
         raise SystemExit("config: value_audit.benchmark_index_ref は null か文字列")
     if not _num(va.get("min_metrics_for_audit")) or va["min_metrics_for_audit"] <= 0:
         raise SystemExit("config: value_audit.min_metrics_for_audit は正の数値")
+
+
+def _check_data_layer(dl: dict) -> None:
+    """data_layer ブロックの検証(存在時のみ・既存コマンドには影響しない)。A1=疎通設定。"""
+    if not isinstance(dl, dict):
+        raise SystemExit("config: data_layer は object である必要があります")
+    for k in ("retry_max", "backoff_base_sec", "timeout_sec",
+              "max_response_bytes", "daily_request_budget"):
+        if k in dl and (not _num(dl[k]) or dl[k] <= 0):
+            raise SystemExit(f"config: data_layer.{k} は正の有限数")
+    provs = dl.get("providers")
+    if provs is not None:
+        if not isinstance(provs, dict):
+            raise SystemExit("config: data_layer.providers は object である必要があります")
+        for name, pc in provs.items():
+            if not isinstance(pc, dict):
+                raise SystemExit(f"config: data_layer.providers.{name} は object")
+            for req in ("base_url", "ping_path", "auth", "key_var"):
+                if not isinstance(pc.get(req), str) or not pc.get(req):
+                    raise SystemExit(f"config: data_layer.providers.{name}.{req} は非空文字列")

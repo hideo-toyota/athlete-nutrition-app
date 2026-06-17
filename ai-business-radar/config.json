@@ -29,5 +29,29 @@
     "max_cycle_days": 200,
     "benchmark_index_ref": null,
     "min_metrics_for_audit": 3
+  },
+  "data_layer": {
+    "retry_max": 3,
+    "backoff_base_sec": 2,
+    "timeout_sec": 10,
+    "max_response_bytes": 1048576,
+    "daily_request_budget": 50,
+    "providers": {
+      "jquants": {
+        "base_url": "https://api.jquants.com/v1",
+        "ping_path": "/token/auth_refresh",
+        "auth": "query:refreshtoken",
+        "key_var": "JQUANTS_API_KEY",
+        "_note": "要確認: 実際の最小疎通endpoint/auth方式はJ-Quants公式仕様で確認し調整(宣言的設定)"
+      },
+      "edinet-db": {
+        "base_url": "https://edinetdb.com/v1",
+        "ping_path": "/companies",
+        "auth": "bearer",
+        "key_var": "EDINETDB_API_KEY",
+        "ping_params": { "limit": 1 },
+        "_note": "要確認: 実際の最小endpoint/auth方式はedinetdb.com/docs/apiで確認し調整(宣言的設定)"
+      }
+    }
   }
 }

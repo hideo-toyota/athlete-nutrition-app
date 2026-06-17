@@ -394,18 +394,37 @@ def cmd_value_audit(args) -> None:
         raise SystemExit("使い方: value-audit {register|score|review} ...")
 
 
-def cmd_data_check(offline: bool) -> None:
-    """A0: ネットワーク無しのキー存在確認 + redact 動作確認。**値は表示しない・外部接続しない**。"""
-    if not offline:
-        raise SystemExit("A0: 実疎通は未実装です。`data-check --offline` で実行してください(実API疎通は A1)。")
+def cmd_data_check(offline: bool, live: bool = False, provider: str | None = None) -> None:
+    """A0(--offline): ネット無しのキー存在/redact 確認。A1(--live): 軽量疎通のみ。
+
+    **キー値も response 本文も表示しない・保存しない・LLM に渡さない。** --live が無ければ外部接続しない。
+    A1 は「疎通のみ」(ToS)。sync/raw保存/第三者LLM入力は未実装・NO-GO のまま。
+    """
     import os
     from .sources import common
+    if live:
+        from .sources import live as live_mod
+        if not provider:
+            raise SystemExit(f"--live には --provider が必要です(choices: {live_mod.PROVIDERS})")
+        cfg = load_config()
+        res = live_mod.ping(provider, cfg)   # 本文は保存も表示もしない
+        head = "✅ 疎通OK" if res["success"] else "⛔ 疎通NG"
+        print(f"data-check --live [{res['provider']}]: {head}")
+        print(f"  endpoint: {res['endpoint']} / HTTP status: {res['status']} / 試行 {res['attempts']}")
+        if res["error"]:
+            print(f"  error(redact済): {res['error']}")
+        print("  ※ 疎通可否のみ。取得本文は保存も表示もせず、Claude にも渡していません(A1)。")
+        print("  ※ sync(raw保存)・第三者LLM入力は未実装・ToS確認まで NO-GO。")
+        return
+    if not offline:
+        raise SystemExit("外部接続するには `data-check --live --provider <jquants|edinet-db>`。"
+                         "ネット無し確認は `data-check --offline`。")
     common._load_dotenv()
     for name in common.KEY_VARS:
         print(f"  {name}: {'設定あり' if os.environ.get(name) else '未設定'}")  # ★値は出さない
     sample = "Authorization: Bearer DUMMY.TOKEN.VALUE"
     print(f"  redact動作: {common.redact(sample)}")
-    print("  ※ 外部APIには接続していません(A0)。実疎通は A1 で追加。")
+    print("  ※ 外部APIには接続していません(A0)。実疎通は `--live` で。")
 
 
 def main() -> None:
@@ -451,8 +470,11 @@ def main() -> None:
     vsc.add_argument("--asof", help="採点基準日 YYYY-MM-DD(既定: 入力の asof)")
     vrv = vsub.add_parser("review", help="較正(固定表示順・hit率を煽らない)")
     vrv.add_argument("--asof", help="基準日 YYYY-MM-DD(任意)")
-    pd = sub.add_parser("data-check", help="(A0) キー存在とredactをオフライン確認。実疎通はしない")
-    pd.add_argument("--offline", action="store_true", help="A0では必須。外部接続せずに確認")
+    pd = sub.add_parser("data-check",
+                        help="(A0)--offline でキー存在/redact確認 /(A1)--live で軽量疎通のみ")
+    pd.add_argument("--offline", action="store_true", help="ネット無しでキー存在/redactを確認")
+    pd.add_argument("--live", action="store_true", help="(A1)軽量疎通のみ。本文は保存/表示/LLM投入しない")
+    pd.add_argument("--provider", choices=["jquants", "edinet-db"], help="--live の対象")
     args = ap.parse_args()
 
     if args.command == "mirror":
@@ -472,7 +494,7 @@ def main() -> None:
     elif args.command == "value-audit":
         cmd_value_audit(args)
     elif args.command == "data-check":
-        cmd_data_check(args.offline)
+        cmd_data_check(args.offline, live=args.live, provider=args.provider)
     else:
         ap.print_help()
 
