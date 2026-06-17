@@ -227,18 +227,30 @@ def cmd_value_audit_register(args) -> None:
     d = value_store.load_thesis_input(_resolve_path(args.from_file))
     if args.ticker and d.get("ticker") != args.ticker:
         raise SystemExit(f"--from-file の ticker({d.get('ticker')})と引数 ticker({args.ticker})が一致しません")
-    # PIT: snapshot と各 valuation の available_at <= asof(未来混入を拒否)
+    # PIT: snapshot / cycle 起点 / 各 valuation の available_at <= asof(未来混入を拒否)
     if value_store.parse_dt_date(d["snapshot_at"], "snapshot_at") > asof_d:
         raise SystemExit(f"snapshot_at が asof より未来です(PIT 違反): {d['snapshot_at']} > {asof_d}")
+    if value_store.parse_dt_date(d["cycle"]["start_available_at"], "cycle.start_available_at") > asof_d:
+        raise SystemExit(f"cycle.start_available_at が asof より未来です(PIT 違反): > {asof_d}")
     for k, m in (d.get("valuation") or {}).items():
         if isinstance(m, dict) and m.get("available_at"):
             if value_store.parse_dt_date(m["available_at"], f"valuation.{k}.available_at") > asof_d:
                 raise SystemExit(f"valuation.{k}.available_at が asof より未来です(PIT 違反)")
+    # min_metrics_for_audit: 使える metric が少なければ「評価不能」を出力に明示(拒否はしない)
+    va_cfg = _va_config()
+    min_metrics = cfg_min = va_cfg.get("min_metrics_for_audit", 3)
+    usable = sum(1 for m in (d.get("valuation") or {}).values()
+                 if isinstance(m, dict) and m.get("status") in ("FACT", "CALCULATION", "ASSUMPTION")
+                 and value_audit._finite(m.get("value")))
+    eval_warning = None
+    if usable < min_metrics:
+        eval_warning = (f"評価不能/UNKNOWN多すぎ:有効な valuation 指標は {usable} 件で "
+                        f"min_metrics_for_audit={cfg_min} 未満。割安判断の土台が薄いことを直視のこと。")
     thesis_id = value_store.append_thesis(d, asof=asof_d.isoformat())
     slug = value_store.validate_ticker(d["ticker"])
     out = value_store.safe_output_path(slug)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(render_value_audit(d), encoding="utf-8")
+    out.write_text(render_value_audit(d, eval_warning=eval_warning), encoding="utf-8")
     print(f"value-audit 仮説を登録しました(紙上・購入意思ではない): thesis_id={thesis_id}")
     print(f"  → {_rel(out)} / {_rel(value_store.THESIS_LOG)}(追記専用)")
     print("  ※ これは買い候補でも推奨でも予測でもありません。売買は check → 人間 → log。")
@@ -273,6 +285,16 @@ def cmd_value_audit_score(args) -> None:
     start_d = value_store.parse_dt_date(start_at, "cycle.start_available_at")
     end_d = value_store.parse_dt_date(nea, "next_earnings_available_at")
     days = value_audit.cycle_days(start_d.toordinal(), end_d.toordinal())
+
+    # 価格 PIT / 後知恵防止: 価格の available_at を asof・サイクル境界と突合
+    entry_av = value_store.parse_dt_date(oin["entry_price_available_at"], "entry_price_available_at")
+    exit_av = value_store.parse_dt_date(oin["exit_price_available_at"], "exit_price_available_at")
+    if entry_av > asof_d or exit_av > asof_d:
+        raise SystemExit(f"価格の available_at が asof({asof_d})より未来です(PIT 違反・後知恵)")
+    if entry_av < start_d:
+        raise SystemExit("entry_price_available_at は cycle.start_available_at 以降である必要があります")
+    if exit_av < end_d:
+        raise SystemExit("exit_price_available_at は next_earnings_available_at 以降である必要があります")
 
     raw = value_audit.raw_return(oin["entry_price"], oin["exit_price"])
     raw_m = value_audit.measured(raw, value_audit.CALCULATION, unit="%", note="ASSUMPTION依存(手入力価格)")
@@ -320,6 +342,9 @@ def cmd_value_audit_score(args) -> None:
     outcome = {
         "thesis_id": oin["thesis_id"], "scored_at": asof_d.isoformat(), "asof": asof_d.isoformat(),
         "source": "manual", "cycle_start_available_at": start_at, "next_earnings_available_at": nea,
+        "price_basis": oin["price_basis"],
+        "entry_price_date": oin["entry_price_date"], "entry_price_available_at": oin["entry_price_available_at"],
+        "exit_price_date": oin["exit_price_date"], "exit_price_available_at": oin["exit_price_available_at"],
         "cycle_days": days, "raw_return": raw_m, "annualized_return": ann, "vs_target_10pct": vs10,
         "benchmark": {"method": "dca_index", "index_ref": va_cfg.get("benchmark_index_ref"),
                       "return": value_audit.unknown(note="no_price_series(Phase A)")},
@@ -347,11 +372,12 @@ def cmd_value_audit_review(args) -> None:
     value_store.valid_asof(args.asof)
     va_cfg = _va_config()
     outcomes = value_store.read_outcomes()
-    n_active = len(value_store.active_theses())
+    actives = value_store.active_theses()
+    n_active = len(actives)
     stats = value_audit.aggregate(outcomes, va_cfg)
     OUTPUTS.mkdir(exist_ok=True)
     out = OUTPUTS / "value_audit_review.md"
-    out.write_text(render_value_review(stats, n_active), encoding="utf-8")
+    out.write_text(render_value_review(stats, n_active, active_theses=actives), encoding="utf-8")
     print(f"value-audit 較正: 有効仮説 {n_active} 件 / 採点 {stats['n_scored']} 件 → {_rel(out)}")
     if stats["n_scored"] < 20:
         print("  ⚠️ サンプル不足:統計的な結論は保留(原則3)。対DCA は Phase A では UNKNOWN(未算出)。")

@@ -172,19 +172,24 @@ def aggregate(outcomes: list[dict], cfg: dict) -> dict:
     # 反証発火
     fired = [o for o in outcomes if o.get("falsification_triggered")]
     total_triggers = sum(len(o.get("falsification_triggered") or []) for o in outcomes)
-    # checklist 一致率(非 qualitative・matched が確定したもののみ)。
-    # matched is not None は actual が確定値(UNKNOWN/非数値でない)で比較できたことを意味する。
-    # UNKNOWN は matched=None として除外され、負け/不一致に数えない(SPEC §4.1)。
-    cl_den = cl_hit = 0
+    # checklist 一致率(SPEC §2.0/§4.1: 分母は actual.status が FACT/CALCULATION のもののみ)。
+    # ASSUMPTION(手入力・Phase A)は正式分母から除外し、別枠の「参考一致率」に集計(混ぜない)。
+    # UNKNOWN/qualitative は matched=None として両方の分母から除外(負け/不一致に数えない)。
+    cl_den = cl_hit = 0          # 正式(FACT/CALCULATION)
+    ref_den = ref_hit = 0        # 参考(ASSUMPTION依存)
     for o in outcomes:
         for item in (o.get("checklist_result") or []):
-            if item.get("qualitative_only"):
+            if item.get("qualitative_only") or item.get("matched") is None:
                 continue
-            if item.get("matched") is None:
-                continue
-            cl_den += 1
-            if item.get("matched") is True:
-                cl_hit += 1
+            st = (item.get("actual") or {}).get("status")
+            if st in _CONFIRMED:
+                cl_den += 1
+                if item.get("matched") is True:
+                    cl_hit += 1
+            elif st == ASSUMPTION:
+                ref_den += 1
+                if item.get("matched") is True:
+                    ref_hit += 1
     # 対10% hit(annualized が確定したものだけ)
     h10_den = h10_hit = 0
     n_ann_unknown = 0
@@ -215,6 +220,7 @@ def aggregate(outcomes: list[dict], cfg: dict) -> dict:
         "falsification_outcomes": len(fired),
         "falsification_total_triggers": total_triggers,
         "checklist_match_rate": _rate(cl_hit, cl_den), "checklist_den": cl_den,
+        "checklist_ref_rate": _rate(ref_hit, ref_den), "checklist_ref_den": ref_den,
         "hit_10pct": _rate(h10_hit, h10_den), "hit_10pct_den": h10_den,
         "hit_dca": _rate(dca_hit, dca_den), "hit_dca_den": dca_den,  # Phase A: den=0 → None
         "max_dd_known": dd_known,

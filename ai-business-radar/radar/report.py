@@ -260,7 +260,7 @@ def _cond_str(c: dict) -> str:
     return f"`{metric}` {body}{tail}"
 
 
-def render_value_audit(thesis: dict) -> str:
+def render_value_audit(thesis: dict, eval_warning: str | None = None) -> str:
     """個別 value_audit レポート(4点・不確実性先頭・購入意思でない・免責)。"""
     o = []
     o.append("# Value Audit — 決算 to 決算の割安“仮説”検証")
@@ -277,6 +277,8 @@ def render_value_audit(thesis: dict) -> str:
     o.append("- これは**割安“仮説”を反証可能な形で固定し、次決算で事後検証する**もの。**銘柄推奨でも予測でもない。**")
     o.append("- 手入力値は **ASSUMPTION**(概算)。そこから計算する指標は CALCULATION(ASSUMPTION依存)。")
     o.append("- 年率10%は**事後測定のハードル(ASSUMPTION)**であり、見込みや保証ではない。")
+    if eval_warning:
+        o.append(f"- ⚠️ {eval_warning}")
     o.append("")
     # 1. 検証対象
     o.append("## 1. 検証対象(What we are testing)[INFERENCE]")
@@ -325,8 +327,11 @@ def render_value_audit(thesis: dict) -> str:
     return "\n".join(o)
 
 
-def render_value_review(stats: dict, n_active: int) -> str:
-    """較正レポート(固定表示順・hit率を先頭に出さない・UNKNOWNを分母に入れない)。"""
+def render_value_review(stats: dict, n_active: int, active_theses=None) -> str:
+    """較正レポート(固定表示順・hit率を先頭に出さない・UNKNOWNを分母に入れない)。
+
+    active_theses を渡すと cheapness_reason / anti_thesis を両論併記で表示(自己正当化の歯止め)。
+    """
     def pct(x):
         return f"{x*100:.0f}%" if isinstance(x, (int, float)) else "—(算出不可/UNKNOWN)"
 
@@ -360,18 +365,37 @@ def render_value_review(stats: dict, n_active: int) -> str:
         o.append("- 最大DD: UNKNOWN(日足が無い Phase A では算出しない)。")
     o.append("- 集中度・上限は `mirror` / `check` を併用(本レポートは仮説検証に限定)。")
     o.append("")
-    # 4. checklist 一致率
-    o.append("## 4. checklist 一致率(構造化フィールドのみ・UNKNOWN除外)")
-    o.append(f"- 事前期待と実績の一致率: **{pct(stats['checklist_match_rate'])}** "
-             f"(分母 {stats['checklist_den']} 項目)")
+    # 4. 各仮説の安い理由 / 反対仮説(両論併記=自己正当化の歯止め。hit率より前に置く)
+    o.append("## 4. 各仮説の『安い理由』と『反対仮説』(両論併記)")
+    if active_theses:
+        for th in sorted(active_theses, key=lambda t: str(t.get("ticker"))):  # ticker昇順=魅力度と無関係
+            cr = th.get("cheapness_reason", {}) or {}
+            at = th.get("anti_thesis", {}) or {}
+            o.append(f"- **{th.get('ticker')}**(安い理由 [{cr.get('classification', '?')}]): "
+                     f"{cr.get('explanation', '—')}")
+            o.append(f"  - 反対(安さが正当かも): {at.get('why_cheap_may_be_deserved', '—')}")
+            o.append(f"  - 反対(構造劣化かも): {at.get('structural_risk_case', '—')}")
+            o.append(f"  - 反対(次決算で強まる条件): {at.get('intensifies_if', '—')}")
+    else:
+        o.append("- (有効な仮説なし)")
     o.append("")
-    # 5. 対10%
-    o.append("## 5. 対10%ハードル hit率(年率換算が確定したもののみ)")
+    # 5. checklist 一致率
+    o.append("## 5. checklist 一致率(構造化フィールドのみ・FACT/CALCULATION の actual のみ)")
+    o.append(f"- 事前期待と実績の一致率(正式): **{pct(stats['checklist_match_rate'])}** "
+             f"(分母 {stats['checklist_den']} 項目)")
+    if stats["checklist_den"] == 0:
+        o.append("  - Phase A の手入力 actual は ASSUMPTION のため正式分母は 0(=算出不可/UNKNOWN)。")
+    if stats.get("checklist_ref_den"):
+        o.append(f"- 参考(ASSUMPTION依存・手入力前提): {pct(stats['checklist_ref_rate'])} "
+                 f"(分母 {stats['checklist_ref_den']} 項目)— **正式 hit率とは別物**。")
+    o.append("")
+    # 6. 対10%
+    o.append("## 6. 対10%ハードル hit率(年率換算が確定したもののみ)")
     o.append(f"- 年率10%換算を超えた割合: **{pct(stats['hit_10pct'])}** "
              f"(分母 {stats['hit_10pct_den']} 件)")
     o.append("")
-    # 6. 対DCA
-    o.append("## 6. 対DCA hit率")
+    # 7. 対DCA
+    o.append("## 7. 対DCA hit率")
     if stats["hit_dca_den"]:
         o.append(f"- DCAインデックス超過の割合: **{pct(stats['hit_dca'])}** (分母 {stats['hit_dca_den']} 件)")
     else:

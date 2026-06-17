@@ -177,23 +177,48 @@ def load_thesis_input(path: Path) -> dict:
     cyc = d["cycle"]
     if not isinstance(cyc, dict) or not cyc.get("start_available_at"):
         raise SystemExit("cycle.start_available_at は必須です")
+    # discipline_status は検証専用で常に未通過。source は Phase A で manual 固定。
+    if "discipline_status" in d and d.get("discipline_status") != "未通過":
+        raise SystemExit('discipline_status は "未通過" 固定です(検証専用・売買は別系統)')
+    if "source" in d and d.get("source") != "manual":
+        raise SystemExit('Phase A は source="manual" 固定です(ネット取得は B 以降)')
+    # snapshot_at と cycle.start_available_at は同一 available_at(同日)で一貫していること
+    if parse_dt_date(d["snapshot_at"], "snapshot_at") != parse_dt_date(
+            cyc["start_available_at"], "cycle.start_available_at"):
+        raise SystemExit("snapshot_at と cycle.start_available_at は同日(同一 available_at)で一貫させてください")
     return d
 
 
+PRICE_BASIS = "manual_next_trading_close"
+
+
 def load_outcome_input(path: Path) -> dict:
-    """score --from-file の入力を検証して返す(手入力 actuals=ASSUMPTION)。"""
+    """score --from-file の入力を検証して返す(手入力 価格/actuals=ASSUMPTION)。
+
+    後知恵防止のため価格に日付と available_at を必須化(PIT は cmd 側で asof と突合)。
+    """
     d = _read_json(path, "採点入力")
     _scan_forbidden(d)
-    for k in ("thesis_id", "next_earnings_available_at", "entry_price",
-              "exit_price", "actuals", "asof", "source"):
+    for k in ("thesis_id", "next_earnings_available_at",
+              "entry_price", "entry_price_date", "entry_price_available_at",
+              "exit_price", "exit_price_date", "exit_price_available_at",
+              "price_basis", "actuals", "asof", "source"):
         if k not in d or d.get(k) in (None, ""):
             raise SystemExit(f"採点入力に必須項目がありません: {k}")
+    if d["price_basis"] != PRICE_BASIS:
+        raise SystemExit(f'price_basis は "{PRICE_BASIS}" 固定です(約定を装わない評価基準): {d["price_basis"]!r}')
+    if d.get("source") != "manual":
+        raise SystemExit('Phase A は source="manual" 固定です')
     if not va._finite(d["entry_price"]) or d["entry_price"] <= 0:
         raise SystemExit("entry_price は正の有限数で必須です")
     if not va._finite(d["exit_price"]) or d["exit_price"] < 0:
         raise SystemExit("exit_price は非負の有限数で必須です")
     if not isinstance(d["actuals"], dict):
         raise SystemExit("actuals は object(metric->値)で必須です")
+    # 日付・available_at の形式検証(突合は cmd 側で asof / cycle と)
+    for k in ("entry_price_date", "entry_price_available_at",
+              "exit_price_date", "exit_price_available_at"):
+        parse_dt_date(d[k], k)
     return d
 
 
@@ -283,7 +308,10 @@ def append_outcome(d: dict) -> tuple[str, bool]:
     訂正は d['amends'] を付ければ別イベントとして追記可能(原本は不変)。
     """
     existing = read_outcomes()
-    if not d.get("amends"):
+    if d.get("amends"):
+        if not any(r.get("event_id") == d["amends"] for r in existing):
+            raise SystemExit(f"outcome amends が存在しない outcome event_id を参照: {d['amends']}")
+    else:
         key = _outcome_key(d)
         for r in existing:
             if _outcome_key(r) == key:
@@ -316,12 +344,31 @@ def active_theses() -> list[dict]:
     thesis_ids = {r.get("thesis_id") for r in recs}
     # supersedes: 旧 thesis_id を inactive 化(参照先の存在を検証)
     superseded: set[str] = set()
+    sup_edges: dict[str, set[str]] = {}   # thesis_id --supersedes--> 旧 thesis_id
     for r in recs:
         sup = r.get("supersedes")
         if sup:
             if sup not in thesis_ids:
                 raise SystemExit(f"supersedes が存在しない thesis_id を参照: {sup}")
             superseded.add(sup)
+            sup_edges.setdefault(r.get("thesis_id"), set()).add(sup)
+    # supersedes の循環検出(A→B→…→A を停止)
+    _WHITE, _GREY, _BLACK = 0, 1, 2
+    color: dict[str, int] = {}
+
+    def _visit(node: str) -> None:
+        color[node] = _GREY
+        for nxt in sup_edges.get(node, ()):
+            c = color.get(nxt, _WHITE)
+            if c == _GREY:
+                raise SystemExit(f"supersedes が循環しています: {node} → {nxt}")
+            if c == _WHITE:
+                _visit(nxt)
+        color[node] = _BLACK
+
+    for n in list(sup_edges):
+        if color.get(n, _WHITE) == _WHITE:
+            _visit(n)
 
     # amends: 参照先 event_id の存在 + 同一 thesis_id + 循環検出
     for r in recs:

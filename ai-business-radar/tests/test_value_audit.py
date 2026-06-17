@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import uuid
 from argparse import Namespace
 from pathlib import Path
 
@@ -103,7 +104,8 @@ class TestAggregate(unittest.TestCase):
              "annualized_return": va.measured(0.5, va.CALCULATION),
              "beat_dca": va.unknown(), "max_drawdown_pct": va.unknown(),
              "checklist_result": [
-                 {"matched": True, "qualitative_only": False, "actual": va.measured(1, va.ASSUMPTION)},
+                 {"matched": True, "qualitative_only": False, "actual": va.measured(1, va.CALCULATION)},  # 正式
+                 {"matched": True, "qualitative_only": False, "actual": va.measured(1, va.ASSUMPTION)},    # 参考のみ
                  {"matched": None, "qualitative_only": False, "actual": va.unknown()},  # UNKNOWN→除外
                  {"matched": True, "qualitative_only": True, "actual": va.unknown()},   # 定性→除外
              ],
@@ -116,8 +118,10 @@ class TestAggregate(unittest.TestCase):
         s = va.aggregate(outcomes, VA_CFG)
         self.assertEqual(s["n_scored"], 2)
         self.assertEqual(s["n_annualized_unknown"], 1)
-        self.assertEqual(s["checklist_den"], 1)          # UNKNOWN/定性は分母外
+        self.assertEqual(s["checklist_den"], 1)          # FACT/CALCULATION のみ正式分母
         self.assertEqual(s["checklist_match_rate"], 1.0)
+        self.assertEqual(s["checklist_ref_den"], 1)      # ASSUMPTION は参考枠へ分離
+        self.assertEqual(s["checklist_ref_rate"], 1.0)
         self.assertEqual(s["hit_10pct_den"], 1)          # 年率確定の1件のみ
         self.assertEqual(s["hit_10pct"], 1.0)
         self.assertEqual(s["hit_dca_den"], 0)            # Phase A: 対DCA は分母0
@@ -195,6 +199,22 @@ class TestThesisInput(unittest.TestCase):
         with self.assertRaises(SystemExit):
             vs.load_thesis_input(self._write(d))
 
+    def test_snapshot_cycle_inconsistent(self):
+        d = json.loads(json.dumps(self.base))
+        d["cycle"]["start_available_at"] = "2026-05-09T15:30:00+09:00"  # snapshot と別日
+        with self.assertRaises(SystemExit):
+            vs.load_thesis_input(self._write(d))
+
+    def test_discipline_status_forced(self):
+        d = json.loads(json.dumps(self.base)); d["discipline_status"] = "通過"
+        with self.assertRaises(SystemExit):
+            vs.load_thesis_input(self._write(d))
+
+    def test_source_must_be_manual(self):
+        d = json.loads(json.dumps(self.base)); d["source"] = "sync:jquants"
+        with self.assertRaises(SystemExit):
+            vs.load_thesis_input(self._write(d))
+
 
 # ---------------------------------------------------------------------------
 # 閉ループ e2e + amends/supersedes + 冪等(temp に隔離)
@@ -221,14 +241,18 @@ class TestClosedLoop(unittest.TestCase):
         m.cmd_value_audit_register(Namespace(ticker=None, from_file=str(EXAMPLE_THESIS), asof="2026-06-01"))
         return vs.read_theses()[-1]["thesis_id"]
 
-    def _outcome_file(self, thesis_id, asof="2026-08-08", exitp=3100.0, amends=None):
-        d = {"thesis_id": thesis_id, "next_earnings_available_at": "2026-08-07T15:30:00+09:00",
-             "entry_price": 2800.0, "exit_price": exitp,
+    def _outcome_file(self, thesis_id, asof="2026-08-08", exitp=3100.0, amends=None,
+                      entry_av="2026-05-11T15:30:00+09:00", exit_av="2026-08-07T15:30:00+09:00",
+                      nea="2026-08-07T15:30:00+09:00", fname="o.json"):
+        d = {"thesis_id": thesis_id, "next_earnings_available_at": nea,
+             "price_basis": "manual_next_trading_close",
+             "entry_price": 2800.0, "entry_price_date": "2026-05-11", "entry_price_available_at": entry_av,
+             "exit_price": exitp, "exit_price_date": "2026-08-07", "exit_price_available_at": exit_av,
              "actuals": {"revenue_growth": 4.5, "op_margin": 7.5},
              "asof": asof, "source": "manual"}
         if amends:
             d["amends"] = amends
-        f = self.tmp / "o.json"
+        f = self.tmp / fname
         f.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
         return f
 
@@ -290,6 +314,68 @@ class TestClosedLoop(unittest.TestCase):
         with self.assertRaises(SystemExit):
             vs.active_theses()
 
+    def _raw_thesis(self, **kw):
+        rec = {"type": "research_item", "subtype": "value_audit", "event_id": uuid.uuid4().hex}
+        rec.update(kw)
+        vs._append_jsonl(vs.THESIS_LOG, rec)
+
+    def test_active_theses_supersede_cycle_stops(self):
+        self._raw_thesis(thesis_id="AAA", supersedes="BBB")
+        self._raw_thesis(thesis_id="BBB", supersedes="AAA")  # 相互 supersede=循環
+        with self.assertRaises(SystemExit):
+            vs.active_theses()
+
+    def test_outcome_amends_invalid_stops(self):
+        tid = self._register()
+        with self.assertRaises(SystemExit):
+            vs.append_outcome({"thesis_id": tid, "amends": "nonexistent_outcome_event",
+                               "cycle_start_available_at": "2026-05-08T15:30:00+09:00",
+                               "next_earnings_available_at": "2026-08-07T15:30:00+09:00",
+                               "asof": "2026-08-08"})
+
+    def test_register_rejects_future_pit(self):
+        # snapshot/cycle.start が asof より未来 → register 停止(PIT)
+        with self.assertRaises(SystemExit):
+            m.cmd_value_audit_register(Namespace(ticker=None, from_file=str(EXAMPLE_THESIS), asof="2026-05-01"))
+
+    def test_score_rejects_future_entry_av(self):
+        tid = self._register()
+        f = self._outcome_file(tid, entry_av="2026-09-01T00:00:00+09:00")  # asof より未来
+        with self.assertRaises(SystemExit):
+            m.cmd_value_audit_score(Namespace(from_file=str(f), asof=None))
+
+    def test_score_rejects_future_exit_av(self):
+        tid = self._register()
+        f = self._outcome_file(tid, exit_av="2026-09-01T00:00:00+09:00")  # asof より未来
+        with self.assertRaises(SystemExit):
+            m.cmd_value_audit_score(Namespace(from_file=str(f), asof=None))
+
+    def test_score_rejects_exit_before_next_earnings(self):
+        tid = self._register()
+        f = self._outcome_file(tid, exit_av="2026-08-06T15:30:00+09:00")  # 次決算より前
+        with self.assertRaises(SystemExit):
+            m.cmd_value_audit_score(Namespace(from_file=str(f), asof=None))
+
+    def test_phase_a_checklist_official_rate_none(self):
+        # 手入力 actual は ASSUMPTION → 正式 checklist 分母0 → 率は None(参考のみ算出され得る)
+        tid = self._register()
+        m.cmd_value_audit_score(Namespace(from_file=str(self._outcome_file(tid)), asof=None))
+        stats = va.aggregate(vs.read_outcomes(), VA_CFG)
+        self.assertEqual(stats["checklist_den"], 0)
+        self.assertIsNone(stats["checklist_match_rate"])
+        self.assertGreaterEqual(stats["checklist_ref_den"], 1)
+
+    def test_review_shows_anti_thesis_and_order(self):
+        tid = self._register()
+        m.cmd_value_audit_score(Namespace(from_file=str(self._outcome_file(tid)), asof=None))
+        m.cmd_value_audit_review(Namespace(asof=None))
+        md = (m.OUTPUTS / "value_audit_review.md").read_text(encoding="utf-8")
+        self.assertIn("反対仮説", md)          # cheapness/anti_thesis セクション
+        self.assertIn("構造劣化かも", md)
+        # 表示順: 反証(§2)→ anti_thesis(§4)→ 対10%(§6)。hit率が先頭に出ない。
+        self.assertLess(md.index("反証条件に触れた件数"), md.index("反対仮説"))
+        self.assertLess(md.index("反対仮説"), md.index("対10%ハードル hit率"))
+
 
 # ---------------------------------------------------------------------------
 # 出力の語彙ガード(推奨/予測/買い候補が無い)
@@ -311,6 +397,31 @@ class TestOutputSafety(unittest.TestCase):
         md = render_value_review(stats, 0)
         for w in ("おすすめ", "買うべき", "ランキング", "買い候補"):
             self.assertNotIn(w, md)
+
+
+# ---------------------------------------------------------------------------
+# config value_audit ブロックの検証(NaN/inf を弾く)
+# ---------------------------------------------------------------------------
+class TestConfigValueAudit(unittest.TestCase):
+    def _write_cfg(self, mutate):
+        from radar import config as cfgmod  # noqa
+        base = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
+        mutate(base.setdefault("value_audit", {}))
+        f = Path(tempfile.mkdtemp()) / "config.json"
+        f.write_text(json.dumps(base, allow_nan=True), encoding="utf-8")
+        return f
+
+    def test_nan_inf_rejected(self):
+        from radar import config as cfgmod
+        for bad in (float("nan"), float("inf"), float("-inf")):
+            f = self._write_cfg(lambda va: va.__setitem__("annual_hurdle_pct", bad))
+            with self.assertRaises(SystemExit):
+                cfgmod.load_config(f)
+
+    def test_valid_value_audit_ok(self):
+        from radar import config as cfgmod
+        f = self._write_cfg(lambda va: None)  # 既存の正常値のまま
+        cfgmod.load_config(f)  # 例外なし
 
 
 # ---------------------------------------------------------------------------
