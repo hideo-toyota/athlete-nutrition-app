@@ -1,0 +1,14 @@
+{
+  "_comment": "value-audit score --from-file の手入力サンプル(Phase A)。次決算後の実績・価格を手入力(=ASSUMPTION)。対DCAは未算出(UNKNOWN)。",
+  "thesis_id": "(register で発行された thesis_id を貼る)",
+  "next_earnings_available_at": "2026-08-07T15:30:00+09:00",
+  "entry_price": 2800.0,
+  "exit_price": 3100.0,
+  "actuals": {
+    "revenue_growth": 4.5,
+    "op_margin": 7.5
+  },
+  "asof": "2026-08-08",
+  "source": "manual",
+  "claim_tags": { "actuals": "ASSUMPTION", "computed": "CALCULATION(ASSUMPTION依存)" }
+}

@@ -20,5 +20,14 @@
     }
   },
   "benchmark": { "type": "dca_index", "index_ref": "indices/acwi.json", "note": "同一CFのDCA" },
-  "data_source": { "index_composition_dir": "indices" }
+  "data_source": { "index_composition_dir": "indices" },
+  "value_audit": {
+    "annual_hurdle_pct": 10,
+    "hurdle_basis": "pre_tax",
+    "annualization_day_base": 365,
+    "min_cycle_days": 45,
+    "max_cycle_days": 200,
+    "benchmark_index_ref": null,
+    "min_metrics_for_audit": 3
+  }
 }

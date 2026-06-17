@@ -14,7 +14,10 @@ from .data import load_portfolio
 from .discipline import check
 from . import journal
 from . import target_check
-from .report import render_check, render_mirror, render_review, render_target_check
+from . import value_audit
+from . import value_store
+from .report import (render_check, render_mirror, render_review, render_target_check,
+                     render_value_audit, render_value_review)
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS = ROOT / "outputs"
@@ -193,6 +196,178 @@ def cmd_target_check(args) -> None:
           "(必要条件/破綻条件は出力を参照)。これは予測でも助言でもありません。")
 
 
+def _va_config() -> dict:
+    """config.json の value_audit ブロック(既定値で補完)。"""
+    cfg = load_config()
+    d = dict(cfg.get("value_audit") or {})
+    d.setdefault("annual_hurdle_pct", 10)
+    d.setdefault("annualization_day_base", 365)
+    d.setdefault("min_cycle_days", 45)
+    d.setdefault("max_cycle_days", 200)
+    return d
+
+
+def _resolve_path(p: str) -> Path:
+    q = Path(p)
+    return q if q.is_absolute() else (ROOT / q)
+
+
+def _rel(p: Path):
+    try:
+        return p.relative_to(ROOT)
+    except ValueError:
+        return p
+
+
+def cmd_value_audit_register(args) -> None:
+    """B5: 割安“仮説”を事前固定(紙上・購入意思ではない)。手入力 snapshot のみ・ネット無し。"""
+    if not args.from_file:
+        raise SystemExit("Phase A は手入力です: value-audit register <ticker> --from-file <json>")
+    asof_d = value_store.valid_asof(args.asof) or date.today()
+    d = value_store.load_thesis_input(_resolve_path(args.from_file))
+    if args.ticker and d.get("ticker") != args.ticker:
+        raise SystemExit(f"--from-file の ticker({d.get('ticker')})と引数 ticker({args.ticker})が一致しません")
+    # PIT: snapshot と各 valuation の available_at <= asof(未来混入を拒否)
+    if value_store.parse_dt_date(d["snapshot_at"], "snapshot_at") > asof_d:
+        raise SystemExit(f"snapshot_at が asof より未来です(PIT 違反): {d['snapshot_at']} > {asof_d}")
+    for k, m in (d.get("valuation") or {}).items():
+        if isinstance(m, dict) and m.get("available_at"):
+            if value_store.parse_dt_date(m["available_at"], f"valuation.{k}.available_at") > asof_d:
+                raise SystemExit(f"valuation.{k}.available_at が asof より未来です(PIT 違反)")
+    thesis_id = value_store.append_thesis(d, asof=asof_d.isoformat())
+    slug = value_store.validate_ticker(d["ticker"])
+    out = value_store.safe_output_path(slug)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(render_value_audit(d), encoding="utf-8")
+    print(f"value-audit 仮説を登録しました(紙上・購入意思ではない): thesis_id={thesis_id}")
+    print(f"  → {_rel(out)} / {_rel(value_store.THESIS_LOG)}(追記専用)")
+    print("  ※ これは買い候補でも推奨でも予測でもありません。売買は check → 人間 → log。")
+
+
+def cmd_value_audit_score(args) -> None:
+    """B5: 次決算後の手入力実績で事後採点(対DCA=UNKNOWN・凍結・冪等)。ネット無し。"""
+    if not args.from_file:
+        raise SystemExit("Phase A は手入力です: value-audit score --from-file <json>")
+    oin = value_store.load_outcome_input(_resolve_path(args.from_file))
+    asof_str = args.asof or oin.get("asof")
+    asof_d = value_store.valid_asof(asof_str)
+    if asof_d is None:
+        raise SystemExit("asof が必要です(--asof か入力の asof)")
+    va_cfg = _va_config()
+
+    all_theses = value_store.read_theses()
+    if not any(t.get("thesis_id") == oin["thesis_id"] for t in all_theses):
+        raise SystemExit(f"thesis_id が見つかりません: {oin['thesis_id']}(先に register)")
+    actives = {t["thesis_id"]: t for t in value_store.active_theses()}
+    th = actives.get(oin["thesis_id"])
+    if th is None:
+        print(f"thesis_id={oin['thesis_id']} は superseded(無効版)のため採点をスキップします(既存 outcome は不変)。")
+        return
+
+    nea = oin["next_earnings_available_at"]
+    if value_store.parse_dt_date(nea, "next_earnings_available_at") > asof_d:
+        print(f"次決算 available_at={nea} は asof={asof_d} より未来 → pending(採点しない)。")
+        return
+
+    start_at = th["cycle"]["start_available_at"]
+    start_d = value_store.parse_dt_date(start_at, "cycle.start_available_at")
+    end_d = value_store.parse_dt_date(nea, "next_earnings_available_at")
+    days = value_audit.cycle_days(start_d.toordinal(), end_d.toordinal())
+
+    raw = value_audit.raw_return(oin["entry_price"], oin["exit_price"])
+    raw_m = value_audit.measured(raw, value_audit.CALCULATION, unit="%", note="ASSUMPTION依存(手入力価格)")
+    ann = value_audit.annualize(raw, days, va_cfg)
+    if ann.get("status") == value_audit.CALCULATION:
+        ann["note"] = "ASSUMPTION依存(手入力価格)"
+    hurdle = va_cfg["annual_hurdle_pct"] / 100.0
+    vs10 = value_audit.vs_target(ann, hurdle)
+
+    actuals = oin["actuals"]
+
+    def _actual_measured(metric):
+        v = actuals.get(metric)
+        if value_audit._finite(v):
+            return value_audit.measured(float(v), value_audit.ASSUMPTION)
+        return value_audit.unknown(note="手入力 actual 欠損")
+
+    checklist_result = []
+    for c in th.get("next_earnings_checklist", []):
+        if c.get("qualitative_only"):
+            checklist_result.append({"metric": c.get("metric"), "qualitative_only": True,
+                                     "actual": value_audit.unknown(), "matched": None})
+            continue
+        am = _actual_measured(c["metric"])
+        try:
+            matched = value_audit.evaluate_condition(c, am)
+        except ValueError as e:
+            raise SystemExit(f"checklist 判定エラー({c.get('metric')}): {e}")
+        checklist_result.append({"metric": c["metric"], "operator": c["operator"],
+                                 "threshold": c["threshold"], "tolerance": c.get("tolerance", 0.0),
+                                 "actual": am, "matched": matched,
+                                 "qualitative_only": False, "judge_basis": "構造化比較(operator真理表)"})
+
+    fired = []
+    for c in th.get("falsification", []):
+        am = _actual_measured(c["metric"])
+        try:
+            res = value_audit.evaluate_condition(c, am)
+        except ValueError as e:
+            raise SystemExit(f"falsification 判定エラー({c.get('metric')}): {e}")
+        if res is True:
+            fired.append({"metric": c["metric"], "operator": c["operator"],
+                          "threshold": c["threshold"], "actual": am})
+
+    outcome = {
+        "thesis_id": oin["thesis_id"], "scored_at": asof_d.isoformat(), "asof": asof_d.isoformat(),
+        "source": "manual", "cycle_start_available_at": start_at, "next_earnings_available_at": nea,
+        "cycle_days": days, "raw_return": raw_m, "annualized_return": ann, "vs_target_10pct": vs10,
+        "benchmark": {"method": "dca_index", "index_ref": va_cfg.get("benchmark_index_ref"),
+                      "return": value_audit.unknown(note="no_price_series(Phase A)")},
+        "excess_vs_dca": value_audit.unknown(note="no_price_series(Phase A)"),
+        "beat_dca": value_audit.unknown(note="no_price_series(Phase A)"),
+        "max_drawdown_pct": value_audit.unknown(note="日足無し(Phase A)"),
+        "checklist_result": checklist_result, "falsification_triggered": fired,
+        "cheapness_resolution": "undetermined",
+        "claim_tags": {"actuals": "ASSUMPTION", "computed": "CALCULATION(ASSUMPTION依存)"},
+    }
+    if oin.get("amends"):
+        outcome["amends"] = oin["amends"]
+    event_id, written = value_store.append_outcome(outcome)
+    if not written:
+        print(f"already_scored: 同一キーの採点が既にあります(追記しません)。thesis_id={oin['thesis_id']}")
+        return
+    ann_txt = f"{ann['value']*100:.1f}%/年" if ann.get("status") == value_audit.CALCULATION else "UNKNOWN(範囲外)"
+    print(f"採点しました(手入力仮定・対DCA=UNKNOWN): outcome_id={event_id}")
+    print(f"  raw {raw*100:.1f}% / {days}日 → 年率 {ann_txt} / 反証発火 {len(fired)} 件")
+    print("  ※ これは予測でも推奨でもありません。手入力前提(ASSUMPTION)の事後測定です。")
+
+
+def cmd_value_audit_review(args) -> None:
+    """B5: 較正(固定表示順・hit率を先頭に出さない・対DCA=UNKNOWN)。ネット無し。"""
+    value_store.valid_asof(args.asof)
+    va_cfg = _va_config()
+    outcomes = value_store.read_outcomes()
+    n_active = len(value_store.active_theses())
+    stats = value_audit.aggregate(outcomes, va_cfg)
+    OUTPUTS.mkdir(exist_ok=True)
+    out = OUTPUTS / "value_audit_review.md"
+    out.write_text(render_value_review(stats, n_active), encoding="utf-8")
+    print(f"value-audit 較正: 有効仮説 {n_active} 件 / 採点 {stats['n_scored']} 件 → {_rel(out)}")
+    if stats["n_scored"] < 20:
+        print("  ⚠️ サンプル不足:統計的な結論は保留(原則3)。対DCA は Phase A では UNKNOWN(未算出)。")
+
+
+def cmd_value_audit(args) -> None:
+    if args.va_command == "register":
+        cmd_value_audit_register(args)
+    elif args.va_command == "score":
+        cmd_value_audit_score(args)
+    elif args.va_command == "review":
+        cmd_value_audit_review(args)
+    else:
+        raise SystemExit("使い方: value-audit {register|score|review} ...")
+
+
 def cmd_data_check(offline: bool) -> None:
     """A0: ネットワーク無しのキー存在確認 + redact 動作確認。**値は表示しない・外部接続しない**。"""
     if not offline:
@@ -238,6 +413,18 @@ def main() -> None:
     pt.add_argument("--max-dd", dest="max_dd", type=float, default=None,
                     help="最大ドローダウン許容%%(任意)")
     pt.add_argument("--asof", help="基準日 YYYY-MM-DD(再現可能性のため・任意)")
+    pva = sub.add_parser("value-audit",
+                         help="決算to決算の割安“仮説”検証(銘柄推奨なし・予測なし・購入意思でない)")
+    vsub = pva.add_subparsers(dest="va_command")
+    vr = vsub.add_parser("register", help="割安仮説を事前固定(紙上・手入力 --from-file)")
+    vr.add_argument("ticker", nargs="?", help="ticker(--from-file と一致確認)")
+    vr.add_argument("--from-file", dest="from_file", help="仮説JSON(Phase A は必須)")
+    vr.add_argument("--asof", help="基準日 YYYY-MM-DD(PIT・再現性)")
+    vsc = vsub.add_parser("score", help="次決算後の手入力実績で事後採点(対DCA=UNKNOWN)")
+    vsc.add_argument("--from-file", dest="from_file", help="採点JSON(Phase A は必須)")
+    vsc.add_argument("--asof", help="採点基準日 YYYY-MM-DD(既定: 入力の asof)")
+    vrv = vsub.add_parser("review", help="較正(固定表示順・hit率を煽らない)")
+    vrv.add_argument("--asof", help="基準日 YYYY-MM-DD(任意)")
     pd = sub.add_parser("data-check", help="(A0) キー存在とredactをオフライン確認。実疎通はしない")
     pd.add_argument("--offline", action="store_true", help="A0では必須。外部接続せずに確認")
     args = ap.parse_args()
@@ -256,6 +443,8 @@ def main() -> None:
         cmd_review()
     elif args.command == "target-check":
         cmd_target_check(args)
+    elif args.command == "value-audit":
+        cmd_value_audit(args)
     elif args.command == "data-check":
         cmd_data_check(args.offline)
     else:

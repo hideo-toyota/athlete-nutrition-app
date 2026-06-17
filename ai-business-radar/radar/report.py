@@ -239,3 +239,144 @@ def render_mirror(exp: dict, portfolio: dict, cfg: dict, asof: str | None = None
     o.append(f"> {DISCLAIMER}")
     o.append("")
     return "\n".join(o)
+
+
+VALUE_AUDIT_DISCLAIMER = ("※これは投資助言ではありません。割安“仮説”の検証であり、特定銘柄の推奨・"
+                          "売買指示・利益保証・将来予測ではありません。これは購入意思の表明でもありません。"
+                          "売買は discipline check + 人間判断が必要です。最終判断は自分にあります。")
+
+
+def _cond_str(c: dict) -> str:
+    """構造化条件を人が読める形に。判定には使わない(表示専用)。"""
+    op = c.get("operator", "?")
+    th = c.get("threshold")
+    tol = c.get("tolerance", 0.0) or 0.0
+    metric = c.get("metric", "?")
+    if op in ("in_range", "out_of_range") and isinstance(th, (list, tuple)) and len(th) == 2:
+        body = f"{op} [{th[0]}, {th[1]}]"
+    else:
+        body = f"{op} {th}"
+    tail = f" (±{tol})" if tol else ""
+    return f"`{metric}` {body}{tail}"
+
+
+def render_value_audit(thesis: dict) -> str:
+    """個別 value_audit レポート(4点・不確実性先頭・購入意思でない・免責)。"""
+    o = []
+    o.append("# Value Audit — 決算 to 決算の割安“仮説”検証")
+    o.append("")
+    o.append(f"_対象: {thesis.get('ticker')} {thesis.get('company_name') or ''} / "
+             f"snapshot: {thesis.get('snapshot_at')} / "
+             f"立場: {thesis.get('position_intent', 'paper_only')}_")
+    o.append("")
+    o.append("> **これは購入意思ではありません(紙上の仮説)。** 売買は `check` → 人間判断 → `log` の系統で。")
+    o.append(f"> {VALUE_AUDIT_DISCLAIMER}")
+    o.append("")
+    # uncertainty-first
+    o.append("## まず:これは何か(不確実性)")
+    o.append("- これは**割安“仮説”を反証可能な形で固定し、次決算で事後検証する**もの。**銘柄推奨でも予測でもない。**")
+    o.append("- 手入力値は **ASSUMPTION**(概算)。そこから計算する指標は CALCULATION(ASSUMPTION依存)。")
+    o.append("- 年率10%は**事後測定のハードル(ASSUMPTION)**であり、見込みや保証ではない。")
+    o.append("")
+    # 1. 検証対象
+    o.append("## 1. 検証対象(What we are testing)[INFERENCE]")
+    cr = thesis.get("cheapness_reason", {})
+    o.append(f"- 安いと考える理由(分類: **{cr.get('classification', '?')}**): {cr.get('explanation', '—')}")
+    o.append("- valuation(claim 分類つき・欠損は UNKNOWN で 0 埋めしない):")
+    val = thesis.get("valuation", {})
+    for k, m in val.items():
+        if isinstance(m, dict) and m:
+            st = m.get("status", "UNKNOWN")
+            vv = m.get("value")
+            shown = "UNKNOWN(未取得/欠損)" if (st == "UNKNOWN" or vv is None) else f"{vv}{m.get('unit') or ''}"
+            o.append(f"  - {k}: {shown} [{st}]")
+        else:
+            o.append(f"  - {k}: UNKNOWN(未設定)[UNKNOWN]")
+    o.append("")
+    # 2. 必要条件
+    o.append("## 2. 必要条件(What must hold)[INFERENCE]")
+    o.append("- 次決算で以下の事前期待が満たされること(満たさなければ仮説は弱まる):")
+    for c in thesis.get("next_earnings_checklist", []):
+        if c.get("qualitative_only"):
+            o.append(f"  - {c.get('metric', '?')}(定性・一致率の分母外): {c.get('why') or c.get('expectation') or ''}")
+        else:
+            o.append(f"  - {_cond_str(c)} — {c.get('why') or c.get('expectation') or ''}")
+    o.append("")
+    # 3. 反証条件
+    o.append("## 3. 反証条件(What would break it)[WARNING]")
+    o.append("- 次の条件に触れたら仮説は棄却:")
+    for c in thesis.get("falsification", []):
+        o.append(f"  - {_cond_str(c)} — {c.get('why') or ''}")
+    at = thesis.get("anti_thesis", {})
+    o.append("- 反対仮説(安さが正当・構造劣化の可能性):")
+    o.append(f"  - 安さが正当かも: {at.get('why_cheap_may_be_deserved', '—')}")
+    o.append(f"  - 構造劣化かも: {at.get('structural_risk_case', '—')}")
+    o.append(f"  - 次決算で強まる条件: {at.get('intensifies_if', '—')}")
+    o.append("")
+    # 4. 次決算で見る項目
+    o.append("## 4. 次決算で見る項目(What to read next)[INFERENCE]")
+    for c in thesis.get("next_earnings_checklist", []):
+        o.append(f"- `{c.get('metric', '?')}`: {c.get('why') or c.get('expectation') or '仮説の確認点'}")
+    for r in thesis.get("key_risks", []):
+        o.append(f"- リスク: {r}")
+    o.append("")
+    o.append(f"> {VALUE_AUDIT_DISCLAIMER}")
+    o.append("")
+    return "\n".join(o)
+
+
+def render_value_review(stats: dict, n_active: int) -> str:
+    """較正レポート(固定表示順・hit率を先頭に出さない・UNKNOWNを分母に入れない)。"""
+    def pct(x):
+        return f"{x*100:.0f}%" if isinstance(x, (int, float)) else "—(算出不可/UNKNOWN)"
+
+    o = []
+    o.append("# Value Audit Review — 較正(過程 > 結果)")
+    o.append("")
+    o.append(f"_有効な仮説 {n_active} 件 / 採点済み {stats['n_scored']} 件_")
+    o.append("")
+    o.append("> **Phase A は手入力仮定(ASSUMPTION)に基づく較正。** 数値は CALCULATION(ASSUMPTION依存)であり"
+             "実測 FACT ではない。過信しないこと(原則3)。")
+    o.append(f"> {VALUE_AUDIT_DISCLAIMER}")
+    o.append("")
+    # 1. サンプル不足 / UNKNOWN / 欠損(まず分かっていないこと)
+    o.append("## 1. サンプル不足 / UNKNOWN / 欠損(まず読む)")
+    if stats["n_scored"] < 20:
+        o.append(f"- ⚠️ 採点 {stats['n_scored']} 件 < 20:**統計的な結論は保留**(原則3)。"
+                 "決算は年≈4回なので、意味ある較正には数年かかる。")
+    o.append(f"- 年率換算が UNKNOWN(サイクル日数が範囲外 等): {stats['n_annualized_unknown']} 件")
+    o.append("- 対DCA は **UNKNOWN(未算出)**:Phase A は指数の価格系列が無いため hit率を出さない。")
+    o.append("")
+    # 2. 反証発火
+    o.append("## 2. 反証条件に触れた件数")
+    o.append(f"- 反証が発火した採点: **{stats['falsification_outcomes']} 件** "
+             f"(発火条件の総数 {stats['falsification_total_triggers']})")
+    o.append("")
+    # 3. リスク
+    o.append("## 3. 規律 / 集中度 / 最大DD")
+    if stats["max_dd_known"]:
+        o.append(f"- 最大DD(判明分): {', '.join(f'{v:.0f}%' for v in stats['max_dd_known'])}")
+    else:
+        o.append("- 最大DD: UNKNOWN(日足が無い Phase A では算出しない)。")
+    o.append("- 集中度・上限は `mirror` / `check` を併用(本レポートは仮説検証に限定)。")
+    o.append("")
+    # 4. checklist 一致率
+    o.append("## 4. checklist 一致率(構造化フィールドのみ・UNKNOWN除外)")
+    o.append(f"- 事前期待と実績の一致率: **{pct(stats['checklist_match_rate'])}** "
+             f"(分母 {stats['checklist_den']} 項目)")
+    o.append("")
+    # 5. 対10%
+    o.append("## 5. 対10%ハードル hit率(年率換算が確定したもののみ)")
+    o.append(f"- 年率10%換算を超えた割合: **{pct(stats['hit_10pct'])}** "
+             f"(分母 {stats['hit_10pct_den']} 件)")
+    o.append("")
+    # 6. 対DCA
+    o.append("## 6. 対DCA hit率")
+    if stats["hit_dca_den"]:
+        o.append(f"- DCAインデックス超過の割合: **{pct(stats['hit_dca'])}** (分母 {stats['hit_dca_den']} 件)")
+    else:
+        o.append("- **UNKNOWN(未算出)**:価格系列が無いため Phase A では出さない(負け扱いにもしない)。")
+    o.append("")
+    o.append(f"> {VALUE_AUDIT_DISCLAIMER}")
+    o.append("")
+    return "\n".join(o)

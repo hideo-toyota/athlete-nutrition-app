@@ -17,3 +17,5 @@ __pycache__/
 decision_log.jsonl
 journal/decision_input.json
 journal/prices.json
+journal/value_thesis.jsonl
+journal/value_outcomes.jsonl
