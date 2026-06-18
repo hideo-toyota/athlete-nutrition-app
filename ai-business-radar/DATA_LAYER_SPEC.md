@@ -1,7 +1,8 @@
-# DATA_LAYER_SPEC — J-Quants + EDINET DB データ/リサーチ層の契約(v3・実装前)
+# DATA_LAYER_SPEC — J-Quants + EDINET DB データ/リサーチ層の契約(v3・A1実装済)
 
 > 設計のみ。実装はこの契約の帰結。正は DESIGN_PRINCIPLES.md / SPEC.md / CLAIMS.md / CLAUDE.md。
-> ⚠️ `LICENSE_MATRIX.md` の ToS 確認が埋まるまで **A1疎通・sync 実装は NO-GO**(D1)。**A0(ネットワーク無し)のみGO**。
+> ✅ A0/A1(`data-check --offline` / `data-check --live`)は実装済み。2026-06-18時点で J-Quants / EDINET DB とも実キーで軽量疎通OK。
+> ⚠️ `LICENSE_MATRIX.md` の ToS 確認が埋まるまで **B(sync/raw保存)以降は NO-GO**(D1)。取得本文を保存・表示・LLM投入しないこと。
 
 ## 0. 目的 / 非目的
 - **目的**: J-Quants(有料)+ EDINET DB のデータから **research_queue(調査候補)** と **evidence pack(根拠)** を生成。
@@ -138,9 +139,9 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
 キー未設定 / **キーがログ・例外・出力に出ない** / network失敗 / 401・403・429・5xx / 壊れJSON / 非dict / CSV列欠損 / nan・inf / 欠損 / same fetch の raw_hash 一致 / fetch_log 追記 / **source層が data/raw・data/metadata 以外に書かない**(build/output層は所定出力のみ) / research_queue が「買い候補」を書かない / evidence が売買断定しない・action例が金額入り売買案でない / **既存5コマンド非回帰**。
 
 ## 16. Phase 境界 と Phase別 完了条件
-- **A0(ネットワーク無し)** ← GO可:secrets/config/gitignore/注入可能client・clock/provenance・fetch_log のスキーマ定義/offlineテスト。完了=キー処理・redact・スキーマ・テストが揃い、ネット接続コードは無い。
-- **A1(軽量疎通)** ← ToS確認後:`data-check`(key存在+最小疎通、失敗時redact)。完了=キーを見せず疎通可否を返す。
-- **B**:最小 sync(listed-info / financials / prices)+ raw + metadata + manifest。完了=raw+provenanceが保存され raw_hash再現。
+- **A0(ネットワーク無し)** ← 実装済み:secrets/config/gitignore/注入可能client・clock/provenance・fetch_log のスキーマ定義/offlineテスト。完了=キー処理・redact・スキーマ・テストが揃い、ネット接続コードは無い。
+- **A1(軽量疎通)** ← 実装済み:`data-check`(key存在+最小疎通、失敗時redact)。完了=キーを見せず疎通可否を返す。2026-06-18 実キーで J-Quants `/bulk/list` と EDINET DB `/companies` 疎通OK。
+- **B** ← **NO-GO**:`LICENSE_MATRIX.md` の raw保存/retention/第三者LLM入力ゲート解除後のみ。最小 sync(listed-info / financials / prices)+ raw + metadata + manifest。完了=raw+provenanceが保存され raw_hash再現。
 - **C**:features レジストリ + research_queue。完了=research_queue.md 生成・推奨漏れ無し。
 - **D**:evidence + claim_audit。完了=evidence/<ticker>.md 生成・売買断定無し・全主張 claim分類。
 - **E**:既存への導線 + README/CLAUDE/SPEC 更新 + 監査。

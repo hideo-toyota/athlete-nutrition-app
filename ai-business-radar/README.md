@@ -25,6 +25,11 @@ python3 -m radar check add NVDA 100000              # 例: 既に上限 → 却�
 python3 -m radar log       # journal/decision_input.json を追記(予測必須・override理由必須)
 python3 -m radar score     # journal/prices.json の horizon終値で採点(未来不参照)
 python3 -m radar review    # outputs/journal_review.md(裁量 vs 規律 / 対DCA)
+
+# ④ データ層A1:APIキーと軽量疎通だけ確認(raw保存・本文表示なし)
+python3 -m radar data-check --offline
+python3 -m radar data-check --live --provider jquants
+python3 -m radar data-check --live --provider edinet-db
 ```
 
 判断ログ `decision_log.jsonl` は**追記専用**(decision も outcome も別行・過去は改変しない=後知恵対策)。個人データなので `.gitignore` 済み(テンプレは `journal/*.example.json`)。
@@ -32,6 +37,7 @@ python3 -m radar review    # outputs/journal_review.md(裁量 vs 規律 / 対DCA
 - 設定は宣言的: [`config.json`](config.json)(コア/サテライト・上限 2.5%/5%/10%・規律しきい値・DCAベンチ)。
 - データはファイル: [`portfolio.json`](portfolio.json)、[`indices/`](indices)(指数構成=手入力概算)。
 - 生成物は [`outputs/`](outputs)(`honest_mirror.md` + `honest_mirror.csv` / `discipline_check.md`)。
+- 有料データ層はA1(軽量疎通)まで実装済み。**sync/raw保存/Claude等LLMへの取得本文投入は `LICENSE_MATRIX.md` のToSゲート解除まで NO-GO**。
 
 ## 使い方プロンプト集
 Discordから送る分析指示の例は [PROMPTS.md](PROMPTS.md)。
