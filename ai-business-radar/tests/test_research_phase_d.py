@@ -8,7 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from radar.research import build_evidence, build_research_queue, write_evidence, write_research_queue
+from radar.research import (build_evidence, build_llm_handoff, build_research_queue,
+                            write_evidence, write_llm_handoff, write_research_queue)
 from radar.research.common import FORBIDDEN_OUTPUT_TOKENS
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -121,8 +122,22 @@ class ResearchPhaseDTests(unittest.TestCase):
         for needle in ("urllib", "requests", "socket", "load_api_key", "_load_dotenv"):
             self.assertNotIn(needle, text)
 
+    def test_llm_handoff_packet_is_bounded_and_local_only(self):
+        packet = build_llm_handoff(asof="2026-06-18", derived_root=self.base / "data" / "derived")
+        with tempfile.TemporaryDirectory() as od:
+            res = write_llm_handoff(packet, outputs_root=Path(od))
+            text = Path(res["md_path"]).read_text(encoding="utf-8")
+            manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
+        self.assertNotIn(SENTINEL, text)
+        self.assertIn("UNKNOWN / 不足", text)
+        self.assertIn("discipline check 未通過", text)
+        self.assertFalse(manifest["raw_body_included"])
+        self.assertFalse(manifest["llm_api_called"])
+        for token in FORBIDDEN_OUTPUT_TOKENS:
+            self.assertNotIn(token, text)
+
     def test_cli_help_ok(self):
-        for cmd in ("research-queue", "evidence"):
+        for cmd in ("research-queue", "evidence", "llm-brief"):
             p = subprocess.run([sys.executable, "-m", "radar", cmd, "--help"],
                                cwd=str(ROOT), capture_output=True, text=True)
             self.assertEqual(p.returncode, 0, p.stderr)

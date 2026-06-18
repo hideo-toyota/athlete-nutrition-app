@@ -63,7 +63,8 @@ ai-business-radar/
 - Phase B: EDINET DB `companies` / `financials` の minimal sync は実装済み。raw は `data/raw`、provenance は `data/metadata`、本文・キーは表示しない。
 - Phase C: `FEATURE_PHASE_C_SPEC.md` / `FEATURE_PHASE_C_PLAN.md` に従い、EDINET DB financials raw から `data/derived` を作る minimal feature生成は実装済み。
 - Phase D0: derived feature のみを読む local `research_queue` / `evidence` は実装済み。**provider raw本文の第三者LLM投入には進めない**。
-- J-Quants sync、prices、LLM連携、`analyze`、`backtest` は後段。**安全と正直の土台ができてから**。
+- Phase D1 prep: `llm-brief` で derived/evidence をLLM投入用packetに整形(API呼び出しなし)。自動API送信は後段。
+- J-Quants sync、prices、LLM API送信、`analyze`、`backtest` は後段。**安全と正直の土台ができてから**。
 
 ## 原則充足チェック(planner自己監査)
 | 原則 | 本プランでの担保 |

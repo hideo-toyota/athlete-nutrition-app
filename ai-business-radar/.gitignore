@@ -13,6 +13,7 @@ data/metadata/
 outputs/research_queue.md
 outputs/research_queue.csv
 outputs/evidence/
+outputs/llm_handoff/
 
 # Python
 __pycache__/

@@ -17,7 +17,8 @@ from . import target_check
 from . import value_audit
 from . import value_store
 from .features import build_financial_features
-from .research import build_evidence, build_research_queue, write_evidence, write_research_queue
+from .research import (build_evidence, build_llm_handoff, build_research_queue,
+                       write_evidence, write_llm_handoff, write_research_queue)
 from .sources import edinet_db
 from .report import (render_check, render_mirror, render_review, render_target_check,
                      render_value_audit, render_value_review)
@@ -509,6 +510,18 @@ def cmd_evidence(args) -> None:
     print("  ※ raw本文は含めず、derived feature と hash/provenance参照だけを整理しています。")
 
 
+def cmd_llm_brief(args) -> None:
+    """Build a bounded LLM handoff packet. It does not call an LLM API."""
+    asof = _valid_asof(args.asof)
+    if args.max_items is not None and args.max_items <= 0:
+        raise SystemExit("--max-items は正の整数で指定してください")
+    packet = build_llm_handoff(asof=asof, max_items=args.max_items)
+    res = write_llm_handoff(packet)
+    print(f"LLM brief を生成しました: {_rel(res['md_path'])} / {_rel(res['manifest_path'])}")
+    print(f"  evidence blocks: {res['count']} / asof: {packet['asof']}")
+    print("  ※ LLM APIは呼んでいません。provider raw本文・APIキー値・.env は含めていません。")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="radar",
                                  description="Personal Equity Research Radar")
@@ -584,6 +597,11 @@ def main() -> None:
                          help="(Phase D0) EDINET code の evidence pack を生成(売買指示なし・LLM投入なし)")
     pev.add_argument("entity", help="EDINETコード(E02367形式)。Phase D0 は ticker未対応")
     pev.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
+    plb = sub.add_parser("llm-brief",
+                         help="(Phase D1 prep) derived/evidence からLLM投入用packetを生成(API呼び出しなし)")
+    plb.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
+    plb.add_argument("--max-items", dest="max_items", type=int, default=None,
+                     help="packetに含める最大件数(任意・正の整数)")
     args = ap.parse_args()
 
     if args.command == "mirror":
@@ -612,6 +630,8 @@ def main() -> None:
         cmd_research_queue(args)
     elif args.command == "evidence":
         cmd_evidence(args)
+    elif args.command == "llm-brief":
+        cmd_llm_brief(args)
     else:
         ap.print_help()
 

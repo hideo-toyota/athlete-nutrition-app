@@ -127,6 +127,7 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
 | `build-features` | `build-features --provider edinet-db --dataset financials --raw-path <path> [--asof YYYY-MM-DD]` | `data/derived` | なし |
 | `research-queue` | `research-queue [--asof YYYY-MM-DD]` | `outputs/research_queue.md/.csv` | なし |
 | `evidence` | `evidence <ticker> [--asof YYYY-MM-DD]` | `outputs/evidence/<ticker>.md` | なし |
+| `llm-brief` | `llm-brief [--asof YYYY-MM-DD] [--max-items N]` | `outputs/llm_handoff/<asof>.md/.json` | なし(API呼び出しなし) |
 | `claim-audit` | `claim-audit <file>` | 端末 | なし |
 - `--asof` は厳密 `YYYY-MM-DD` 検証(既存 mirror/score と同実装)。各コマンドは 入力/出力先/鮮度/欠損/注意 を表示。
 
@@ -155,5 +156,6 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
   - 完了=raw+provenanceが保存され raw_hash再現。**第三者LLM入力は別ゲートで、B完了をもって解禁しない**。
 - **C(feature生成)**: `FEATURE_PHASE_C_SPEC.md` の範囲で EDINET DB financials raw から `data/derived` を生成。完了=derived + source_snapshot + raw_hash + UNKNOWN監査。**research_queue はまだ作らない**。
 - **D0(local research/evidence)**: derived feature のみから `research_queue.md/.csv` と `evidence/<edinet_code>.md` を生成。完了=売買断定無し・raw本文無し・第三者LLM投入無し。
-- **D1(LLM/claim-audit連携)**: `LICENSE_MATRIX.md` の第三者LLM入力セル確認後のみ。完了=evidence/claim の外部投入方針・保持/再配布条件が明示済み。
+- **D1 prep(LLM handoff packet)**: derived/evidence だけから `llm-brief` を生成。完了=raw本文無し・API呼び出し無し・LLM指示に claim分類/反証/discipline gate を固定。
+- **D1 send(LLM API送信)**: `LICENSE_MATRIX.md` の第三者LLM入力セル確認後のみ。完了=evidence/claim の外部投入方針・保持/再配布条件が明示済み。
 - **E**:既存への導線 + README/CLAUDE/SPEC 更新 + 監査。
