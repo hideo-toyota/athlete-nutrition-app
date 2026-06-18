@@ -21,10 +21,12 @@ CFG = {
         "retry_max": 2, "backoff_base_sec": 0, "timeout_sec": 5,
         "max_response_bytes": 64, "daily_request_budget": 50,
         "providers": {
-            "jquants": {"base_url": "https://api.jquants.com/v1", "ping_path": "/token/auth_refresh",
-                        "auth": "query:refreshtoken", "key_var": "JQUANTS_API_KEY"},
-            "edinet-db": {"base_url": "https://edinetdb.com/v1", "ping_path": "/companies",
-                          "auth": "bearer", "key_var": "EDINETDB_API_KEY", "ping_params": {"limit": 1}},
+            "jquants": {"base_url": "https://api.jquants.com/v2", "ping_path": "/bulk/list",
+                        "auth": "x-api-key", "key_var": "JQUANTS_API_KEY",
+                        "ping_params": {"endpoint": "/markets/calendar"}},
+            "edinet-db": {"base_url": "https://edinetdb.jp/v1", "ping_path": "/companies",
+                          "auth": "x-api-key", "key_var": "EDINETDB_API_KEY",
+                          "ping_params": {"per_page": 1}},
         },
     }
 }
@@ -51,6 +53,11 @@ class A1Tests(unittest.TestCase):
         return live.ping(provider, CFG, client=client, clock=CLK,
                          sleeper=lambda _s: None, key_getter=_key)
 
+    def test_redact_refreshtoken_query_param(self):
+        s = common.redact("https://api.example.test/ping?refreshtoken=abc123&x=1")
+        self.assertNotIn("abc123", s)
+        self.assertIn("refreshtoken=***REDACTED***", s)
+
     # --- success ---
     def test_success_200_dict(self):
         res = self._ping(lambda url, h: FakeResp(200, b'{"ok":true}'))
@@ -69,11 +76,33 @@ class A1Tests(unittest.TestCase):
             return FakeResp(200, b'{"ok":1}')
 
         res = self._ping(client, provider="jquants")
-        # 鍵は url(query)に入るが、戻り値(endpoint/error)には出ない
+        # 鍵は送信用headerに入るが、戻り値(endpoint/error)には出ない
         self.assertNotIn(SECRET, str(res))
-        self.assertEqual(res["endpoint"], "/token/auth_refresh")
-        # 実際に鍵は送信先には乗る(疎通のため)が、結果には残さない設計
-        self.assertIn(SECRET, captured["url"])
+        self.assertEqual(res["endpoint"], "/bulk/list")
+        self.assertIn(SECRET, str(captured["headers"]))
+        self.assertNotIn(SECRET, captured["url"])
+
+    def test_query_auth_url_exception_redacts_secret_without_env(self):
+        cfg = {
+            "data_layer": {
+                "retry_max": 0, "backoff_base_sec": 0, "timeout_sec": 5,
+                "max_response_bytes": 64, "daily_request_budget": 50,
+                "providers": {
+                    "jquants": {"base_url": "https://api.example.test", "ping_path": "/ping",
+                                "auth": "query:refreshtoken", "key_var": "JQUANTS_API_KEY"},
+                },
+            }
+        }
+
+        def client(url, _headers):
+            self.assertIn(SECRET, url)
+            raise Exception(f"failed url={url}")
+
+        res = live.ping("jquants", cfg, client=client, clock=CLK,
+                        sleeper=lambda _s: None, key_getter=_key)
+        self.assertFalse(res["success"])
+        self.assertNotIn(SECRET, str(res))
+        self.assertNotIn("refreshtoken=" + SECRET, str(res))
 
     def test_error_message_redacts_key(self):
         os.environ["EDINETDB_API_KEY"] = SECRET
@@ -116,6 +145,22 @@ class A1Tests(unittest.TestCase):
         self.assertEqual(res["status"], 503)
         self.assertEqual(res["attempts"], CFG["data_layer"]["retry_max"] + 1)
 
+    def test_retry_max_zero_means_single_attempt(self):
+        cfg = {
+            "data_layer": dict(CFG["data_layer"], retry_max=0),
+        }
+        calls = {"n": 0}
+
+        def client(url, h):
+            calls["n"] += 1
+            return FakeResp(503)
+
+        res = live.ping("edinet-db", cfg, client=client, clock=CLK,
+                        sleeper=lambda _s: None, key_getter=_key)
+        self.assertFalse(res["success"])
+        self.assertEqual(calls["n"], 1)
+        self.assertEqual(res["attempts"], 1)
+
     # --- network failure / timeout ---
     def test_network_failure_redacted(self):
         def client(url, h):
@@ -128,6 +173,10 @@ class A1Tests(unittest.TestCase):
     # --- broken / non-dict / huge ---
     def test_broken_json(self):
         res = self._ping(lambda url, h: FakeResp(200, b"{not json"))
+        self.assertFalse(res["success"])
+
+    def test_empty_body(self):
+        res = self._ping(lambda url, h: FakeResp(200, b""))
         self.assertFalse(res["success"])
 
     def test_non_dict_root(self):
@@ -149,11 +198,21 @@ class A1Tests(unittest.TestCase):
             live.ping("jquants", {"data_layer": {"providers": {}}},
                       client=lambda u, h: FakeResp(200), key_getter=_key)
 
+    def test_config_allows_retry_zero_and_backoff_zero(self):
+        from radar.config import _check_data_layer
+        _check_data_layer({
+            "retry_max": 0,
+            "backoff_base_sec": 0,
+            "timeout_sec": 1,
+            "max_response_bytes": 1,
+            "daily_request_budget": 1,
+        })
+
     # --- auth header building ---
-    def test_bearer_header(self):
+    def test_x_api_key_header(self):
         cap = {}
         self._ping(lambda url, h: cap.update(h) or FakeResp(200, b'{"a":1}'))
-        self.assertEqual(cap.get("Authorization"), "Bearer " + SECRET)
+        self.assertEqual(cap.get("X-API-Key"), SECRET)
 
 
 class DataCheckCLITests(unittest.TestCase):
@@ -173,6 +232,16 @@ class DataCheckCLITests(unittest.TestCase):
         # 外部接続せず、案内して停止(従来の A0 非回帰: offline=False は SystemExit)
         with self.assertRaises(SystemExit):
             m.cmd_data_check(False)
+
+    def test_offline_and_live_are_mutually_exclusive(self):
+        import radar.__main__ as m
+        with self.assertRaises(SystemExit):
+            m.cmd_data_check(True, live=True, provider="edinet-db")
+
+    def test_provider_requires_live(self):
+        import radar.__main__ as m
+        with self.assertRaises(SystemExit):
+            m.cmd_data_check(True, live=False, provider="edinet-db")
 
     def test_offline_hides_key_value(self):
         import radar.__main__ as m

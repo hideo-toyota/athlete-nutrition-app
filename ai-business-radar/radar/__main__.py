@@ -402,6 +402,10 @@ def cmd_data_check(offline: bool, live: bool = False, provider: str | None = Non
     """
     import os
     from .sources import common
+    if offline and live:
+        raise SystemExit("--offline と --live は同時指定できません")
+    if provider and not live:
+        raise SystemExit("--provider は --live 専用です")
     if live:
         from .sources import live as live_mod
         if not provider:
@@ -472,8 +476,9 @@ def main() -> None:
     vrv.add_argument("--asof", help="基準日 YYYY-MM-DD(任意)")
     pd = sub.add_parser("data-check",
                         help="(A0)--offline でキー存在/redact確認 /(A1)--live で軽量疎通のみ")
-    pd.add_argument("--offline", action="store_true", help="ネット無しでキー存在/redactを確認")
-    pd.add_argument("--live", action="store_true", help="(A1)軽量疎通のみ。本文は保存/表示/LLM投入しない")
+    mode = pd.add_mutually_exclusive_group()
+    mode.add_argument("--offline", action="store_true", help="ネット無しでキー存在/redactを確認")
+    mode.add_argument("--live", action="store_true", help="(A1)軽量疎通のみ。本文は保存/表示/LLM投入しない")
     pd.add_argument("--provider", choices=["jquants", "edinet-db"], help="--live の対象")
     args = ap.parse_args()
 

@@ -21,7 +21,7 @@
 ## 3. source 層 I/F(`radar/sources/`)
 - `common.fetch(provider, endpoint, params, *, client, clock) -> (raw, meta)`。**client/clock 注入可能**(D8)。
 - 失敗時の挙動は §13 の表に**一意化**(「停止 or リトライ」のような選択余地を残さない)。
-- `jquants.py` / `edinet_db.py` は common を使う薄いアダプタ。EDINET DB **canonical=`edinetdb.com`(REST `/v1/`)/ allowed=`edinetdb.com|edinetdb.jp`**、MCP=`edinetdb.jp/mcp`。
+- `jquants.py` / `edinet_db.py` は common を使う薄いアダプタ。EDINET DB **canonical=`edinetdb.jp`(REST `/v1/`)/ allowed=`edinetdb.com|edinetdb.jp`**、MCP=`edinetdb.jp/mcp`。
 
 ## 4. REST / MCP 役割分担(D5)
 - **REST = 記録の正**(`sync` で raw 保存 + provenance)。再現性の本線。

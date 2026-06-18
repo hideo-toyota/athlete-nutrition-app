@@ -72,8 +72,11 @@ def _check_data_layer(dl: dict) -> None:
     """data_layer ブロックの検証(存在時のみ・既存コマンドには影響しない)。A1=疎通設定。"""
     if not isinstance(dl, dict):
         raise SystemExit("config: data_layer は object である必要があります")
-    for k in ("retry_max", "backoff_base_sec", "timeout_sec",
-              "max_response_bytes", "daily_request_budget"):
+    if "retry_max" in dl and (not _num(dl["retry_max"]) or dl["retry_max"] < 0):
+        raise SystemExit("config: data_layer.retry_max は0以上の有限数")
+    if "backoff_base_sec" in dl and (not _num(dl["backoff_base_sec"]) or dl["backoff_base_sec"] < 0):
+        raise SystemExit("config: data_layer.backoff_base_sec は0以上の有限数")
+    for k in ("timeout_sec", "max_response_bytes", "daily_request_budget"):
         if k in dl and (not _num(dl[k]) or dl[k] <= 0):
             raise SystemExit(f"config: data_layer.{k} は正の有限数")
     provs = dl.get("providers")

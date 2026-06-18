@@ -43,7 +43,8 @@ def load_api_key(name: str) -> str:
 
 
 def _known_secrets() -> list[str]:
-    return [v for k in KEY_VARS if (v := os.environ.get(k)) and len(v) >= 4]
+    vals = [v for k in KEY_VARS if (v := os.environ.get(k))]
+    return sorted(set(vals), key=len, reverse=True)
 
 
 def redact(text) -> str:
@@ -55,8 +56,8 @@ def redact(text) -> str:
     # JSON フィールド: "api_key":"...", "token":"...", "authorization":"...", "secret"/"password"
     text = re.sub(r'(?i)("(?:api[_-]?key|access[_-]?token|token|authorization|secret|password)"\s*:\s*")[^"]+',
                   r"\1***REDACTED***", text)
-    # URL クエリ: ?api_key=... &token=... key= access_token= secret= password=
-    text = re.sub(r"(?i)([?&](?:api[_-]?key|access[_-]?token|token|key|secret|password)=)[^&\s]+",
+    # URL クエリ: api_key/token/refreshtoken/key/secret/password 等
+    text = re.sub(r"(?i)([?&](?:api[_-]?key|access[_-]?token|refresh[_-]?token|refreshtoken|id[_-]?token|idtoken|token|key|secret|password)=)[^&\s]+",
                   r"\1***REDACTED***", text)
     # ヘッダ: X-API-Key: ...
     text = re.sub(r"(?i)(x-api-key\s*:\s*)\S+", r"\1***REDACTED***", text)

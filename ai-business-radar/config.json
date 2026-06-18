@@ -38,19 +38,20 @@
     "daily_request_budget": 50,
     "providers": {
       "jquants": {
-        "base_url": "https://api.jquants.com/v1",
-        "ping_path": "/token/auth_refresh",
-        "auth": "query:refreshtoken",
+        "base_url": "https://api.jquants.com/v2",
+        "ping_path": "/bulk/list",
+        "auth": "x-api-key",
         "key_var": "JQUANTS_API_KEY",
-        "_note": "要確認: 実際の最小疎通endpoint/auth方式はJ-Quants公式仕様で確認し調整(宣言的設定)"
+        "ping_params": { "endpoint": "/markets/calendar" },
+        "_note": "A1疎通のみ。Bulk list APIの最小確認としてendpoint=/markets/calendarを使う。取得本文は保存/表示しない"
       },
       "edinet-db": {
-        "base_url": "https://edinetdb.com/v1",
+        "base_url": "https://edinetdb.jp/v1",
         "ping_path": "/companies",
-        "auth": "bearer",
+        "auth": "x-api-key",
         "key_var": "EDINETDB_API_KEY",
-        "ping_params": { "limit": 1 },
-        "_note": "要確認: 実際の最小endpoint/auth方式はedinetdb.com/docs/apiで確認し調整(宣言的設定)"
+        "ping_params": { "per_page": 1 },
+        "_note": "A1疎通のみ。API docsのBase URL/X-API-Keyに合わせる。取得本文は保存/表示しない"
       }
     }
   }

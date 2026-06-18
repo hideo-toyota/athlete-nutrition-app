@@ -16,7 +16,7 @@ import json
 import time
 import urllib.error
 import urllib.request
-from urllib.parse import urlencode
+from urllib.parse import quote, quote_plus, urlencode
 
 from . import common
 
@@ -79,6 +79,15 @@ def _build_request(base_url: str, path: str, params, auth: str, key: str):
     if q:
         url = url + "?" + urlencode(q)
     return url, headers
+
+
+def _redact_with_key(text, key: str) -> str:
+    """env 以外の key_getter 注入でも、例外文字列から当該 key を必ず消す。"""
+    redacted = common.redact(text)
+    for secret in {key, quote(key, safe=""), quote_plus(key)}:
+        if secret:
+            redacted = redacted.replace(secret, "***REDACTED***")
+    return redacted
 
 
 def ping(provider: str, cfg: dict, *, client=None, clock=None, sleeper=None, key_getter=None) -> dict:
@@ -148,7 +157,7 @@ def ping(provider: str, cfg: dict, *, client=None, clock=None, sleeper=None, key
         "endpoint": path,                       # path のみ(キー・query秘匿値を含めない)
         "status": status,
         "success": bool(success and error is None),
-        "error": common.redact(error) if error else None,
+        "error": _redact_with_key(error, key) if error else None,
         "retrieved_at": common.utcnow_iso(clock),
         "attempts": attempt + 1,
     }
