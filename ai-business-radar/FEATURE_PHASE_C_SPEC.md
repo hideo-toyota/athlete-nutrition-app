@@ -2,11 +2,11 @@
 
 > 正: DESIGN_PRINCIPLES.md / CLAIMS.md / DATA_LAYER_SPEC.md / LICENSE_MATRIX.md /
 > SYNC_PHASE_B_PLAN.md / EARNINGS_CYCLE_VALUE_AUDIT_SPEC.md。
-> これは **Phase C(feature生成)の実装前契約**。コードはまだ書かない。
+> これは **Phase C(feature生成)の契約**。実装はこの契約から逸脱しない。
 
 ## 0. 判定
 - **Phase C 設計: GO**。
-- **Phase C 実装スコープ: EDINET DB financials raw → data/derived のみ**。
+- **Phase C minimal 実装スコープ: EDINET DB financials raw → data/derived のみ**。
 - **NO-GO 維持**: research_queue / evidence / 第三者LLM入力 / ランキング / 買い候補 / 推奨 / 予測。
 
 ## 1. 目的 / 非目的

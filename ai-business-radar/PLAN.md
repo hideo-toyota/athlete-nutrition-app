@@ -61,7 +61,7 @@ ai-business-radar/
 
 ### データ層 Phase B/C(有料データ・個人利用)
 - Phase B: EDINET DB `companies` / `financials` の minimal sync は実装済み。raw は `data/raw`、provenance は `data/metadata`、本文・キーは表示しない。
-- Phase C: `FEATURE_PHASE_C_SPEC.md` / `FEATURE_PHASE_C_PLAN.md` に従い、EDINET DB financials raw から `data/derived` を作る。**research_queue / evidence / LLM投入には進めない**。
+- Phase C: `FEATURE_PHASE_C_SPEC.md` / `FEATURE_PHASE_C_PLAN.md` に従い、EDINET DB financials raw から `data/derived` を作る minimal feature生成は実装済み。**research_queue / evidence / LLM投入には進めない**。
 - J-Quants sync、prices、research_queue、evidence、`analyze`、`backtest` は後段。**安全と正直の土台ができてから**。
 
 ## 原則充足チェック(planner自己監査)

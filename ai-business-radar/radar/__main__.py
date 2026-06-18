@@ -16,6 +16,7 @@ from . import journal
 from . import target_check
 from . import value_audit
 from . import value_store
+from .features import build_financial_features
 from .sources import edinet_db
 from .report import (render_check, render_mirror, render_review, render_target_check,
                      render_value_audit, render_value_review)
@@ -471,6 +472,22 @@ def cmd_sync(args) -> None:
     print("  ※ 取得本文・APIキー値は表示していません。feature/research_queue/evidence/LLM投入は未実装です。")
 
 
+def cmd_build_features(args) -> None:
+    """Phase C minimal feature build. Reads existing raw only; no network/env/API key."""
+    asof = _valid_asof(args.asof) or date.today().isoformat()
+    if args.provider != "edinet-db" or args.dataset != "financials":
+        raise SystemExit("Phase C minimal build-features は --provider edinet-db --dataset financials のみ対応")
+    if not args.raw_path:
+        raise SystemExit("--raw-path が必要です")
+    res = build_financial_features(raw_path=args.raw_path, asof=asof)
+    print(f"build-features [{res['provider']}:{res['dataset']}]: derived を生成しました")
+    print(f"  output: {_rel(res['output_path'])}")
+    print(f"  feature_set: {res['feature_set']} / asof: {res['asof']} / edinet_code: {res['edinet_code']}")
+    print(f"  features: {res['feature_count']} / UNKNOWN: {res['unknown_count']}")
+    print(f"  input_hash: {res['raw_hash_normalized']}")
+    print("  ※ raw本文・APIキー値は表示していません。research_queue/evidence/LLM投入は未実装です。")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="radar",
                                  description="Personal Equity Research Radar")
@@ -533,6 +550,12 @@ def main() -> None:
     psy.add_argument("--years", type=int, default=edinet_db.DEFAULT_YEARS, help="financials用: 取得年数(正の整数)")
     psy.add_argument("--period", choices=edinet_db.PERIODS, default="annual",
                      help="financials用: annual|quarterly|quarterly_standalone")
+    pbf = sub.add_parser("build-features",
+                         help="(Phase C) edinet-db financials raw から derived feature を生成(推奨/予測なし)")
+    pbf.add_argument("--provider", required=True, choices=["edinet-db"], help="Phase C minimal は edinet-db のみ")
+    pbf.add_argument("--dataset", required=True, choices=["financials"], help="Phase C minimal は financials のみ")
+    pbf.add_argument("--raw-path", required=True, help="data/raw/edinet-db/financials 配下の raw JSON")
+    pbf.add_argument("--asof", required=True, help="基準日 YYYY-MM-DD。available_at<=asof のみ採用")
     args = ap.parse_args()
 
     if args.command == "mirror":
@@ -555,6 +578,8 @@ def main() -> None:
         cmd_data_check(args.offline, live=args.live, provider=args.provider)
     elif args.command == "sync":
         cmd_sync(args)
+    elif args.command == "build-features":
+        cmd_build_features(args)
     else:
         ap.print_help()
 
