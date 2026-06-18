@@ -136,9 +136,11 @@ class PureFeatureTests(unittest.TestCase):
         rows = _rows()
         cur = rows[-1]
         cur.pop("operating_cash_flow")
+        cur.pop("capital_expenditure")
         cur.pop("cash_and_deposits")
         cur.pop("interest_bearing_debt")
         cur["cf_operating"] = 180
+        cur["capex"] = -50
         cur["cash"] = 300
         cur["ibd_current"] = 30
         cur["ibd_noncurrent"] = 50

@@ -24,7 +24,7 @@ ALIASES = {
     "equity": ("net_assets", "equity", "total_equity"),
     "total_assets": ("total_assets", "assets"),
     "operating_cash_flow": ("operating_cash_flow", "cash_flows_from_operating_activities", "cf_operating"),
-    "capex": ("capital_expenditure", "purchase_of_property_plant_and_equipment"),
+    "capex": ("capital_expenditure", "purchase_of_property_plant_and_equipment", "capex"),
     "cash": ("cash_and_deposits", "cash_and_cash_equivalents", "cash"),
     "interest_bearing_debt": ("interest_bearing_debt", "borrowings", "bonds_payable"),
 }
