@@ -258,13 +258,13 @@ class SyncCompaniesTests(unittest.TestCase):
 
 
 class SyncFinancialsTests(unittest.TestCase):
-    def _sync(self, client, *, asof="2026-06-17", code="E02367", years=1, period="annual"):
+    def _sync(self, client, *, asof="2026-06-17", code="E02367", years=1, period="annual", cfg=None):
         if getattr(self, "td", None) is not None:
             self.td.cleanup()
         self.td = tempfile.TemporaryDirectory()
         base = Path(self.td.name)
         return edinet_db.sync_financials(
-            CFG,
+            cfg or CFG,
             asof=asof,
             code=code,
             years=years,
@@ -351,6 +351,73 @@ class SyncFinancialsTests(unittest.TestCase):
         )
         self.assertEqual(res1["raw_hash_compressed"], res2["raw_hash_compressed"])
         self.assertEqual(res1["raw_hash_normalized"], res2["raw_hash_normalized"])
+
+    def test_financials_auth_errors_do_not_retry(self):
+        for st in (401, 403):
+            calls = {"n": 0}
+
+            def client(_u, _h, st=st):
+                calls["n"] += 1
+                return FakeResp(st)
+
+            with self.assertRaises(SystemExit):
+                self._sync(client)
+            self.assertEqual(calls["n"], 1)
+
+    def test_financials_429_retries_then_succeeds(self):
+        calls = {"n": 0}
+
+        def client(_u, _h):
+            calls["n"] += 1
+            return FakeResp(429) if calls["n"] == 1 else FakeResp(200, _financials_raw())
+
+        res = self._sync(client)
+        self.assertEqual(res["attempts"], 2)
+        self.assertEqual(calls["n"], 2)
+
+    def test_financials_5xx_exhausts_retries(self):
+        calls = {"n": 0}
+
+        def client(_u, _h):
+            calls["n"] += 1
+            return FakeResp(503)
+
+        with self.assertRaises(SystemExit):
+            self._sync(client)
+        self.assertEqual(calls["n"], CFG["data_layer"]["retry_max"] + 1)
+
+    def test_financials_retry_max_zero_single_attempt(self):
+        cfg = {"data_layer": dict(CFG["data_layer"], retry_max=0)}
+        calls = {"n": 0}
+
+        def client(_u, _h):
+            calls["n"] += 1
+            return FakeResp(503)
+
+        with self.assertRaises(SystemExit):
+            self._sync(client, cfg=cfg)
+        self.assertEqual(calls["n"], 1)
+
+    def test_financials_network_error_redacts_key(self):
+        def client(url, _h):
+            raise TimeoutError(f"timeout url={url} key={SECRET}")
+
+        with self.assertRaises(SystemExit) as cm:
+            self._sync(client)
+        self.assertNotIn(SECRET, str(cm.exception))
+
+    def test_financials_broken_json_non_dict_and_huge_do_not_write_raw(self):
+        cases = [
+            FakeResp(200, b"{not json"),
+            FakeResp(200, b"[1,2,3]"),
+            FakeResp(200, b'{"x":"' + b"a" * 1000 + b'"}'),
+        ]
+        for resp in cases:
+            with self.subTest(resp=resp.body[:10]):
+                with self.assertRaises(SystemExit):
+                    self._sync(lambda _u, _h, resp=resp: resp)
+                base = Path(self.td.name) / "data" / "raw"
+                self.assertFalse(any(base.rglob("*.json")) if base.exists() else False)
 
 
 class SyncCLITests(unittest.TestCase):
