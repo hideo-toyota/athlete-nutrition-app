@@ -51,6 +51,9 @@
         "auth": "x-api-key",
         "key_var": "EDINETDB_API_KEY",
         "ping_params": { "per_page": 1 },
+        "datasets": {
+          "companies": { "path": "/companies" }
+        },
         "_note": "A1疎通のみ。API docsのBase URL/X-API-Keyに合わせる。取得本文は保存/表示しない"
       }
     }

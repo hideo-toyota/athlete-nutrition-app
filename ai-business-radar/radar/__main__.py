@@ -16,6 +16,7 @@ from . import journal
 from . import target_check
 from . import value_audit
 from . import value_store
+from .sources import edinet_db
 from .report import (render_check, render_mirror, render_review, render_target_check,
                      render_value_audit, render_value_review)
 
@@ -431,6 +432,26 @@ def cmd_data_check(offline: bool, live: bool = False, provider: str | None = Non
     print("  ※ 外部APIには接続していません(A0)。実疎通は `--live` で。")
 
 
+def cmd_sync(args) -> None:
+    """Phase B minimum sync. Scope is only edinet-db companies."""
+    asof = _valid_asof(args.asof) or date.today().isoformat()
+    if args.provider != edinet_db.PROVIDER or args.dataset != edinet_db.DATASET:
+        raise SystemExit("Phase B の最小 sync は --provider edinet-db --dataset companies のみ対応")
+    cfg = load_config()
+    res = edinet_db.sync_companies(
+        cfg,
+        asof=asof,
+        page=args.page,
+        per_page=args.per_page,
+    )
+    print(f"sync [{res['provider']}:{res['dataset']}]: raw+provenance を保存しました")
+    print(f"  raw: {_rel(res['raw_path'])}")
+    print(f"  provenance: {_rel(res['provenance_path'])}")
+    print(f"  fetch_log: data/metadata/fetch_log.jsonl")
+    print(f"  asof: {res['asof']} / available_at: {res['available_at']} / 試行 {res['attempts']}")
+    print("  ※ 取得本文・APIキー値は表示していません。feature/research_queue/evidence/LLM投入は未実装です。")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="radar",
                                  description="Personal Equity Research Radar")
@@ -480,6 +501,14 @@ def main() -> None:
     mode.add_argument("--offline", action="store_true", help="ネット無しでキー存在/redactを確認")
     mode.add_argument("--live", action="store_true", help="(A1)軽量疎通のみ。本文は保存/表示/LLM投入しない")
     pd.add_argument("--provider", choices=["jquants", "edinet-db"], help="--live の対象")
+    psy = sub.add_parser("sync",
+                         help="(Phase B) edinet-db companies の最小raw sync。本文は表示/LLM投入しない")
+    psy.add_argument("--provider", required=True, choices=["edinet-db"], help="Phase B最小syncは edinet-db のみ")
+    psy.add_argument("--dataset", required=True, choices=["companies"], help="Phase B最小syncは companies のみ")
+    psy.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 今日)。available_at<=asof のみ保存")
+    psy.add_argument("--page", type=int, default=edinet_db.DEFAULT_PAGE, help="取得ページ(正の整数)")
+    psy.add_argument("--per-page", dest="per_page", type=int, default=edinet_db.DEFAULT_PER_PAGE,
+                     help="1ページ件数(正の整数)")
     args = ap.parse_args()
 
     if args.command == "mirror":
@@ -500,6 +529,8 @@ def main() -> None:
         cmd_value_audit(args)
     elif args.command == "data-check":
         cmd_data_check(args.offline, live=args.live, provider=args.provider)
+    elif args.command == "sync":
+        cmd_sync(args)
     else:
         ap.print_help()
 

@@ -7,6 +7,7 @@
 data/raw/
 data/cache/
 data/derived/
+data/metadata/
 
 # Python
 __pycache__/

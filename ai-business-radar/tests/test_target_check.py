@@ -195,7 +195,7 @@ class TestCLISubprocess(unittest.TestCase):
     def test_all_subcommand_help_ok(self):
         # 各サブコマンドの --help が argparse の % 展開等で落ちないこと。
         for cmd in ("mirror", "check", "log", "score", "review",
-                    "data-check", "target-check"):
+                    "data-check", "target-check", "sync"):
             p = self._run(cmd, "--help")
             self.assertEqual(p.returncode, 0,
                              f"`radar {cmd} --help` が失敗: {p.stderr}")
