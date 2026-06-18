@@ -1,11 +1,12 @@
-# DATA_LAYER_SPEC — J-Quants + EDINET DB データ/リサーチ層の契約(v3・A1実装済)
+# DATA_LAYER_SPEC — J-Quants + EDINET DB データ/リサーチ層の契約(v3・B minimal実装済)
 
 > 設計のみ。実装はこの契約の帰結。正は DESIGN_PRINCIPLES.md / SPEC.md / CLAIMS.md / CLAUDE.md。
 > ✅ A0/A1(`data-check --offline` / `data-check --live`)は実装済み。2026-06-18時点で J-Quants / EDINET DB とも実キーで軽量疎通OK。
-> ⚠️ `LICENSE_MATRIX.md` の ToS 確認が埋まるまで **B(sync/raw保存)以降は NO-GO**(D1)。取得本文を保存・表示・LLM投入しないこと。
+> ✅ EDINET DB の `companies` / `financials` minimal sync は、本人確認済みの個人内 raw 一時キャッシュ前提で GO。
+> ⚠️ J-Quants sync と **第三者LLM入力 / research_queue / evidence** は `LICENSE_MATRIX.md` のゲート解除まで NO-GO。
 
 ## 0. 目的 / 非目的
-- **目的**: J-Quants(有料)+ EDINET DB のデータから **research_queue(調査候補)** と **evidence pack(根拠)** を生成。
+- **目的**: J-Quants(有料)+ EDINET DB のデータから、まず **raw/provenance/feature** を監査可能に作り、後段で **research_queue(調査候補)** と **evidence pack(根拠)** へ進む。
 - **非目的**: 自動売買 / 売買推奨 / シグナル化 / スクレイピング / API再配布 / LLM推測で財務数値を作る / 既存5コマンドを壊す。
 - **絶対**: 売買断定しない。**discipline gate 前に買い候補を出さない**。最終判断は人間。
 
@@ -78,10 +79,13 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
 - hash方針: `sha256`。**`raw_hash_compressed`(取得バイト列)と `raw_hash_normalized`(正規化後)の2フィールド**、`normalization_version`・`content_type` を併記。
 
 ## 8. feature 定義(`radar/features/` + レジストリ必須)
+> Phase C の詳細契約は `FEATURE_PHASE_C_SPEC.md`、実装順序は `FEATURE_PHASE_C_PLAN.md` を正とする。
+
 - **feature レジストリ**(宣言的): 各 feature に `id / 分類(official|own|proxy) / 式 / 必須入力(dataset.field) / 単位 / UNKNOWN条件 / 除外ルール`。
 - 欠損 / nan / inf / 非数値は**黙殺せず当該値を UNKNOWN 保持**(計算は停止しない)。UNKNOWN は queue/score で**除外 or 明示**。
 - 最小例(式はレジストリに明記): 売上/営業利益 成長率・営業利益率・ROE・ROIC proxy・FCF・FCF利回り・自己資本比率・ネットキャッシュ proxy・配当利回り/性向/増配・株数変化・出来高/売買代金・モメンタム・過熱度・(あれば)信用倍率・セグメント依存・大株主変化・健全性リスク。
 - **代表featureの具体式(分類・入力field・UNKNOWN条件)の確定は Phase C の前提**。例: `ROE = 当期純利益 / 期中平均自己資本`(分類=own / 入力=financials.net_income, financials.equity / 欠損→UNKNOWN)。
+- Phase C minimal は **EDINET DB financials raw → `data/derived/features/edinet_financials_v1` のみ**。research_queue/evidence/LLM投入には進めない。
 
 ## 9. entity マッピング
 - 主キー候補: `securities_code`(J-Quants) ↔ `edinet_code`(EDINET DB) ↔ `company_id` ↔ `isin`。
@@ -117,7 +121,7 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
 |---|---|---|---|
 | `data-check` | `data-check` | 端末(key redact) | A1のみ・軽量疎通 |
 | `sync` | `sync <jquants\|edinet-db> --dataset <name> [--from YYYY-MM-DD --to YYYY-MM-DD] [--ticker X]` | `data/raw`+metadata | あり |
-| `build-features` | `build-features [--asof YYYY-MM-DD]` | `data/derived` | なし |
+| `build-features` | `build-features --provider edinet-db --dataset financials --raw-path <path> [--asof YYYY-MM-DD]` | `data/derived` | なし |
 | `research-queue` | `research-queue [--asof YYYY-MM-DD]` | `outputs/research_queue.md/.csv` | なし |
 | `evidence` | `evidence <ticker> [--asof YYYY-MM-DD]` | `outputs/evidence/<ticker>.md` | なし |
 | `claim-audit` | `claim-audit <file>` | 端末 | なし |
@@ -146,6 +150,6 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
   - EDINET DB:本人確認済みの個人内利用・raw一時キャッシュ前提で、最小 sync(companies/financials)は GO。
   - J-Quants: raw保存/retention が未確認の間は sync NO-GO。
   - 完了=raw+provenanceが保存され raw_hash再現。**第三者LLM入力は別ゲートで、B完了をもって解禁しない**。
-- **C**:features レジストリ + research_queue。完了=research_queue.md 生成・推奨漏れ無し。
+- **C(feature生成)**: `FEATURE_PHASE_C_SPEC.md` の範囲で EDINET DB financials raw から `data/derived` を生成。完了=derived + source_snapshot + raw_hash + UNKNOWN監査。**research_queue はまだ作らない**。
 - **D**:evidence + claim_audit。完了=evidence/<ticker>.md 生成・売買断定無し・全主張 claim分類。
 - **E**:既存への導線 + README/CLAUDE/SPEC 更新 + 監査。

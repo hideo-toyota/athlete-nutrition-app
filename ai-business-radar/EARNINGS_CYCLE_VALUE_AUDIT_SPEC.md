@@ -464,17 +464,18 @@ Phase A は手入力 snapshot なので**価格系列処理は実装しない**�
   - **対DCA hit率は出さない**(価格系列が無い間は UNKNOWN・§4.1)。
   - 完了条件:手入力 fixture で thesis 登録 → 採点 → 較正が再現可能・推奨/予測語ゼロ・既存非回帰・
     全主張 claim 分類・**UNKNOWN を負けに数えない**・path safety・イベント不変。
-- **Phase B(NO-GO / ToS 充足 + A1・sync 後)**
+- **Phase B(設計待ち / A1・EDINET DB sync 後)**
   - financials / prices を sync(DATA_LAYER B)から **available_at つき**で取り込み、snapshot を**自動構築**。
     DCA 価格系列が入れば対DCA を UNKNOWN から CALCULATION に昇格。
   - 完了条件:raw + provenance から PIT 準拠で snapshot・採点が再現(raw_hash 一致)。
-- **Phase C(NO-GO / ToS 充足後)**
+- **Phase C(設計待ち / feature registry 合流後)**
   - feature レジストリ合流(EV/EBIT・FCF・ROIC 等)+ **同業相対(universe coverage)** + EDINET text-block を
     cheapness_reason/anti_thesis の evidence に。analysis scores は INFERENCE 固定。entity mapping 合流。
   - 完了条件:相対評価つき value_audit が生成・売買断定無し・全主張 claim 分類・原本(docID)遡及可。
 
-> **ToS ブロッカー(LICENSE_MATRIX)**:B/C は J-Quants/EDINET DB の **raw 保存・第三者LLM入力・再配布**が
-> 許容と確認できるまで **NO-GO**(DATA_LAYER §16・D1 と同一ゲート)。Phase A は**この層と独立**で進められる。
+> **ゲート(LICENSE_MATRIX / DATA_LAYER)**:EDINET DB raw sync は本人確認済みで Phase B minimal GO。
+> ただし value-audit の自動snapshot化、prices/DCA、同業相対、第三者LLM入力は別設計・別ゲート。
+> Phase A は**この層と独立**で動く。
 
 ---
 
@@ -508,8 +509,8 @@ Phase A は手入力 snapshot なので**価格系列処理は実装しない**�
   - **§2.6.1 の operator 真理表どおりに実装**(判定の一意化)。
   - **集計分母 = `FACT`/`CALCULATION` のみ**、UNKNOWN を負け/不一致に数えない(§2.0・§4.1)。
   - 既存 **mirror/check/log/score/review/target-check 非回帰**(subprocess で --help と実行)。
-- **Phase B / C:NO-GO**。LICENSE_MATRIX の ToS(raw 保存・第三者LLM入力・再配布)が埋まるまで凍結
-  (データ層 A1/sync と同一ブロッカー)。
+- **Phase B / C:設計待ち**。EDINET DB raw sync と feature Phase C は別文書で進行中。
+  value-audit への自動snapshot統合、prices/DCA、同業相対、第三者LLM入力はこのSPECだけでは解禁しない。
 
 ### Phase 順序
 - **A(オフライン閉ループ)→ B(sync で snapshot 自動構築・対DCA 昇格)→ C(feature/同業相対/EDINET text)**。

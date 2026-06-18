@@ -206,7 +206,8 @@ ai-business-radar/
 
 ## 8. ブロッカー / 範囲外(Phase A では触れない)
 - 対DCA 算出(価格系列が無い・§9.1)、同業相対 universe、進捗率の自動取得、feature 式の確定 → **B/C**。
-- J-Quants / EDINET DB 接続・sync・raw 保存 → **LICENSE_MATRIX の ToS 充足まで NO-GO**(A1/sync と同一ゲート)。
+- J-Quants sync、価格系列、value-audit 自動snapshot、同業相対、第三者LLM入力 → **別ゲート**。
+  EDINET DB raw sync と feature生成は DATA_LAYER / FEATURE_PHASE_C の契約に従う。
 - 本 PLAN はコードを含まない。実装着手は人間ゲート承認後。
 
 ---
@@ -217,8 +218,8 @@ ai-business-radar/
   ticker `.`・`..` 拒否 / 手入力 actual の claim 扱い)を反映した本 PLAN の下で**実装着手可(GO)**。
 - **Phase A 全体**: **GO**。範囲は **ネット無し・手入力 snapshot / outcome(`--from-file`)・stdlib・対DCA=UNKNOWN・
   `hurdle_basis=pre_tax`・`min/max_cycle_days=45/200`・operator 真理表どおり・既存6コマンド非回帰**。
-- **Phase B / C**: **NO-GO**。LICENSE_MATRIX の ToS(raw 保存・第三者LLM入力・再配布)が埋まるまで凍結
-  (A1/sync と同一ゲート)。
+- **Phase B / C**: **このPLAN単体では未実装**。EDINET DB raw sync と feature生成は DATA_LAYER / FEATURE_PHASE_C で進行。
+  value-audit への自動snapshot統合、prices/DCA、同業相対、第三者LLM入力は別PLANまで NO-GO。
 - **残る未決(Phase A 着手は妨げない)**: 税基準は pre_tax 暫定(§9-1 SPEC)/ DCA 価格系列は B 以降(対DCA は UNKNOWN 固定)/
   進捗率・同業相対は B/C / feature 式はレジストリ合流(C)/ 検証に必要な最小 N・期間は運用で蓄積。
 

@@ -59,8 +59,10 @@ ai-business-radar/
 - CLI:`review` → `outputs/journal_review.md`(Obsidian保管庫への取り込みは手動/今後)。
 - **DoD**:十分なログがあれば「裁量はDCAに勝てているか」を提示。少なければ「サンプル不足・判断保留」と正直に表示(原則3)。
 
-### 後段(MVP外)
-- `analyze`(日本中小型の財務スクリーニング/仮説支援)、`backtest`。**安全と正直の土台ができてから**。
+### データ層 Phase B/C(有料データ・個人利用)
+- Phase B: EDINET DB `companies` / `financials` の minimal sync は実装済み。raw は `data/raw`、provenance は `data/metadata`、本文・キーは表示しない。
+- Phase C: `FEATURE_PHASE_C_SPEC.md` / `FEATURE_PHASE_C_PLAN.md` に従い、EDINET DB financials raw から `data/derived` を作る。**research_queue / evidence / LLM投入には進めない**。
+- J-Quants sync、prices、research_queue、evidence、`analyze`、`backtest` は後段。**安全と正直の土台ができてから**。
 
 ## 原則充足チェック(planner自己監査)
 | 原則 | 本プランでの担保 |

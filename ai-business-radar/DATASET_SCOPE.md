@@ -36,7 +36,7 @@
 3. **被害範囲が最小**(静的・小さい・機微情報なし・売買に直結しない)。
 4. **Phase C の土台**(edinet_code↔securities_code の entity mapping の起点)になり、無駄にならない。
 
-> **ただし「実装GO」ではなく「ToS確認後GO」**。下記セルが埋まるまで NO-GO(§3)。
+> EDINET DB 側は本人確認済みの個人内 raw 一時キャッシュ前提で GO。J-Quants 側は raw保存/retention が未確認の間 NO-GO。
 > user の暫定案(「listed-info か companies のような軽い参照系から」)は**方向性として妥当**。
 > 2択のうち **companies を推す**のは、J-Quants の raw保存が未確認(致命)で listed-info はまだ sync できないため。
 > J-Quants 側は **J2/J3 が確認でき次第、listed-info を“2本目”** にするのが自然。
