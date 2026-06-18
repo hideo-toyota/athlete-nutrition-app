@@ -42,18 +42,18 @@
 > J-Quants 側は **J2/J3 が確認でき次第、listed-info を“2本目”** にするのが自然。
 
 ## 3. 実装に進むための LICENSE_MATRIX 確認セル(本人)
-**EDINET DB `companies` を sync する最小条件**:
-- [ ] **E2**(raw ローカルキャッシュ可否):一時キャッシュ可の**具体条件**を原本で最終確認(本人 FACT 化)。
-- [ ] **E3**(retention / purge):「定期再取得」を満たす**保持期間/purge 規則**を確定(例:N 日で再取得・破棄)。
-- [ ] **E7**(再配布禁止):個人内利用に留め、再配布しないことを再確認(確認済の見込み)。
-- [ ] **E9**(attribution):公開しない前提を維持(個人内なら表記不要かを確認)。
+**EDINET DB `companies` / `financials` を sync する最小条件**:
+- [x] **E2**(raw ローカルキャッシュ可否):本人が個人内 raw 一時キャッシュの許容を確認済み。
+- [x] **E3**(retention / purge):当面は手動 purge + 定期再取得で運用。大規模反復前に TTL/purge を追加検討。
+- [x] **E7**(再配布禁止):個人内利用に留め、再配布しない前提を維持。
+- [ ] **E9**(attribution):公開しない前提を維持(公開に切り替える場合のみ再確認)。
 - （第三者LLM入力 **E5** は Phase B では**不要**=sync は LLM に渡さない。B では触れない。)
 
 **J-Quants 系(listed-info 以降=2本目)に進む条件**:
 - [ ] **J2**(raw保存)/ **J3**(retention)を原本で確認(現状 未確認=致命のため NO-GO)。
 
 ## 4. 非対象(今回広げない)
-- prices / financials / ratios / earnings-calendar（PIT・量・改訂が重い。companies の配管検証後）。
+- prices / ratios / earnings-calendar（PIT・量・改訂が重い。financials の配管検証後）。
 - Daloopa（別レーン・DALOOPA_LANE_SPEC。data 層へ混ぜない)。
 - feature 生成 / research_queue / evidence / LLM 投入(Phase C/D・本書の範囲外)。
 

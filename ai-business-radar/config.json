@@ -53,9 +53,10 @@
         "plan_or_limit": "unknown-personal-plan",
         "ping_params": { "per_page": 1 },
         "datasets": {
-          "companies": { "path": "/companies" }
+          "companies": { "path": "/companies" },
+          "financials": { "path": "/companies/{code}/financials" }
         },
-        "_note": "A1疎通 + Phase B最小sync。Base URL/X-API-Key/companies paging/契約plan_or_limitは本人が公式docs・契約画面で最終確認する"
+        "_note": "A1疎通 + Phase B最小sync。Base URL/X-API-Key/companies/financials/契約plan_or_limitは本人が公式docs・契約画面で最終確認する"
       }
     }
   }

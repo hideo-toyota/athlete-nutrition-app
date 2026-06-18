@@ -433,17 +433,36 @@ def cmd_data_check(offline: bool, live: bool = False, provider: str | None = Non
 
 
 def cmd_sync(args) -> None:
-    """Phase B minimum sync. Scope is only edinet-db companies."""
+    """Phase B minimum sync. Scope is EDINET DB companies/financials only."""
     asof = _valid_asof(args.asof) or date.today().isoformat()
-    if args.provider != edinet_db.PROVIDER or args.dataset != edinet_db.DATASET:
-        raise SystemExit("Phase B の最小 sync は --provider edinet-db --dataset companies のみ対応")
+    if args.provider != edinet_db.PROVIDER:
+        raise SystemExit("Phase B の最小 sync は --provider edinet-db のみ対応")
     cfg = load_config()
-    res = edinet_db.sync_companies(
-        cfg,
-        asof=asof,
-        page=args.page,
-        per_page=args.per_page,
-    )
+    if args.dataset == edinet_db.DATASET:
+        if args.code:
+            raise SystemExit("--dataset companies では --code は使いません")
+        if args.years != edinet_db.DEFAULT_YEARS or args.period != "annual":
+            raise SystemExit("--dataset companies では --years/--period は使いません")
+        res = edinet_db.sync_companies(
+            cfg,
+            asof=asof,
+            page=args.page,
+            per_page=args.per_page,
+        )
+    elif args.dataset == edinet_db.DATASET_FINANCIALS:
+        if not args.code:
+            raise SystemExit("--dataset financials では --code E02367 形式が必須です")
+        if args.page != edinet_db.DEFAULT_PAGE or args.per_page != edinet_db.DEFAULT_PER_PAGE:
+            raise SystemExit("--dataset financials では --page/--per-page は使いません")
+        res = edinet_db.sync_financials(
+            cfg,
+            asof=asof,
+            code=args.code,
+            years=args.years,
+            period=args.period,
+        )
+    else:
+        raise SystemExit("Phase B の最小 sync は companies|financials のみ対応")
     print(f"sync [{res['provider']}:{res['dataset']}]: raw+provenance を保存しました")
     print(f"  raw: {_rel(res['raw_path'])}")
     print(f"  provenance: {_rel(res['provenance_path'])}")
@@ -502,13 +521,18 @@ def main() -> None:
     mode.add_argument("--live", action="store_true", help="(A1)軽量疎通のみ。本文は保存/表示/LLM投入しない")
     pd.add_argument("--provider", choices=["jquants", "edinet-db"], help="--live の対象")
     psy = sub.add_parser("sync",
-                         help="(Phase B) edinet-db companies の最小raw sync。本文は表示/LLM投入しない")
+                         help="(Phase B) edinet-db companies/financials の最小raw sync。本文は表示/LLM投入しない")
     psy.add_argument("--provider", required=True, choices=["edinet-db"], help="Phase B最小syncは edinet-db のみ")
-    psy.add_argument("--dataset", required=True, choices=["companies"], help="Phase B最小syncは companies のみ")
+    psy.add_argument("--dataset", required=True, choices=["companies", "financials"],
+                     help="Phase B最小syncは companies|financials のみ")
     psy.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 今日)。available_at<=asof のみ保存")
     psy.add_argument("--page", type=int, default=edinet_db.DEFAULT_PAGE, help="取得ページ(正の整数)")
     psy.add_argument("--per-page", dest="per_page", type=int, default=edinet_db.DEFAULT_PER_PAGE,
-                     help="1ページ件数(正の整数)")
+                     help="companies用: 1ページ件数(正の整数)")
+    psy.add_argument("--code", help="financials用: EDINETコード(E02367形式)")
+    psy.add_argument("--years", type=int, default=edinet_db.DEFAULT_YEARS, help="financials用: 取得年数(正の整数)")
+    psy.add_argument("--period", choices=edinet_db.PERIODS, default="annual",
+                     help="financials用: annual|quarterly|quarterly_standalone")
     args = ap.parse_args()
 
     if args.command == "mirror":

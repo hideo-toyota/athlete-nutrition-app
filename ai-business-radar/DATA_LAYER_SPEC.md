@@ -142,7 +142,10 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
 - **A0(ネットワーク無し)** ← 実装済み:secrets/config/gitignore/注入可能client・clock/provenance・fetch_log のスキーマ定義/offlineテスト。完了=キー処理・redact・スキーマ・テストが揃い、ネット接続コードは無い。
 - **A1(軽量疎通)** ← 実装済み:`data-check`(key存在+最小疎通、失敗時redact)。完了=キーを見せず疎通可否を返す。2026-06-18 実キーで J-Quants `/bulk/list` と EDINET DB `/companies` 疎通OK。
   - 疎通OKは「設定endpointが実キーで HTTP 200 + JSON object を返した」という意味に限定する。鍵有効性の監査証跡として扱う前に、同一endpointが無効キーで 401/403 になることを一度だけ確認し、値を出さずに記録する。
-- **B** ← **NO-GO**:`LICENSE_MATRIX.md` の raw保存/retention/第三者LLM入力ゲート解除後のみ。最小 sync(listed-info / financials / prices)+ raw + metadata + manifest。完了=raw+provenanceが保存され raw_hash再現。
+- **B(sync/raw保存)** ← providerごとに `LICENSE_MATRIX.md` の raw保存/retention/再配布禁止ゲート解除後のみ。
+  - EDINET DB:本人確認済みの個人内利用・raw一時キャッシュ前提で、最小 sync(companies/financials)は GO。
+  - J-Quants: raw保存/retention が未確認の間は sync NO-GO。
+  - 完了=raw+provenanceが保存され raw_hash再現。**第三者LLM入力は別ゲートで、B完了をもって解禁しない**。
 - **C**:features レジストリ + research_queue。完了=research_queue.md 生成・推奨漏れ無し。
 - **D**:evidence + claim_audit。完了=evidence/<ticker>.md 生成・売買断定無し・全主張 claim分類。
 - **E**:既存への導線 + README/CLAUDE/SPEC 更新 + 監査。
