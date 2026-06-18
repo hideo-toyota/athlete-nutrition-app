@@ -23,11 +23,13 @@ ALIASES = {
     "net_income": ("net_income", "profit_attributable_to_owners_of_parent"),
     "equity": ("net_assets", "equity", "total_equity"),
     "total_assets": ("total_assets", "assets"),
-    "operating_cash_flow": ("operating_cash_flow", "cash_flows_from_operating_activities"),
+    "operating_cash_flow": ("operating_cash_flow", "cash_flows_from_operating_activities", "cf_operating"),
     "capex": ("capital_expenditure", "purchase_of_property_plant_and_equipment"),
-    "cash": ("cash_and_deposits", "cash_and_cash_equivalents"),
+    "cash": ("cash_and_deposits", "cash_and_cash_equivalents", "cash"),
     "interest_bearing_debt": ("interest_bearing_debt", "borrowings", "bonds_payable"),
 }
+
+DEBT_COMPONENT_ALIASES = ("ibd_current", "ibd_noncurrent")
 
 FEATURES = {
     "revenue_growth_yoy": {
@@ -87,6 +89,9 @@ def registry_fingerprint_payload() -> dict:
         "normalization_version": NORMALIZATION_VERSION,
         "features": FEATURES,
         "aliases": ALIASES,
+        "component_aliases": {
+            "interest_bearing_debt": DEBT_COMPONENT_ALIASES,
+        },
         "feature_assumptions": {
             "roic_proxy": "UNKNOWN_FIXED_PHASE_C_MINIMAL",
             "valuation_status": "UNKNOWN_FIXED_NO_PRICE_OR_MARKET_CAP_DATASET",

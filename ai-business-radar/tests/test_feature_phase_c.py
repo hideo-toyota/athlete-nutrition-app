@@ -132,6 +132,23 @@ class PureFeatureTests(unittest.TestCase):
         self.assertEqual(f["operating_margin"]["status"], "UNKNOWN")
         self.assertIn("alias_conflict", f["operating_margin"]["note"])
 
+    def test_actual_edinet_style_cash_flow_and_debt_aliases(self):
+        rows = _rows()
+        cur = rows[-1]
+        cur.pop("operating_cash_flow")
+        cur.pop("cash_and_deposits")
+        cur.pop("interest_bearing_debt")
+        cur["cf_operating"] = 180
+        cur["cash"] = 300
+        cur["ibd_current"] = 30
+        cur["ibd_noncurrent"] = 50
+        f = compute_financial_features({"data": rows})["features"]
+        self.assertEqual(f["fcf_proxy"]["status"], "CALCULATION")
+        self.assertEqual(f["fcf_proxy"]["value"], 130)
+        self.assertEqual(f["net_cash"]["status"], "CALCULATION")
+        self.assertEqual(f["net_cash"]["value"], 220)
+        self.assertEqual(f["net_cash"]["source_fields"], ["cash", "ibd_current", "ibd_noncurrent"])
+
 
 class BuildFeatureTests(unittest.TestCase):
     def setUp(self):

@@ -84,6 +84,23 @@ def _resolve(row: dict | None, logical: str):
     return first, found[0][0], None
 
 
+def _resolve_interest_bearing_debt(row: dict | None):
+    value, field, err = _resolve(row, "interest_bearing_debt")
+    if value is not None:
+        return value, [field], None
+    if row is None:
+        return None, [], err
+    components = []
+    for field in registry.DEBT_COMPONENT_ALIASES:
+        if field in row:
+            v = _to_float(row.get(field))
+            if v is not None:
+                components.append((field, v))
+    if components:
+        return sum(v for _, v in components), [f for f, _ in components], None
+    return None, [], err
+
+
 def _measured(
     feature_id: str,
     value,
@@ -219,11 +236,16 @@ def compute_financial_features(raw: dict, *, raw_hashes: dict | None = None) -> 
     )
 
     cash, cash_f, cash_err = val("current", current, "cash")
-    debt, debt_f, debt_err = val("current", current, "interest_bearing_debt")
+    debt, debt_fields, debt_err = _resolve_interest_bearing_debt(current)
+    if debt_fields:
+        used.setdefault("current", {})["interest_bearing_debt"] = {
+            "field": "+".join(debt_fields),
+            "value": debt,
+        }
     net_cash = None if cash is None or debt is None else cash - debt
     features["net_cash"] = _measured(
         "net_cash", net_cash,
-        source_fields=[f for f in (cash_f, debt_f) if f],
+        source_fields=[f for f in (cash_f, *debt_fields) if f],
         source_periods=["current"],
         hashes=raw_hashes,
         note=None if net_cash is not None else (cash_err or debt_err),

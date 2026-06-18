@@ -52,6 +52,7 @@
 - **build/検証は `available_at <= asof` のみ採用**。latest は evidence 本文で参考表示可・**検証(score)には使わない**。
 - 日足は **取引日の JST 引け後に available** とし、**日中時刻の asof では当日を採用しない**(時刻・tz を持つ)。
 - `available_at` は **datetime(tz付)に統一**。日付粒度の dataset は「当日終端の時刻」を入れる。`asof` が日付のみなら **当日末** を asof として比較(date/datetime 混在を排除)。
+- EDINET DB financials 由来の sync / feature build は、開示時刻の基準に合わせ **JST 当日末** を日付asofの比較点とする。
 - dataset 別 `available_at` 導出(全対象):
 
 | dataset | provider | available_at |
