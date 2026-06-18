@@ -28,6 +28,7 @@ CFG = {
                 "ping_path": "/companies",
                 "auth": "x-api-key",
                 "key_var": "EDINETDB_API_KEY",
+                "plan_or_limit": "unknown-personal-plan",
                 "datasets": {"companies": {"path": "/companies"}},
             },
         },
@@ -105,6 +106,7 @@ class SyncCompaniesTests(unittest.TestCase):
             self.assertIn(k, meta)
         self.assertEqual(meta["provider"], "edinet-db")
         self.assertEqual(meta["dataset"], "companies")
+        self.assertEqual(meta["plan_or_limit"], "unknown-personal-plan")
         self.assertEqual(meta["raw_hash_compressed"], res["raw_hash_compressed"])
         self.assertIsNotNone(datetime.fromisoformat(meta["available_at"]).tzinfo)
         self.assertIsNotNone(datetime.fromisoformat(meta["retrieved_at"]).tzinfo)
@@ -221,6 +223,23 @@ class SyncCompaniesTests(unittest.TestCase):
                     key_getter=_key,
                     **kwargs,
                 )
+
+    def test_invalid_asof_rejected_as_system_exit(self):
+        for asof in ("20260617", "2026-02", "2026-02-31", "", None):
+            with self.subTest(asof=asof):
+                with self.assertRaises(SystemExit):
+                    edinet_db.sync_companies(
+                        CFG,
+                        asof=asof,
+                        page=1,
+                        per_page=1,
+                        raw_root=Path(tempfile.mkdtemp()) / "data" / "raw",
+                        metadata_dir=Path(tempfile.mkdtemp()) / "data" / "metadata",
+                        http_client=lambda _u, _h: FakeResp(200, _raw()),
+                        clock=_clock,
+                        sleeper=lambda _s: None,
+                        key_getter=_key,
+                    )
 
 
 class SyncCLITests(unittest.TestCase):

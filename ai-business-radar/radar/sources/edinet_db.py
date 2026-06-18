@@ -10,6 +10,7 @@ Scope is intentionally narrow:
 from __future__ import annotations
 
 import json
+import re
 import time
 from datetime import date, datetime, time as dt_time, timezone
 from pathlib import Path
@@ -21,6 +22,7 @@ DATASET = "companies"
 DEFAULT_PAGE = 1
 DEFAULT_PER_PAGE = 100
 _RETRYABLE = (429, 500, 502, 503, 504)
+_ASOF_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 class _RequestClient:
@@ -60,8 +62,18 @@ def _parse_iso_dt(value: str) -> datetime:
 
 
 def _asof_end_utc(asof: str) -> datetime:
-    d = date.fromisoformat(asof)
+    d = date.fromisoformat(_valid_asof(asof))
     return datetime.combine(d, dt_time(23, 59, 59), tzinfo=timezone.utc)
+
+
+def _valid_asof(asof: str) -> str:
+    if not isinstance(asof, str) or not _ASOF_RE.match(asof):
+        raise SystemExit(f"--asof は 'YYYY-MM-DD' で指定してください: {asof}")
+    try:
+        date.fromisoformat(asof)
+    except ValueError as e:
+        raise SystemExit(f"--asof が実在しない日付です: {asof}") from e
+    return asof
 
 
 def _provider_cfg(cfg: dict) -> tuple[dict, dict]:
@@ -122,6 +134,7 @@ def sync_companies(
 
     Returns only metadata/path summary. It never returns the response body.
     """
+    asof = _valid_asof(asof)
     page = _positive_int(page, "--page")
     per_page = _positive_int(per_page, "--per-page")
     dl, pc = _provider_cfg(cfg)

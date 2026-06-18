@@ -89,6 +89,8 @@ def _check_data_layer(dl: dict) -> None:
             for req in ("base_url", "ping_path", "auth", "key_var"):
                 if not isinstance(pc.get(req), str) or not pc.get(req):
                     raise SystemExit(f"config: data_layer.providers.{name}.{req} は非空文字列")
+            if "plan_or_limit" in pc and (not isinstance(pc["plan_or_limit"], str) or not pc["plan_or_limit"]):
+                raise SystemExit(f"config: data_layer.providers.{name}.plan_or_limit は非空文字列")
             datasets = pc.get("datasets")
             if datasets is not None:
                 if not isinstance(datasets, dict):
