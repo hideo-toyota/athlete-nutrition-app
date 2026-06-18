@@ -27,7 +27,9 @@ radar/features/compute.py
 
 DoD:
 - `revenue_growth_yoy`, `operating_margin`, `net_margin`, `roe_proxy`, `equity_ratio`, `fcf_proxy`, `net_cash`, `valuation_status` を返す。
-- `roic_proxy` は入力が足りなければ UNKNOWN。無理に出さない。
+- `roic_proxy` は Phase C minimal では UNKNOWN 固定。税率・投下資本の仮定を勝手に置かない。
+- ratio系 feature はすべて decimal ratio 形式。例: `12.3%` は `value=0.123`, `unit="ratio"`。
+  `12.3` や `8.0%` のような percent数値は保存しない。percentage point / bps は Phase C minimal では使わない。
 - 単体テストで欠損 / nan / inf / 分母0 / 前期なしを網羅。
 
 ### C-2: builder / derived writer
@@ -39,8 +41,10 @@ radar/features/build.py
 
 責務:
 - explicit `raw_path` + sidecar provenance を読む。
-- raw hash を再計算して sidecar と一致確認。
-- `available_at <= asof` を検証。
+- raw hash は `raw_hash_compressed` と `raw_hash_normalized` の両方を再計算して sidecar と一致確認。
+- `available_at <= asof` を検証。`available_at` は tz-aware、`asof` は JST 当日末で比較。
+  raw path に含まれる日付は採否判定に使わない。
+- output path に使う `edinet_code` は `^E\d{5}$` 検証後に使う。
 - `data/derived/features/edinet_financials_v1/<asof>/<edinet_code>.json` に書く。
 
 DoD:
@@ -87,9 +91,16 @@ tests/test_feature_phase_c.py
 - output path traversal拒否。
 - missing previous period → growth/ROE UNKNOWN。
 - denominator zero → UNKNOWN。
+- ratio scale: `operating_margin=0.08` / `unit="ratio"` を期待し、`8.0` や `unit="%"` を拒否。
 - nan/inf/non-numeric → UNKNOWN。
 - alias conflict → UNKNOWN。
+- roic_proxy は常に UNKNOWN。
 - valuation_status は価格datasetなしで常に UNKNOWN。
+- both hashes mismatch: compressed/normalized の片方でも不一致なら停止。
+- feature metadata includes both hashes: feature単位にも `raw_hash_compressed` と `raw_hash_normalized` が入る。
+- timezone: available_at timezone無しは停止、asofはJST当日末比較。
+- edinet_code regex: 不正な code では derived path を作らない。
+- restatement flag は derived に保持。
 - stdout に raw本文 sentinel が出ない。
 - `rg` で feature層に `urllib|requests|socket` import が無い。
 - non-regression: existing CLI help + key commands。
