@@ -129,10 +129,12 @@ class ResearchPhaseDTests(unittest.TestCase):
             text = Path(res["md_path"]).read_text(encoding="utf-8")
             manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
         self.assertNotIn(SENTINEL, text)
+        self.assertIn("LICENSE_MATRIX E5", text)
         self.assertIn("UNKNOWN / 不足", text)
         self.assertIn("discipline check 未通過", text)
         self.assertFalse(manifest["raw_body_included"])
         self.assertFalse(manifest["llm_api_called"])
+        self.assertEqual(manifest["third_party_llm_gate"], "LICENSE_MATRIX_E5_REQUIRED")
         for token in FORBIDDEN_OUTPUT_TOKENS:
             self.assertNotIn(token, text)
 
