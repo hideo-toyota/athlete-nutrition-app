@@ -9,6 +9,11 @@ data/cache/
 data/derived/
 data/metadata/
 
+# provider由来の派生分析出力(ローカル運用のみ・再配布しない)
+outputs/research_queue.md
+outputs/research_queue.csv
+outputs/evidence/
+
 # Python
 __pycache__/
 *.pyc

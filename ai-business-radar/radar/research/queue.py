@@ -1,0 +1,144 @@
+"""Build a local research queue from derived features.
+
+This does not rank attractiveness and does not create trade ideas.
+"""
+from __future__ import annotations
+
+import csv
+from pathlib import Path
+
+from .common import DISCLAIMER, assert_no_forbidden_output, load_feature_docs, metric_value, rel
+
+
+def _feature(doc: dict, key: str) -> dict:
+    return (doc.get("features") or {}).get(key) or {}
+
+
+def _status(doc: dict, key: str) -> str:
+    return str(_feature(doc, key).get("status") or "UNKNOWN")
+
+
+def _risks(doc: dict) -> list[str]:
+    risks = []
+    for key in ("valuation_status", "roic_proxy"):
+        if _status(doc, key) == "UNKNOWN":
+            risks.append(f"{key}=UNKNOWN")
+    if _status(doc, "revenue_growth_yoy") == "CALCULATION":
+        v = _feature(doc, "revenue_growth_yoy").get("value")
+        if isinstance(v, (int, float)) and v < 0:
+            risks.append("revenue_growth_yoy<0")
+    if _status(doc, "operating_margin") == "CALCULATION":
+        v = _feature(doc, "operating_margin").get("value")
+        if isinstance(v, (int, float)) and v < 0:
+            risks.append("operating_margin<0")
+    if _status(doc, "net_cash") == "CALCULATION":
+        v = _feature(doc, "net_cash").get("value")
+        if isinstance(v, (int, float)) and v < 0:
+            risks.append("net_cash<0")
+    return risks or ["no_risk_flag_from_available_features"]
+
+
+def _item(doc: dict) -> dict:
+    features = doc.get("features") or {}
+    unknown = sorted(k for k, v in features.items() if isinstance(v, dict) and v.get("status") == "UNKNOWN")
+    calculated = sorted(k for k, v in features.items() if isinstance(v, dict) and v.get("status") == "CALCULATION")
+    code = doc.get("edinet_code") or "UNKNOWN"
+    return {
+        "type": "research_item",
+        "entity_id": code,
+        "edinet_code": code,
+        "ticker": "UNKNOWN",
+        "company_name": "UNKNOWN",
+        "market": "UNKNOWN",
+        "sector": "UNKNOWN",
+        "liquidity": "UNKNOWN",
+        "data_freshness": {
+            "asof": doc.get("asof"),
+            "available_at": (doc.get("input") or {}).get("available_at"),
+            "retrieved_at": (doc.get("input") or {}).get("retrieved_at"),
+        },
+        "extraction_reason_id": "screen:edinet_financials_feature_review_v1",
+        "evidence_refs": [{
+            "derived_path": rel(doc.get("_path")),
+            "feature_set": doc.get("feature_set"),
+            "raw_hash_normalized": (doc.get("input") or {}).get("raw_hash_normalized"),
+            "raw_hash_compressed": (doc.get("input") or {}).get("raw_hash_compressed"),
+        }],
+        "computed_features": calculated,
+        "unknown_features": unknown,
+        "key_risks": _risks(doc),
+        "falsification": [
+            "次回同じfeature_setでUNKNOWNが増えたら、根拠不足として保留する",
+            "revenue_growth_yoy / operating_margin / net_margin のいずれかが悪化したら、仮説を再点検する",
+        ],
+        "next_to_read": [
+            "EDINET financials raw/provenance",
+            "次回決算の同一feature_set",
+            "価格/時価総額 dataset は未取得のため valuation_status は UNKNOWN",
+        ],
+        "discipline_status": "未通過",
+        "coverage_priority": 0,
+        "claim_tags": {
+            "features": "CALCULATION",
+            "unknowns": "UNKNOWN",
+            "risks": "INFERENCE(CALCULATION依存)",
+        },
+        "disclaimer": "調査項目。売買指示ではない。売買は discipline check + 人間判断が必要。",
+    }
+
+
+def build_research_queue(*, asof: str | None = None, derived_root: Path | None = None) -> dict:
+    asof, docs = load_feature_docs(asof=asof, derived_root=derived_root)
+    items = [_item(d) for d in docs]
+    items.sort(key=lambda x: x["edinet_code"])
+    return {"asof": asof, "items": items}
+
+
+def render_research_queue(queue: dict) -> str:
+    out = [
+        "# Research Queue — 調査項目(売買指示なし)",
+        "",
+        f"_asof: {queue['asof']} / type は research_item 固定 / discipline_status は未通過固定_",
+        "",
+        f"> {DISCLAIMER}",
+        "",
+        "| edinet_code | extraction_reason_id | CALCULATION | UNKNOWN | key_risks | evidence |",
+        "|---|---|---:|---:|---|---|",
+    ]
+    for item in queue["items"]:
+        out.append(
+            f"| {item['edinet_code']} | {item['extraction_reason_id']} | "
+            f"{len(item['computed_features'])} | {len(item['unknown_features'])} | "
+            f"{'; '.join(item['key_risks'])} | `python3 -m radar evidence {item['edinet_code']} --asof {queue['asof']}` |"
+        )
+    out.extend([
+        "",
+        "## 注意",
+        "- 並べ替えは edinet_code のみ。魅力度・売買順ではありません。",
+        "- 価格/時価総額 dataset 未取得のため valuation_status は UNKNOWN。",
+        "- このファイルを第三者LLMへ渡す運用は LICENSE_MATRIX の確認対象です。",
+        "",
+    ])
+    text = "\n".join(out)
+    assert_no_forbidden_output(text)
+    return text
+
+
+def write_research_queue(queue: dict, *, outputs_root: Path | None = None) -> dict:
+    root = outputs_root or (Path(__file__).resolve().parent.parent.parent / "outputs")
+    root.mkdir(parents=True, exist_ok=True)
+    md = root / "research_queue.md"
+    csv_path = root / "research_queue.csv"
+    md.write_text(render_research_queue(queue), encoding="utf-8")
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["type", "edinet_code", "extraction_reason_id", "calculation_count",
+                    "unknown_count", "discipline_status", "evidence_command"])
+        for item in queue["items"]:
+            w.writerow([
+                item["type"], item["edinet_code"], item["extraction_reason_id"],
+                len(item["computed_features"]), len(item["unknown_features"]),
+                item["discipline_status"],
+                f"python3 -m radar evidence {item['edinet_code']} --asof {queue['asof']}",
+            ])
+    return {"md_path": md, "csv_path": csv_path, "count": len(queue["items"])}

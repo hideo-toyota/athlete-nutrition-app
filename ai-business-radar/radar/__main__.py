@@ -17,6 +17,7 @@ from . import target_check
 from . import value_audit
 from . import value_store
 from .features import build_financial_features
+from .research import build_evidence, build_research_queue, write_evidence, write_research_queue
 from .sources import edinet_db
 from .report import (render_check, render_mirror, render_review, render_target_check,
                      render_value_audit, render_value_review)
@@ -488,6 +489,26 @@ def cmd_build_features(args) -> None:
     print("  ※ raw本文・APIキー値は表示していません。research_queue/evidence/LLM投入は未実装です。")
 
 
+def cmd_research_queue(args) -> None:
+    """Phase D0: deterministic research items from derived features. No LLM handoff."""
+    asof = _valid_asof(args.asof)
+    q = build_research_queue(asof=asof)
+    res = write_research_queue(q)
+    print(f"research queue を生成しました: {_rel(res['md_path'])} / {_rel(res['csv_path'])}")
+    print(f"  items: {res['count']} / asof: {q['asof']}")
+    print("  ※ 調査項目であり、売買指示ではありません。provider raw本文・LLM投入はしていません。")
+
+
+def cmd_evidence(args) -> None:
+    """Phase D0: deterministic evidence pack from derived features. No LLM handoff."""
+    asof = _valid_asof(args.asof)
+    ev = build_evidence(args.entity, asof=asof)
+    res = write_evidence(ev)
+    print(f"evidence を生成しました: {_rel(res['path'])}")
+    print(f"  edinet_code: {res['edinet_code']} / asof: {ev['asof']}")
+    print("  ※ raw本文は含めず、derived feature と hash/provenance参照だけを整理しています。")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="radar",
                                  description="Personal Equity Research Radar")
@@ -556,6 +577,13 @@ def main() -> None:
     pbf.add_argument("--dataset", required=True, choices=["financials"], help="Phase C minimal は financials のみ")
     pbf.add_argument("--raw-path", required=True, help="data/raw/edinet-db/financials 配下の raw JSON")
     pbf.add_argument("--asof", required=True, help="基準日 YYYY-MM-DD。available_at<=asof のみ採用")
+    prq = sub.add_parser("research-queue",
+                         help="(Phase D0) derived feature から調査項目を生成(売買指示なし・LLM投入なし)")
+    prq.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
+    pev = sub.add_parser("evidence",
+                         help="(Phase D0) EDINET code の evidence pack を生成(売買指示なし・LLM投入なし)")
+    pev.add_argument("entity", help="EDINETコード(E02367形式)。Phase D0 は ticker未対応")
+    pev.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
     args = ap.parse_args()
 
     if args.command == "mirror":
@@ -580,6 +608,10 @@ def main() -> None:
         cmd_sync(args)
     elif args.command == "build-features":
         cmd_build_features(args)
+    elif args.command == "research-queue":
+        cmd_research_queue(args)
+    elif args.command == "evidence":
+        cmd_evidence(args)
     else:
         ap.print_help()
 

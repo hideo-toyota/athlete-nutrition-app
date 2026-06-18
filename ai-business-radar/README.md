@@ -33,6 +33,8 @@ python3 -m radar data-check --live --provider edinet-db
 python3 -m radar sync --provider edinet-db --dataset companies --asof YYYY-MM-DD --page 1 --per-page 1
 python3 -m radar sync --provider edinet-db --dataset financials --code E02144 --years 1 --period annual --asof YYYY-MM-DD
 python3 -m radar build-features --provider edinet-db --dataset financials --raw-path data/raw/edinet-db/financials/<asof>/<file>.json --asof YYYY-MM-DD
+python3 -m radar research-queue --asof YYYY-MM-DD
+python3 -m radar evidence E02144 --asof YYYY-MM-DD
 ```
 
 判断ログ `decision_log.jsonl` は**追記専用**(decision も outcome も別行・過去は改変しない=後知恵対策)。個人データなので `.gitignore` 済み(テンプレは `journal/*.example.json`)。
@@ -42,7 +44,8 @@ python3 -m radar build-features --provider edinet-db --dataset financials --raw-
 - 生成物は [`outputs/`](outputs)(`honest_mirror.md` + `honest_mirror.csv` / `discipline_check.md`)。
 - 有料データ層は A1 + EDINET DB Phase B minimal sync(companies/financials)まで実装済み。
   **J-Quants sync と Claude等LLMへの取得本文投入は `LICENSE_MATRIX.md` のゲート解除まで NO-GO**。
-  Phase C minimal feature生成(EDINET DB financials raw → data/derived)まで実装済み。research_queue/evidence/LLM投入は未実装・NO-GO。
+  Phase C minimal feature生成(EDINET DB financials raw → data/derived)と、derivedだけを読む D0 research_queue/evidence は実装済み。
+  provider raw本文の Claude等LLM投入は未実装・`LICENSE_MATRIX.md` の確認対象。
 
 ## 使い方プロンプト集
 Discordから送る分析指示の例は [PROMPTS.md](PROMPTS.md)。
