@@ -51,10 +51,12 @@ Discordから送る分析指示の例は [PROMPTS.md](PROMPTS.md)。
 - [PLAN.md](PLAN.md) — 実装計画(mirror→check→log/score→review)
 - [WORKFLOW.md](WORKFLOW.md) — 原則→実装のワークフロー(サブエージェント)
 - [CLAUDE.md](CLAUDE.md) — オーケストレーター指示(Discord窓口の振る舞い)
+- [DALOOPA_LANE_SPEC.md](DALOOPA_LANE_SPEC.md) — Daloopa外部分析レーン(本体data層とは隔離)
 
 ## エージェント / スキル(Discord連携の頭脳)
 - `.claude/agents/` — 分析チーム(mirror-keeper / data-fetcher / fundamental-analyst / devils-advocate / discipline-auditor / logbook-keeper)+ ビルドチーム。
 - `.claude/skills/` — `market-pulse`(米国+日本の市況をWebでリアルタイム取得)、`equity-analysis`(規律ある個別株分析)。
+- Daloopaは外部分析補助として別レーン。OAuth/setup確認までは analysis/DCF/tearsheet を走らせず、`ai-business-radar` の `data/*` や `research_queue` には混ぜない。
 
 ## ⚠️ `spike/` について
 `spike/` は**旧プロトタイプ(参照専用)**。`DESIGN_PRINCIPLES` 制定前に書かれ、「買い候補」ラベルを出すなど原則に反します。**判断には使わないでください**([spike/README.md](spike/README.md))。

@@ -88,6 +88,7 @@ python3 -m radar review      # outputs/journal_review.md(裁量 vs 規律)
 - J-Quants / EDINET DB 有料データ層は**別トラック**(`DATA_LAYER_SPEC.md`)。**A0/A1=実装済・実キー疎通OK**。確認は `python3 -m radar data-check --offline` / `python3 -m radar data-check --live --provider jquants|edinet-db`。
 - A1の疎通OKは「実キーで最小endpointが 200 + JSON object を返した」の意味。鍵有効性の監査証跡にする前に、同じendpointが無効キーで 401/403 になる負例確認を値なしで記録する。
 - **B(sync/raw保存)以降は `LICENSE_MATRIX` のToS確認まで NO-GO**。取得本文を保存・表示・Claude等LLMに渡さない。`.claude/agents/data-fetcher.md` もA1では疎通確認と未充足ゲート提示だけに限定する。radarコア(mirror/check/log/score/review)・target-check・value-audit(Phase A・手入力 snapshot)は**この層なしで動く**。
+- Daloopa は**外部分析補助の別レーン**(`DALOOPA_LANE_SPEC.md`)。OAuth/setup確認までは `discover_companies("AAPL")` の疎通 probe 以外を実行しない。tearsheet/DCF/earnings review は setup成功後も本体data層へ混ぜず、保有株の仮説点検メモに限定する。
 
 ## 安全
 - Botは **allowlist で自分だけ**。トークンはパスワード扱い(漏れたら再生成)。

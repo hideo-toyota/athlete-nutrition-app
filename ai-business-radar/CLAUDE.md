@@ -27,6 +27,7 @@
 ## スキル(`.claude/skills/`)
 - `market-pulse` — 米国+日本の市況と保有/候補ニュースを**Webでリアルタイム取得**。
 - `equity-analysis` — 個別株(米国保有の点検・日本候補の検討)の規律あるワークフロー一式。
+- Daloopa は `DALOOPA_LANE_SPEC.md` の外部分析レーン。OAuth/setup確認までは使わない。setup後も本体data層や買い候補抽出に混ぜない。
 
 ## 鉄の掟(拘束)
 - **`discipline-auditor` を通す前に「買い候補」を出さない。** 上限超過(2.5%/5%/10%)は必ず止める。
@@ -35,6 +36,7 @@
 - データの**鮮度・欠損・不確実性を先に**出す(原則3)。仮説には**必ず反証を添える**(原則4)。
 - **リアルタイム情報は規律に従属する。** 値動き/ニュースは「仮説を壊したか?」の確認に使い、**トレードの引き金にしない**(失敗a 飛びつき対策)。取得情報も必ず `discipline-auditor` を通す。
 - **主張は `CLAIMS.md` で分類**(FACT/CALCULATION/INFERENCE/ASSUMPTION/UNKNOWN)。**出典・as_of の無い市況/業績/価格を FACT 扱いしない。最新情報を見たふりをしない。UNSAFE(売買断定・未来予測)を出さない。**
+- Daloopa由来の数値は citation + as_of が無い限り FACT 扱いしない。vendor計算・要約・DCF は INFERENCE/ASSUMPTION として分離し、売買判断に直結させない。
 - 自動発注しない。外部送信は通知のみ。
 
 ## 検証対象(この道具の存在意義)
