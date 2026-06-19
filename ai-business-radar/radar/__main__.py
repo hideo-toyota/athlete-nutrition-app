@@ -16,7 +16,7 @@ from . import journal
 from . import target_check
 from . import value_audit
 from . import value_store
-from .features import build_financial_features, build_jquants_bulk_features
+from .features import build_financial_features, build_financial_features_batch, build_jquants_bulk_features
 from .research import (build_evidence, build_llm_handoff, build_research_queue,
                        write_evidence, write_llm_handoff, write_research_queue)
 from .sources import edinet_db
@@ -221,6 +221,44 @@ def _rel(p: Path):
         return p.relative_to(ROOT)
     except ValueError:
         return p
+
+
+def _load_edinet_codes_file(path: str) -> list[str]:
+    """data/metadata 配下の EDINET code list を読む。値はエラーに含めない。"""
+    p = _resolve_path(path).resolve()
+    allowed_root = (ROOT / "data" / "metadata").resolve()
+    if allowed_root != p.parent and allowed_root not in p.parents:
+        raise SystemExit("--codes-file は data/metadata 配下のコード一覧に限定しています")
+    if not p.exists() or not p.is_file():
+        raise SystemExit("--codes-file が見つかりません")
+    codes = []
+    try:
+        lines = p.read_text(encoding="utf-8").splitlines()
+    except UnicodeDecodeError as e:
+        raise SystemExit("--codes-file は UTF-8 テキストで指定してください") from e
+    for lineno, line in enumerate(lines, start=1):
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        token = s.split(",", 1)[0].strip()
+        if not codes and token.lower() in {"edinet_code", "code"}:
+            continue
+        try:
+            codes.append(edinet_db._valid_edinet_code(token))
+        except SystemExit as e:
+            raise SystemExit(f"--codes-file の {lineno} 行目が EDINETコード(E02367形式)ではありません") from e
+    if not codes:
+        raise SystemExit("--codes-file に EDINETコードがありません")
+    return codes
+
+
+def _sync_batch_limit(cfg: dict, explicit_limit: int | None) -> int:
+    if explicit_limit is not None:
+        return explicit_limit
+    budget = (cfg.get("data_layer") or {}).get("daily_request_budget")
+    if isinstance(budget, bool) or not isinstance(budget, int) or budget <= 0:
+        return edinet_db.DEFAULT_BATCH_LIMIT
+    return min(edinet_db.DEFAULT_BATCH_LIMIT, budget)
 
 
 def cmd_value_audit_register(args) -> None:
@@ -441,9 +479,15 @@ def cmd_sync(args) -> None:
     if args.provider != edinet_db.PROVIDER:
         raise SystemExit("Phase B の最小 sync は --provider edinet-db のみ対応")
     cfg = load_config()
+    code = getattr(args, "code", None)
+    codes_file = getattr(args, "codes_file", None)
+    offset = getattr(args, "offset", 0)
+    limit_arg = getattr(args, "limit", None)
     if args.dataset == edinet_db.DATASET:
-        if args.code:
+        if code or codes_file:
             raise SystemExit("--dataset companies では --code は使いません")
+        if offset != 0 or limit_arg is not None:
+            raise SystemExit("--dataset companies では --offset/--limit は使いません")
         if args.years != edinet_db.DEFAULT_YEARS or args.period != "annual":
             raise SystemExit("--dataset companies では --years/--period は使いません")
         res = edinet_db.sync_companies(
@@ -452,25 +496,49 @@ def cmd_sync(args) -> None:
             page=args.page,
             per_page=args.per_page,
         )
+        print(f"sync [{res['provider']}:{res['dataset']}]: raw+provenance を保存しました")
+        print(f"  raw: {_rel(res['raw_path'])}")
+        print(f"  provenance: {_rel(res['provenance_path'])}")
+        print(f"  fetch_log: data/metadata/fetch_log.jsonl")
+        print(f"  asof: {res['asof']} / available_at: {res['available_at']} / 試行 {res['attempts']}")
     elif args.dataset == edinet_db.DATASET_FINANCIALS:
-        if not args.code:
-            raise SystemExit("--dataset financials では --code E02367 形式が必須です")
+        if bool(code) == bool(codes_file):
+            raise SystemExit("--dataset financials では --code か --codes-file のどちらか一方が必須です")
         if args.page != edinet_db.DEFAULT_PAGE or args.per_page != edinet_db.DEFAULT_PER_PAGE:
             raise SystemExit("--dataset financials では --page/--per-page は使いません")
-        res = edinet_db.sync_financials(
-            cfg,
-            asof=asof,
-            code=args.code,
-            years=args.years,
-            period=args.period,
-        )
+        if codes_file:
+            codes = _load_edinet_codes_file(codes_file)
+            limit = _sync_batch_limit(cfg, limit_arg)
+            res = edinet_db.sync_financials_batch(
+                cfg,
+                asof=asof,
+                codes=codes,
+                offset=offset,
+                limit=limit,
+                years=args.years,
+                period=args.period,
+            )
+            print(f"sync [{res['provider']}:{res['dataset']}:batch]: raw+provenance を保存/確認しました")
+            print(f"  manifest: {_rel(res['manifest_path'])}")
+            print(f"  selected: {res['selected_count']} / saved: {res['saved_count']}"
+                  f" / skipped_existing: {res['skipped_existing_count']} / failures: {res['failure_count']}")
+            print(f"  offset: {res['offset']} → next_offset: {res['next_offset']}"
+                  f" / end_offset: {res['end_offset']} / 試行 {res['total_attempts']}"
+                  f" / asof既使用 {res['prior_attempts_for_asof']}")
+            print("  ※ 取得本文・APIキー値は表示していません。feature/research_queue/evidence/LLM投入はしていません。")
+            if res["failure_count"]:
+                raise SystemExit(f"financials batch に失敗があります(--offset {res['retry_offset']} から再開してください)")
+            return
+        if offset != 0 or limit_arg is not None:
+            raise SystemExit("--code 単体指定では --offset/--limit は使いません")
+        res = edinet_db.sync_financials(cfg, asof=asof, code=code, years=args.years, period=args.period)
+        print(f"sync [{res['provider']}:{res['dataset']}]: raw+provenance を保存しました")
+        print(f"  raw: {_rel(res['raw_path'])}")
+        print(f"  provenance: {_rel(res['provenance_path'])}")
+        print(f"  fetch_log: data/metadata/fetch_log.jsonl")
+        print(f"  asof: {res['asof']} / available_at: {res['available_at']} / 試行 {res['attempts']}")
     else:
         raise SystemExit("Phase B の最小 sync は companies|financials のみ対応")
-    print(f"sync [{res['provider']}:{res['dataset']}]: raw+provenance を保存しました")
-    print(f"  raw: {_rel(res['raw_path'])}")
-    print(f"  provenance: {_rel(res['provenance_path'])}")
-    print(f"  fetch_log: data/metadata/fetch_log.jsonl")
-    print(f"  asof: {res['asof']} / available_at: {res['available_at']} / 試行 {res['attempts']}")
     print("  ※ 取得本文・APIキー値は表示していません。feature/research_queue/evidence/LLM投入は未実装です。")
 
 
@@ -479,8 +547,20 @@ def cmd_build_features(args) -> None:
     asof = _valid_asof(args.asof) or date.today().isoformat()
     if args.provider != "edinet-db" or args.dataset != "financials":
         raise SystemExit("Phase C minimal build-features は --provider edinet-db --dataset financials のみ対応")
-    if not args.raw_path:
-        raise SystemExit("--raw-path が必要です")
+    if bool(args.raw_path) == bool(args.raw_dir):
+        raise SystemExit("--raw-path か --raw-dir のどちらか一方が必要です")
+    if args.raw_dir:
+        res = build_financial_features_batch(raw_dir=args.raw_dir, asof=asof, limit=args.limit)
+        print(f"build-features [{res['provider']}:{res['dataset']}:batch]: derived を生成しました")
+        print(f"  manifest: {_rel(res['manifest_path'])}")
+        print(f"  raw_dir: {_rel(res['raw_dir'])}")
+        print(f"  candidates: {res['candidate_count']} / built: {res['built_count']}"
+              f" / skipped_missing_provenance: {res['skipped_missing_provenance_count']}"
+              f" / failures: {res['failure_count']}")
+        print("  ※ raw本文・APIキー値は表示していません。ランキング/推奨/予測は生成していません。")
+        if res["failure_count"]:
+            raise SystemExit("build-features batch に失敗があります(manifest を確認してください)")
+        return
     res = build_financial_features(raw_path=args.raw_path, asof=asof)
     print(f"build-features [{res['provider']}:{res['dataset']}]: derived を生成しました")
     print(f"  output: {_rel(res['output_path'])}")
@@ -597,6 +677,12 @@ def main() -> None:
     psy.add_argument("--per-page", dest="per_page", type=int, default=edinet_db.DEFAULT_PER_PAGE,
                      help="companies用: 1ページ件数(正の整数)")
     psy.add_argument("--code", help="financials用: EDINETコード(E02367形式)")
+    psy.add_argument("--codes-file", dest="codes_file",
+                     help="financials batch用: data/metadata 配下のEDINETコード一覧(1行1コード)")
+    psy.add_argument("--offset", type=int, default=0,
+                     help="financials batch用: codes-file の開始位置(0以上)")
+    psy.add_argument("--limit", type=int, default=None,
+                     help="financials batch用: 最大取得件数(data_layer.daily_request_budget 以下)")
     psy.add_argument("--years", type=int, default=edinet_db.DEFAULT_YEARS, help="financials用: 取得年数(正の整数)")
     psy.add_argument("--period", choices=edinet_db.PERIODS, default="annual",
                      help="financials用: annual|quarterly|quarterly_standalone")
@@ -604,7 +690,9 @@ def main() -> None:
                          help="(Phase C) edinet-db financials raw から derived feature を生成(推奨/予測なし)")
     pbf.add_argument("--provider", required=True, choices=["edinet-db"], help="Phase C minimal は edinet-db のみ")
     pbf.add_argument("--dataset", required=True, choices=["financials"], help="Phase C minimal は financials のみ")
-    pbf.add_argument("--raw-path", required=True, help="data/raw/edinet-db/financials 配下の raw JSON")
+    pbf.add_argument("--raw-path", help="data/raw/edinet-db/financials 配下の raw JSON")
+    pbf.add_argument("--raw-dir", help="data/raw/edinet-db/financials/<asof> ディレクトリをbatch処理")
+    pbf.add_argument("--limit", type=int, default=None, help="batch処理の最大件数(任意・正の整数)")
     pbf.add_argument("--asof", required=True, help="基準日 YYYY-MM-DD。available_at<=asof のみ採用")
     pjq = sub.add_parser(
         "build-jquants-features",

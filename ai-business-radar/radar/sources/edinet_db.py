@@ -24,6 +24,7 @@ DATASETS = (DATASET, DATASET_FINANCIALS)
 DEFAULT_PAGE = 1
 DEFAULT_PER_PAGE = 100
 DEFAULT_YEARS = 1
+DEFAULT_BATCH_LIMIT = 100
 PERIODS = ("annual", "quarterly", "quarterly_standalone")
 _RETRYABLE = (429, 500, 502, 503, 504)
 _ASOF_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -121,6 +122,18 @@ def _positive_int(v, name: str) -> int:
     return n
 
 
+def _non_negative_int(v, name: str) -> int:
+    if isinstance(v, bool):
+        raise SystemExit(f"{name} は0以上の整数で指定してください")
+    try:
+        n = int(v)
+    except (TypeError, ValueError) as e:
+        raise SystemExit(f"{name} は0以上の整数で指定してください") from e
+    if n < 0:
+        raise SystemExit(f"{name} は0以上の整数で指定してください")
+    return n
+
+
 def _valid_edinet_code(code: str) -> str:
     if not isinstance(code, str):
         raise SystemExit("--code は EDINETコード(E02367形式)で指定してください")
@@ -158,6 +171,85 @@ def _financials_raw_path(raw_root: Path, asof: str, code: str, period: str, year
     if base not in out.parents:
         raise SystemExit("raw 保存先が financials dataset 配下ではありません")
     return out
+
+
+def _financials_batch_manifest_path(metadata_dir: Path, asof: str, offset: int, limit: int) -> Path:
+    root = Path(metadata_dir).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    out = (root / f"edinetdb_financials_batch_{asof}_offset-{offset}_limit-{limit}.json").resolve()
+    if root not in out.parents:
+        raise SystemExit("batch manifest 保存先が metadata_dir 配下ではありません")
+    return out
+
+
+def _existing_financials_valid(out: Path, sidecar: Path, *, asof: str, code: str,
+                               period: str, years: int) -> bool:
+    try:
+        raw = out.read_bytes()
+        meta = json.loads(sidecar.read_text(encoding="utf-8"))
+        provenance.validate_provenance(meta)
+    except (OSError, json.JSONDecodeError, SystemExit):
+        return False
+    if meta.get("provider") != PROVIDER or meta.get("dataset") != DATASET_FINANCIALS:
+        return False
+    if meta.get("edinet_code") != code:
+        return False
+    if meta.get("params") != {"code": code, "years": years, "period": period}:
+        return False
+    if meta.get("raw_hash_compressed") != common.hash_bytes(raw):
+        return False
+    if meta.get("raw_hash_normalized") != common.hash_bytes(common.normalize_json_bytes(raw)):
+        return False
+    try:
+        if _parse_iso_dt(meta.get("available_at")).astimezone(timezone.utc) > _asof_end_utc(asof):
+            return False
+    except SystemExit:
+        return False
+    return True
+
+
+def _safe_batch_failure_message(msg: str) -> str:
+    msg = common.redact(msg)
+    m = re.search(r"HTTP\s+\d{3}", msg)
+    if m:
+        return m.group(0)
+    known = (
+        "data_layer.daily_request_budget に達しました",
+        "response too large",
+        "レスポンスの root が object ではありません",
+        "PIT違反",
+    )
+    for needle in known:
+        if needle in msg:
+            return needle
+    if "JSON parse error" in msg:
+        return "JSON parse error(redacted)"
+    return "sync error(redacted)"
+
+
+def _daily_request_budget(cfg: dict) -> int | None:
+    dl = cfg.get("data_layer") or {}
+    budget = dl.get("daily_request_budget")
+    if budget is None:
+        return None
+    return _positive_int(budget, "data_layer.daily_request_budget")
+
+
+def _batch_attempts_used(metadata_dir: Path, asof: str) -> int:
+    root = Path(metadata_dir).resolve()
+    if not root.exists():
+        return 0
+    total = 0
+    for p in root.glob(f"edinetdb_financials_batch_{asof}_offset-*_limit-*.json"):
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if d.get("provider") == PROVIDER and d.get("dataset") == DATASET_FINANCIALS:
+            attempts = d.get("total_attempts")
+            if isinstance(attempts, int) and attempts > 0:
+                total += attempts
+    return total
 
 
 def _parse_vendor_datetime(value) -> datetime | None:
@@ -402,4 +494,163 @@ def sync_financials(
         "raw_hash_normalized": meta["raw_hash_normalized"],
         "available_at": meta["available_at"],
         "attempts": attempt + 1,
+    }
+
+
+def sync_financials_batch(
+    cfg: dict,
+    *,
+    asof: str,
+    codes: list[str],
+    offset: int = 0,
+    limit: int = DEFAULT_BATCH_LIMIT,
+    years: int = DEFAULT_YEARS,
+    period: str = "annual",
+    raw_root: Path | None = None,
+    metadata_dir: Path | None = None,
+    http_client=None,
+    clock=None,
+    sleeper=None,
+    key_getter=None,
+    skip_existing: bool = True,
+) -> dict:
+    """Fetch a bounded batch of financials by EDINET code.
+
+    Returns only metadata/path summaries. It never returns response bodies.
+    Existing raw+provenance pairs are skipped by default so reruns do not waste
+    daily request budget.
+    """
+    asof = _valid_asof(asof)
+    offset = _non_negative_int(offset, "--offset")
+    limit = _positive_int(limit, "--limit")
+    years = _positive_int(years, "--years")
+    period = _valid_period(period)
+    if not isinstance(codes, list) or not codes:
+        raise SystemExit("financials batch には EDINETコード一覧が必要です")
+    budget = _daily_request_budget(cfg)
+    if budget is not None and limit > budget:
+        raise SystemExit(f"--limit は data_layer.daily_request_budget({budget}) 以下で指定してください")
+
+    deduped = []
+    seen = set()
+    duplicates = []
+    for raw_code in codes:
+        code = _valid_edinet_code(raw_code)
+        if code not in seen:
+            deduped.append(code)
+            seen.add(code)
+        else:
+            duplicates.append(code)
+    selected = deduped[offset:offset + limit]
+
+    raw_root = raw_root or (common.ROOT / "data" / "raw")
+    metadata_dir = metadata_dir or provenance.default_metadata_dir()
+    dl, _pc = _provider_cfg(cfg)
+    max_bytes = int(dl.get("max_response_bytes", live.DEFAULT_MAX_BYTES))
+    timeout = dl.get("timeout_sec", live.DEFAULT_TIMEOUT)
+    base_http_client = http_client or live.UrllibClient(timeout, max_bytes)
+    prior_attempts = _batch_attempts_used(Path(metadata_dir), asof)
+    request_count = 0
+
+    def counted_http_client(url, headers):
+        nonlocal request_count
+        if budget is not None and prior_attempts + request_count >= budget:
+            raise SystemExit("data_layer.daily_request_budget に達しました")
+        request_count += 1
+        return base_http_client(url, headers)
+
+    saved = []
+    skipped = []
+    failures = []
+    processed_count = 0
+
+    for code in selected:
+        out = _financials_raw_path(Path(raw_root), asof, code, period, years)
+        sidecar = out.with_suffix(out.suffix + ".provenance.json")
+        if skip_existing and out.exists() and sidecar.exists() and _existing_financials_valid(
+            out, sidecar, asof=asof, code=code, period=period, years=years
+        ):
+            skipped.append({"code": code, "raw_path": str(out), "provenance_path": str(sidecar)})
+            processed_count += 1
+            continue
+        try:
+            res = sync_financials(
+                cfg,
+                asof=asof,
+                code=code,
+                years=years,
+                period=period,
+                raw_root=raw_root,
+                metadata_dir=metadata_dir,
+                http_client=counted_http_client,
+                clock=clock,
+                sleeper=sleeper,
+                key_getter=key_getter,
+            )
+            saved.append({
+                "code": code,
+                "raw_path": str(res["raw_path"]),
+                "provenance_path": str(res["provenance_path"]),
+                "available_at": res["available_at"],
+                "attempts": res["attempts"],
+            })
+            processed_count += 1
+        except SystemExit as e:
+            msg = _safe_batch_failure_message(str(e))
+            failures.append({"code": code, "error": msg})
+            break
+    end_offset = offset + len(selected)
+    next_offset = offset + processed_count
+
+    manifest = {
+        "provider": PROVIDER,
+        "dataset": DATASET_FINANCIALS,
+        "asof": asof,
+        "offset": offset,
+        "limit": limit,
+        "years": years,
+        "period": period,
+        "input_code_count": len(codes),
+        "unique_code_count": len(deduped),
+        "duplicate_count": len(duplicates),
+        "selected_count": len(selected),
+        "saved_count": len(saved),
+        "skipped_existing_count": len(skipped),
+        "failure_count": len(failures),
+        "prior_attempts_for_asof": prior_attempts,
+        "next_offset": next_offset,
+        "end_offset": end_offset,
+        "retry_offset": next_offset,
+        "saved": saved,
+        "skipped_existing": skipped,
+        "duplicates_skipped": duplicates,
+        "failures": failures,
+        "total_attempts": request_count,
+        "note": "raw本文・APIキー値は含まない。feature/research/evidence/LLM投入は行わない。",
+    }
+    manifest_path = _financials_batch_manifest_path(Path(metadata_dir), asof, offset, limit)
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    return {
+        "provider": PROVIDER,
+        "dataset": DATASET_FINANCIALS,
+        "asof": asof,
+        "offset": offset,
+        "limit": limit,
+        "years": years,
+        "period": period,
+        "input_code_count": len(codes),
+        "unique_code_count": len(deduped),
+        "duplicate_count": len(duplicates),
+        "selected_count": len(selected),
+        "saved_count": len(saved),
+        "skipped_existing_count": len(skipped),
+        "failure_count": len(failures),
+        "prior_attempts_for_asof": prior_attempts,
+        "next_offset": next_offset,
+        "end_offset": end_offset,
+        "retry_offset": next_offset,
+        "manifest_path": manifest_path,
+        "metadata_dir": Path(metadata_dir),
+        "total_attempts": request_count,
     }

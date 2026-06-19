@@ -198,3 +198,102 @@ def build_financial_features(
         "raw_hash_normalized": normalized,
         "output_path": out,
     }
+
+
+def _batch_manifest_path(derived_root: Path, asof: str) -> Path:
+    root = Path(derived_root).resolve()
+    base = (root / "features" / FEATURE_SET / asof).resolve()
+    base.mkdir(parents=True, exist_ok=True)
+    out = (base / "build_manifest.json").resolve()
+    if not _inside(out, base):
+        raise SystemExit("derived manifest 出力先が features 配下を脱出しています")
+    return out
+
+
+def build_financial_features_batch(
+    *,
+    raw_dir,
+    asof: str,
+    raw_root: Path | None = None,
+    derived_root: Path | None = None,
+    limit: int | None = None,
+    clock=None,
+) -> dict:
+    """Build derived features for every financials raw JSON in a directory."""
+    asof = _valid_asof(asof)
+    if limit is not None:
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
+            raise SystemExit("--limit は正の整数で指定してください")
+    raw_root = (raw_root or (ROOT / "data" / "raw")).resolve()
+    financials_root = (raw_root / PROVIDER / DATASET).resolve()
+    raw_d = Path(raw_dir)
+    if not raw_d.is_absolute():
+        raw_d = ROOT / raw_d
+    raw_d = raw_d.resolve()
+    if not _inside(raw_d, financials_root):
+        raise SystemExit("raw-dir は data/raw/edinet-db/financials 配下のみ指定できます")
+    if not raw_d.exists() or not raw_d.is_dir():
+        raise SystemExit("raw-dir が見つかりません")
+
+    candidates = [
+        p for p in sorted(raw_d.glob("*.json"))
+        if not p.name.endswith(".provenance.json") and not p.name.endswith(".meta.json")
+    ]
+    if limit is not None:
+        candidates = candidates[:limit]
+
+    derived_root = derived_root or (ROOT / "data" / "derived")
+    built = []
+    skipped_missing_provenance = []
+    failures = []
+    for raw_p in candidates:
+        if not raw_p.with_suffix(raw_p.suffix + ".provenance.json").exists():
+            skipped_missing_provenance.append({"raw_path": str(raw_p), "reason": "missing_provenance"})
+            continue
+        try:
+            res = build_financial_features(
+                raw_path=raw_p,
+                asof=asof,
+                raw_root=raw_root,
+                derived_root=derived_root,
+                clock=clock,
+            )
+            built.append({
+                "edinet_code": res["edinet_code"],
+                "output_path": str(res["output_path"]),
+                "unknown_count": res["unknown_count"],
+                "raw_hash_normalized": res["raw_hash_normalized"],
+            })
+        except SystemExit as e:
+            failures.append({"raw_path": str(raw_p), "error": common.redact(str(e))})
+
+    manifest = {
+        "provider": PROVIDER,
+        "dataset": DATASET,
+        "feature_set": FEATURE_SET,
+        "asof": asof,
+        "raw_dir": str(raw_d),
+        "candidate_count": len(candidates),
+        "built_count": len(built),
+        "skipped_missing_provenance_count": len(skipped_missing_provenance),
+        "failure_count": len(failures),
+        "built": built,
+        "skipped_missing_provenance": skipped_missing_provenance,
+        "failures": failures,
+        "note": "raw本文・APIキー値は含まない。推奨/予測/ランキングは生成しない。",
+    }
+    manifest_path = _batch_manifest_path(Path(derived_root), asof)
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+                             encoding="utf-8")
+    return {
+        "provider": PROVIDER,
+        "dataset": DATASET,
+        "feature_set": FEATURE_SET,
+        "asof": asof,
+        "raw_dir": raw_d,
+        "candidate_count": len(candidates),
+        "built_count": len(built),
+        "skipped_missing_provenance_count": len(skipped_missing_provenance),
+        "failure_count": len(failures),
+        "manifest_path": manifest_path,
+    }

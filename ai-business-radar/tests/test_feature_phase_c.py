@@ -11,7 +11,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from radar.features import build_financial_features
+from radar.features import build_financial_features, build_financial_features_batch
 from radar.features.compute import compute_financial_features
 from radar.sources import common, provenance
 
@@ -233,6 +233,62 @@ class BuildFeatureTests(unittest.TestCase):
         doc = json.loads(Path(res["output_path"]).read_text(encoding="utf-8"))
         self.assertEqual(doc["restatement_flags"][0]["field"], "restatement_flag")
 
+    def test_batch_builds_directory_manifest_without_stdout_body(self):
+        _write_raw(self.base, edinet_code="E00001")
+        _write_raw(self.base, edinet_code="E00002")
+        raw_dir = self.base / "data" / "raw" / "edinet-db" / "financials" / "2026-06-18"
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            res = build_financial_features_batch(
+                raw_dir=raw_dir,
+                asof="2026-06-18",
+                raw_root=self.base / "data" / "raw",
+                derived_root=self.base / "data" / "derived",
+                clock=_clock,
+            )
+        self.assertNotIn(BODY_SENTINEL, buf.getvalue())
+        self.assertEqual(res["candidate_count"], 2)
+        self.assertEqual(res["built_count"], 2)
+        self.assertEqual(res["skipped_missing_provenance_count"], 0)
+        self.assertEqual(res["failure_count"], 0)
+        manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["built_count"], 2)
+        self.assertEqual(manifest["skipped_missing_provenance_count"], 0)
+        self.assertNotIn(BODY_SENTINEL, json.dumps(manifest, ensure_ascii=False))
+        self.assertTrue((self.base / "data" / "derived" / "features" / "edinet_financials_v1"
+                         / "2026-06-18" / "E00001.json").exists())
+
+    def test_batch_skips_legacy_raw_without_provenance(self):
+        _write_raw(self.base, edinet_code="E00001")
+        raw_dir = self.base / "data" / "raw" / "edinet-db" / "financials" / "2026-06-18"
+        legacy = raw_dir / "E00002_period-annual_years-2.json"
+        legacy.write_bytes(_raw_bytes())
+        res = build_financial_features_batch(
+            raw_dir=raw_dir,
+            asof="2026-06-18",
+            raw_root=self.base / "data" / "raw",
+            derived_root=self.base / "data" / "derived",
+            clock=_clock,
+        )
+        self.assertEqual(res["candidate_count"], 2)
+        self.assertEqual(res["built_count"], 1)
+        self.assertEqual(res["skipped_missing_provenance_count"], 1)
+        self.assertEqual(res["failure_count"], 0)
+        manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["skipped_missing_provenance"][0]["reason"], "missing_provenance")
+
+    def test_batch_raw_dir_traversal_rejected(self):
+        outside = self.base / "outside"
+        outside.mkdir()
+        with self.assertRaises(SystemExit):
+            build_financial_features_batch(
+                raw_dir=outside,
+                asof="2026-06-18",
+                raw_root=self.base / "data" / "raw",
+                derived_root=self.base / "data" / "derived",
+                clock=_clock,
+            )
+
 
 class FeatureCLITests(unittest.TestCase):
     def test_build_features_help_ok(self):
@@ -241,6 +297,7 @@ class FeatureCLITests(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertIn("edinet-db", p.stdout)
         self.assertIn("financials", p.stdout)
+        self.assertIn("--raw-dir", p.stdout)
 
     def test_feature_layer_has_no_network_or_env_imports(self):
         files = list((ROOT / "radar" / "features").glob("*.py"))

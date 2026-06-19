@@ -32,6 +32,7 @@ python3 -m radar data-check --live --provider jquants
 python3 -m radar data-check --live --provider edinet-db
 python3 -m radar sync --provider edinet-db --dataset companies --asof YYYY-MM-DD --page 1 --per-page 1
 python3 -m radar sync --provider edinet-db --dataset financials --code E02144 --years 1 --period annual --asof YYYY-MM-DD
+python3 -m radar sync --provider edinet-db --dataset financials --codes-file data/metadata/edinetdb_company_codes_YYYYMMDD.txt --offset 0 --limit 400 --years 1 --period annual --asof YYYY-MM-DD
 python3 -m radar build-features --provider edinet-db --dataset financials --raw-path data/raw/edinet-db/financials/<asof>/<file>.json --asof YYYY-MM-DD
 python3 -m radar build-jquants-features --asof YYYY-MM-DD
 python3 -m radar research-queue --asof YYYY-MM-DD

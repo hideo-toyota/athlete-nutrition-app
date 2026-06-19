@@ -9,7 +9,7 @@
 
 ## 1. 目的 / 非目的
 - **目的**: 「取得 → `data/raw` 保存 → provenance 記録 → hash → PIT(available_at) → manifest」という
-  **sync の骨格**を、まず **EDINET DB companies**、次に最小単位の **EDINET DB financials(1 EDINET code)** で成立させ、**raw_hash で再現可能**にする。
+  **sync の骨格**を、まず **EDINET DB companies**、次に **EDINET DB financials(1 EDINET code / 予算付きbatch)** で成立させ、**raw_hash で再現可能**にする。
 - **非目的(やらない)**: feature 生成 / research_item 生成 / evidence / **第三者LLM入力** / ランキング /
   買い候補 / 推奨 / 予測 / 複数 provider・複数 dataset への拡大 / Daloopa 統合。
 
@@ -17,7 +17,7 @@
 - provider: `edinet-db`(REST 正・`edinetdb.jp/v1`、auth=X-API-Key)。MCP は探索補助で sync には使わない(REST=記録の正)。
 - dataset:
   - `companies`(企業マスタ): entity mapping の起点。
-  - `financials`(財務): **1 EDINET code + years + period** の最小単位。feature化はしない。
+  - `financials`(財務): **1 EDINET code + years + period** が基本単位。batch はこの単位を順次実行するだけで、feature化はしない。
 - endpoint: `/companies`(最小取得。`per_page` を最小、必要なら `page` で逐次)。
   - `financials`: `/companies/{code}/financials`。query は `years` と `period=annual|quarterly|quarterly_standalone`。
   - ⚠️ endpoint / ページング / レスポンス形は **公式 API docs(`edinetdb.jp/docs/api`)で本人確認**し、config 駆動で固定する。
@@ -28,6 +28,7 @@
 data/raw/edinet-db/companies/<asof>/page_<n>.json   # 取得バイト列(raw・git除外)
 data/raw/edinet-db/financials/<asof>/<edinet_code>_period-<period>_years-<n>.json
 data/metadata/fetch_log.jsonl                        # 1 fetch=1行(provenance・追記専用)
+data/metadata/edinetdb_financials_batch_<asof>_offset-<n>_limit-<n>.json
 data/metadata/dataset_manifest.json                  # 索引(任意・B後半)
 ```
 - **raw はローカル限定**。`data/raw` 以外に漏らさない。`outputs/` や journal には書かない。
@@ -86,8 +87,13 @@ data/metadata/dataset_manifest.json                  # 索引(任意・B後半)
 ```
 python3 -m radar sync --provider edinet-db --dataset companies [--asof YYYY-MM-DD] [--page N --per-page K]
 python3 -m radar sync --provider edinet-db --dataset financials --code E02367 [--asof YYYY-MM-DD] [--years N --period annual]
+python3 -m radar sync --provider edinet-db --dataset financials --codes-file data/metadata/edinetdb_company_codes_YYYYMMDD.txt [--asof YYYY-MM-DD] [--offset N --limit K --years N --period annual]
 ```
 - `--asof` は厳密 `YYYY-MM-DD`(既存 mirror/score/target-check と同実装)。
+- `--codes-file` は `data/metadata` 配下の EDINETコード一覧に限定。空行・`#`コメント・CSVヘッダは無視。
+- `--code` と `--codes-file` は排他。batch は `data_layer.daily_request_budget` 以下の `--limit` で小分け実行し、同一 `asof` の既存 batch manifest の `total_attempts` を既使用分として扱う。
+- batch は既存 raw+provenance が hash/PIT/params 一致なら再取得せず `skipped_existing` にする。壊れた sidecar は再取得対象。
+- batch は最初の失敗で停止し、manifest に redacted class のみ記録し、CLI は非0で停止する。`next_offset` / `retry_offset` を使って失敗地点から再開する。
 - 既存 6コマンド + value-audit + `data-check` の I/O は不変(純加法)。
 - 出力先・件数・hash・鮮度・欠損・注意を端末に表示(**本文・キーは出さない**)。
 
@@ -98,6 +104,7 @@ python3 -m radar sync --provider edinet-db --dataset financials --code E02367 [-
 - provenance に必須フィールドが揃い、`available_at`/`retrieved_at` が tz付き。
 - 同一 fetch で `raw_hash_*` 一致(再現性)。fetch_log 追記専用。
 - PIT: `available_at > asof` を採用しない。
+- financials batch: `--code`/`--codes-file` 排他、invalid code は fetch 前に停止、重複は決定的に skip、`--offset/--limit` 順序、budget超過拒否、skip-existing の sidecar/hash 検証、partial failure manifest。
 - **既存非回帰**: mirror/check/log/score/review/target-check/value-audit/data-check の I/O 不変・全 --help。
 
 ## 11. GO / NO-GO ゲート

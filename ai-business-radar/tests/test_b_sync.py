@@ -420,6 +420,180 @@ class SyncFinancialsTests(unittest.TestCase):
                 self.assertFalse(any(base.rglob("*.json")) if base.exists() else False)
 
 
+class SyncFinancialsBatchTests(unittest.TestCase):
+    def setUp(self):
+        self.td = tempfile.TemporaryDirectory()
+        self.base = Path(self.td.name)
+
+    def tearDown(self):
+        self.td.cleanup()
+
+    def _batch(self, client, *, codes=None, offset=0, limit=2, cfg=None):
+        return edinet_db.sync_financials_batch(
+            cfg or CFG,
+            asof="2026-06-17",
+            codes=codes or ["E00001", "E00002", "E00003"],
+            offset=offset,
+            limit=limit,
+            years=1,
+            period="annual",
+            raw_root=self.base / "data" / "raw",
+            metadata_dir=self.base / "data" / "metadata",
+            http_client=client,
+            clock=_clock,
+            sleeper=lambda _s: None,
+            key_getter=_key,
+        )
+
+    def test_batch_offset_limit_writes_manifest_without_returning_body(self):
+        calls = []
+
+        def client(url, _h):
+            calls.append(url)
+            return FakeResp(200, _financials_raw(marker=BODY_SENTINEL))
+
+        res = self._batch(client, offset=1, limit=2)
+        self.assertEqual(res["selected_count"], 2)
+        self.assertEqual(res["saved_count"], 2)
+        self.assertEqual(res["failure_count"], 0)
+        self.assertEqual(res["next_offset"], 3)
+        self.assertEqual(len(calls), 2)
+        self.assertIn("/companies/E00002/financials", calls[0])
+        self.assertIn("/companies/E00003/financials", calls[1])
+        self.assertNotIn(SECRET, str(res))
+        self.assertNotIn(BODY_SENTINEL, str(res))
+
+        manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["saved_count"], 2)
+        self.assertNotIn(SECRET, json.dumps(manifest, ensure_ascii=False))
+        self.assertNotIn(BODY_SENTINEL, json.dumps(manifest, ensure_ascii=False))
+        for code in ("E00002", "E00003"):
+            p = self.base / "data" / "raw" / "edinet-db" / "financials" / "2026-06-17" / f"{code}_period-annual_years-1.json"
+            self.assertTrue(p.exists())
+            self.assertIn(BODY_SENTINEL, p.read_text(encoding="utf-8"))
+
+    def test_batch_skip_existing_validates_sidecar_and_uses_zero_http(self):
+        first = self._batch(lambda _u, _h: FakeResp(200, _financials_raw()), codes=["E00001"], limit=1)
+        self.assertEqual(first["saved_count"], 1)
+        calls = {"n": 0}
+
+        def client(_u, _h):
+            calls["n"] += 1
+            return FakeResp(200, _financials_raw())
+
+        second = self._batch(client, codes=["E00001"], limit=1)
+        self.assertEqual(second["saved_count"], 0)
+        self.assertEqual(second["skipped_existing_count"], 1)
+        self.assertEqual(calls["n"], 0)
+
+    def test_batch_corrupt_sidecar_does_not_skip_existing(self):
+        first = self._batch(lambda _u, _h: FakeResp(200, _financials_raw()), codes=["E00001"], limit=1)
+        raw = self.base / "data" / "raw" / "edinet-db" / "financials" / "2026-06-17" / "E00001_period-annual_years-1.json"
+        raw.with_suffix(raw.suffix + ".provenance.json").write_text("{broken", encoding="utf-8")
+        calls = {"n": 0}
+
+        def client(_u, _h):
+            calls["n"] += 1
+            return FakeResp(200, _financials_raw())
+
+        second = self._batch(client, codes=["E00001"], limit=1)
+        self.assertEqual(first["saved_count"], 1)
+        self.assertEqual(second["saved_count"], 1)
+        self.assertEqual(second["skipped_existing_count"], 0)
+        self.assertEqual(calls["n"], 1)
+
+    def test_batch_preflights_invalid_code_before_fetch(self):
+        calls = {"n": 0}
+
+        def client(_u, _h):
+            calls["n"] += 1
+            return FakeResp(200, _financials_raw())
+
+        with self.assertRaises(SystemExit):
+            self._batch(client, codes=["E00001", "bad"], limit=2)
+        self.assertEqual(calls["n"], 0)
+        self.assertFalse((self.base / "data" / "raw").exists())
+
+    def test_batch_duplicate_codes_are_reported_and_skipped_deterministically(self):
+        res = self._batch(lambda _u, _h: FakeResp(200, _financials_raw()),
+                          codes=["E00001", "E00001", "E00002"], limit=2)
+        self.assertEqual(res["input_code_count"], 3)
+        self.assertEqual(res["unique_code_count"], 2)
+        self.assertEqual(res["duplicate_count"], 1)
+        manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["duplicates_skipped"], ["E00001"])
+
+    def test_batch_limit_above_budget_rejected_before_fetch(self):
+        calls = {"n": 0}
+
+        def client(_u, _h):
+            calls["n"] += 1
+            return FakeResp(200, _financials_raw())
+
+        with self.assertRaises(SystemExit):
+            self._batch(client, limit=CFG["data_layer"]["daily_request_budget"] + 1)
+        self.assertEqual(calls["n"], 0)
+
+    def test_batch_offset_beyond_codes_writes_empty_manifest_without_fetch(self):
+        calls = {"n": 0}
+        res = self._batch(lambda _u, _h: FakeResp(200, _financials_raw()),
+                          codes=["E00001"], offset=5, limit=2)
+        self.assertEqual(res["selected_count"], 0)
+        self.assertEqual(res["saved_count"], 0)
+        self.assertEqual(res["next_offset"], 5)
+        self.assertEqual(calls["n"], 0)
+        self.assertTrue(Path(res["manifest_path"]).exists())
+
+    def test_batch_failure_records_redacted_manifest_and_no_body(self):
+        calls = {"n": 0}
+
+        def client(_u, _h):
+            calls["n"] += 1
+            raise TimeoutError(f"timeout key={SECRET} body={BODY_SENTINEL}")
+
+        res = self._batch(client, codes=["E00001"], limit=1)
+        self.assertEqual(res["saved_count"], 0)
+        self.assertEqual(res["failure_count"], 1)
+        self.assertEqual(res["next_offset"], 0)
+        self.assertEqual(res["retry_offset"], 0)
+        # retry_max=2 means three actual attempts; all are counted against budget.
+        self.assertEqual(res["total_attempts"], CFG["data_layer"]["retry_max"] + 1)
+        manifest_text = Path(res["manifest_path"]).read_text(encoding="utf-8")
+        self.assertNotIn(SECRET, manifest_text)
+        self.assertNotIn(BODY_SENTINEL, manifest_text)
+        self.assertFalse(any((self.base / "data" / "raw").rglob("*.json")))
+
+    def test_batch_stops_at_first_failure_without_skipping_resume_offset(self):
+        calls = []
+
+        def client(url, _h):
+            calls.append(url)
+            if "/companies/E00002/financials" in url:
+                return FakeResp(503)
+            return FakeResp(200, _financials_raw())
+
+        res = self._batch(client, codes=["E00001", "E00002", "E00003"], limit=3)
+        self.assertEqual(res["saved_count"], 1)
+        self.assertEqual(res["failure_count"], 1)
+        self.assertEqual(res["next_offset"], 1)
+        self.assertEqual(res["retry_offset"], 1)
+        self.assertTrue(any("/companies/E00001/financials" in c for c in calls))
+        self.assertTrue(any("/companies/E00002/financials" in c for c in calls))
+        self.assertFalse(any("/companies/E00003/financials" in c for c in calls))
+
+    def test_batch_budget_is_persisted_by_existing_manifest_for_same_asof(self):
+        cfg = {"data_layer": dict(CFG["data_layer"], daily_request_budget=1)}
+        first = self._batch(lambda _u, _h: FakeResp(200, _financials_raw()),
+                            codes=["E00001"], limit=1, cfg=cfg)
+        self.assertEqual(first["saved_count"], 1)
+        res = self._batch(lambda _u, _h: FakeResp(200, _financials_raw()),
+                          codes=["E00001", "E00002"], offset=1, limit=1, cfg=cfg)
+        self.assertEqual(res["prior_attempts_for_asof"], 1)
+        self.assertEqual(res["saved_count"], 0)
+        self.assertEqual(res["failure_count"], 1)
+        self.assertEqual(res["next_offset"], 1)
+
+
 class SyncCLITests(unittest.TestCase):
     def test_sync_help_ok(self):
         p = subprocess.run([sys.executable, "-m", "radar", "sync", "--help"],
@@ -427,6 +601,9 @@ class SyncCLITests(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertIn("edinet-db", p.stdout)
         self.assertIn("financials", p.stdout)
+        self.assertIn("--codes-file", p.stdout)
+        self.assertIn("--offset", p.stdout)
+        self.assertIn("--limit", p.stdout)
 
     def test_cmd_sync_rejects_scope_before_loading_config(self):
         import radar.__main__ as m
@@ -438,6 +615,9 @@ class SyncCLITests(unittest.TestCase):
             page = 1
             per_page = 1
             code = None
+            codes_file = None
+            offset = 0
+            limit = None
             years = 1
             period = "annual"
 
@@ -454,6 +634,9 @@ class SyncCLITests(unittest.TestCase):
             page = 1
             per_page = 1
             code = None
+            codes_file = None
+            offset = 0
+            limit = None
             years = 1
             period = "annual"
 
@@ -470,6 +653,9 @@ class SyncCLITests(unittest.TestCase):
             page = 1
             per_page = 1
             code = None
+            codes_file = None
+            offset = 0
+            limit = None
             years = 2
             period = "annual"
 
@@ -480,6 +666,9 @@ class SyncCLITests(unittest.TestCase):
             page = 2
             per_page = edinet_db.DEFAULT_PER_PAGE
             code = "E02367"
+            codes_file = None
+            offset = 0
+            limit = None
             years = 1
             period = "annual"
 
@@ -487,6 +676,58 @@ class SyncCLITests(unittest.TestCase):
             m.cmd_sync(CompaniesArgs())
         with self.assertRaises(SystemExit):
             m.cmd_sync(FinancialsArgs())
+
+    def test_cmd_sync_rejects_code_and_codes_file_together(self):
+        import radar.__main__ as m
+
+        class Args:
+            provider = "edinet-db"
+            dataset = "financials"
+            asof = "2026-06-17"
+            page = 1
+            per_page = edinet_db.DEFAULT_PER_PAGE
+            code = "E02367"
+            codes_file = "data/metadata/codes.txt"
+            offset = 0
+            limit = None
+            years = 1
+            period = "annual"
+
+        with self.assertRaises(SystemExit):
+            m.cmd_sync(Args())
+
+    def test_codes_file_reader_accepts_metadata_file_and_rejects_sensitive_paths(self):
+        import radar.__main__ as m
+        meta = ROOT / "data" / "metadata"
+        meta.mkdir(parents=True, exist_ok=True)
+        p = meta / "test_codes_for_unit.txt"
+        try:
+            p.write_text("# comment\nedinet_code\nE00001\nE00001,E00001 Inc\n\n", encoding="utf-8")
+            self.assertEqual(m._load_edinet_codes_file(str(p)), ["E00001", "E00001"])
+        finally:
+            if p.exists():
+                p.unlink()
+        with self.assertRaises(SystemExit):
+            m._load_edinet_codes_file(str(ROOT / ".env"))
+
+    def test_cmd_sync_rejects_batch_options_with_single_code(self):
+        import radar.__main__ as m
+
+        class Args:
+            provider = "edinet-db"
+            dataset = "financials"
+            asof = "2026-06-17"
+            page = 1
+            per_page = edinet_db.DEFAULT_PER_PAGE
+            code = "E02367"
+            codes_file = None
+            offset = 1
+            limit = None
+            years = 1
+            period = "annual"
+
+        with self.assertRaises(SystemExit):
+            m.cmd_sync(Args())
 
 
 if __name__ == "__main__":
