@@ -33,6 +33,7 @@ python3 -m radar data-check --live --provider edinet-db
 python3 -m radar sync --provider edinet-db --dataset companies --asof YYYY-MM-DD --page 1 --per-page 1
 python3 -m radar sync --provider edinet-db --dataset financials --code E02144 --years 1 --period annual --asof YYYY-MM-DD
 python3 -m radar build-features --provider edinet-db --dataset financials --raw-path data/raw/edinet-db/financials/<asof>/<file>.json --asof YYYY-MM-DD
+python3 -m radar build-jquants-features --asof YYYY-MM-DD
 python3 -m radar research-queue --asof YYYY-MM-DD
 python3 -m radar evidence E02144 --asof YYYY-MM-DD
 python3 -m radar llm-brief --asof YYYY-MM-DD
@@ -44,8 +45,11 @@ python3 -m radar llm-brief --asof YYYY-MM-DD
 - データはファイル: [`portfolio.json`](portfolio.json)、[`indices/`](indices)(指数構成=手入力概算)。
 - 生成物は [`outputs/`](outputs)(`honest_mirror.md` + `honest_mirror.csv` / `discipline_check.md`)。
 - 有料データ層は A1 + EDINET DB Phase B minimal sync(companies/financials)まで実装済み。
-  **J-Quants sync と Claude等LLMへの取得本文投入は `LICENSE_MATRIX.md` のゲート解除まで NO-GO**。
-  Phase C minimal feature生成(EDINET DB financials raw → data/derived)、derivedだけを読む D0 research_queue/evidence、
+  J-Quants はユーザー許可済み Premium Bulk raw をローカル取得済みの場合に限り、`build-jquants-features`
+  で `data/derived/features/jquants_equity_v1` を生成できる(API sync ではない・ネット/APIキーなし)。
+  Claude等LLMへの取得本文投入は `LICENSE_MATRIX.md` の確認対象。
+  Phase C minimal feature生成(EDINET DB financials raw → data/derived)、J-Quants Bulk local feature生成、
+  derivedだけを読む D0 research_queue/evidence、
   LLM投入用packet生成(`llm-brief`, API呼び出しなし)は実装済み。
   provider raw本文の Claude等LLM投入と自動API送信は未実装・`LICENSE_MATRIX.md` の確認対象。
 

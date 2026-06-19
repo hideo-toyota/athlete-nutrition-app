@@ -16,7 +16,7 @@ from . import journal
 from . import target_check
 from . import value_audit
 from . import value_store
-from .features import build_financial_features
+from .features import build_financial_features, build_jquants_bulk_features
 from .research import (build_evidence, build_llm_handoff, build_research_queue,
                        write_evidence, write_llm_handoff, write_research_queue)
 from .sources import edinet_db
@@ -490,6 +490,22 @@ def cmd_build_features(args) -> None:
     print("  ※ raw本文・APIキー値は表示していません。research_queue/evidence/LLM投入は未実装です。")
 
 
+def cmd_build_jquants_features(args) -> None:
+    """Build local J-Quants bulk features. Reads existing raw only; no network/env/API key."""
+    asof = _valid_asof(args.asof)
+    if asof is None:
+        raise SystemExit("--asof が必要です")
+    res = build_jquants_bulk_features(asof=asof)
+    print(f"build-jquants-features [{res['provider']}:{res['dataset']}]: derived を生成しました")
+    print(f"  features: {_rel(res['features_path'])}")
+    print(f"  summary: {_rel(res['summary_path'])}")
+    print(f"  manifest: {_rel(res['manifest_path'])}")
+    print(f"  rows: {res['feature_rows']} / input_files: {res['input_file_count']}")
+    print(f"  price_coverage: {res['coverage']['price_coverage_ratio']*100:.1f}%"
+          if isinstance(res['coverage'].get('price_coverage_ratio'), (int, float)) else "  price_coverage: UNKNOWN")
+    print("  ※ raw本文・APIキー値は表示していません。ランキング/推奨/予測は生成していません。")
+
+
 def cmd_research_queue(args) -> None:
     """Phase D0: deterministic research items from derived features. No LLM handoff."""
     asof = _valid_asof(args.asof)
@@ -590,6 +606,12 @@ def main() -> None:
     pbf.add_argument("--dataset", required=True, choices=["financials"], help="Phase C minimal は financials のみ")
     pbf.add_argument("--raw-path", required=True, help="data/raw/edinet-db/financials 配下の raw JSON")
     pbf.add_argument("--asof", required=True, help="基準日 YYYY-MM-DD。available_at<=asof のみ採用")
+    pjq = sub.add_parser(
+        "build-jquants-features",
+        help="取得済み J-Quants Bulk からローカルderived featureを生成(ネット/APIキーなし)",
+        description="取得済み J-Quants Bulk からローカルderived featureを生成します。ランキング/推奨/予測は出しません。",
+    )
+    pjq.add_argument("--asof", required=True, help="基準日 YYYY-MM-DD。asof以前のbulk行のみ採用")
     prq = sub.add_parser("research-queue",
                          help="(Phase D0) derived feature から調査項目を生成(売買指示なし・LLM投入なし)")
     prq.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
@@ -626,6 +648,8 @@ def main() -> None:
         cmd_sync(args)
     elif args.command == "build-features":
         cmd_build_features(args)
+    elif args.command == "build-jquants-features":
+        cmd_build_jquants_features(args)
     elif args.command == "research-queue":
         cmd_research_queue(args)
     elif args.command == "evidence":

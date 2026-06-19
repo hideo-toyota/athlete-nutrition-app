@@ -3,7 +3,8 @@
 > 設計のみ。実装はこの契約の帰結。正は DESIGN_PRINCIPLES.md / SPEC.md / CLAIMS.md / CLAUDE.md。
 > ✅ A0/A1(`data-check --offline` / `data-check --live`)は実装済み。2026-06-18時点で J-Quants / EDINET DB とも実キーで軽量疎通OK。
 > ✅ EDINET DB の `companies` / `financials` minimal sync は、本人確認済みの個人内 raw 一時キャッシュ前提で GO。
-> ⚠️ J-Quants sync と **第三者LLM入力** は `LICENSE_MATRIX.md` のゲート解除まで NO-GO。
+> ✅ ユーザー許可済み J-Quants Premium Bulk raw をローカル取得済みの場合、`build-jquants-features` で derived feature 生成可能(API sync ではなくネット/APIキーなし)。
+> ⚠️ J-Quants API sync と **第三者LLM入力** は `LICENSE_MATRIX.md` のゲート解除まで NO-GO。
 > deterministic な local `research_queue` / `evidence` は derived feature のみを入力とし、provider raw本文を含めない。
 
 ## 0. 目的 / 非目的
@@ -125,6 +126,7 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
 | `data-check` | `data-check` | 端末(key redact) | A1のみ・軽量疎通 |
 | `sync` | `sync <jquants\|edinet-db> --dataset <name> [--from YYYY-MM-DD --to YYYY-MM-DD] [--ticker X]` | `data/raw`+metadata | あり |
 | `build-features` | `build-features --provider edinet-db --dataset financials --raw-path <path> [--asof YYYY-MM-DD]` | `data/derived` | なし |
+| `build-jquants-features` | `build-jquants-features --asof YYYY-MM-DD` | `data/derived/features/jquants_equity_v1` | なし |
 | `research-queue` | `research-queue [--asof YYYY-MM-DD]` | `outputs/research_queue.md/.csv` | なし |
 | `evidence` | `evidence <ticker> [--asof YYYY-MM-DD]` | `outputs/evidence/<ticker>.md` | なし |
 | `llm-brief` | `llm-brief [--asof YYYY-MM-DD] [--max-items N]` | `outputs/llm_handoff/<asof>.md/.json` | なし(API呼び出しなし) |
@@ -152,9 +154,9 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
   - 疎通OKは「設定endpointが実キーで HTTP 200 + JSON object を返した」という意味に限定する。鍵有効性の監査証跡として扱う前に、同一endpointが無効キーで 401/403 になることを一度だけ確認し、値を出さずに記録する。
 - **B(sync/raw保存)** ← providerごとに `LICENSE_MATRIX.md` の raw保存/retention/再配布禁止ゲート解除後のみ。
   - EDINET DB:本人確認済みの個人内利用・raw一時キャッシュ前提で、最小 sync(companies/financials)は GO。
-  - J-Quants: raw保存/retention が未確認の間は sync NO-GO。
+  - J-Quants API sync: raw保存/retention が未確認の間は sync NO-GO。ユーザーが別途許可して取得済みの Premium Bulk raw は、ローカル変換(`build-jquants-features`)のみ可。
   - 完了=raw+provenanceが保存され raw_hash再現。**第三者LLM入力は別ゲートで、B完了をもって解禁しない**。
-- **C(feature生成)**: `FEATURE_PHASE_C_SPEC.md` の範囲で EDINET DB financials raw から `data/derived` を生成。完了=derived + source_snapshot + raw_hash + UNKNOWN監査。**research_queue はまだ作らない**。
+- **C(feature生成)**: `FEATURE_PHASE_C_SPEC.md` の範囲で EDINET DB financials raw から `data/derived` を生成。J-Quants Premium Bulk は取得済みローカルrawから `jquants_equity_v1` を生成。完了=derived + source_snapshot/input manifest + raw hash/digest + UNKNOWN監査。**research_queue はまだ作らない**。
 - **D0(local research/evidence)**: derived feature のみから `research_queue.md/.csv` と `evidence/<edinet_code>.md` を生成。完了=売買断定無し・raw本文無し・第三者LLM投入無し。
 - **D1 prep(LLM handoff packet)**: derived/evidence だけから `llm-brief` を生成。完了=raw本文無し・API呼び出し無し・LLM指示に claim分類/反証/discipline gate を固定。
 - **D1 send(LLM API送信)**: `LICENSE_MATRIX.md` の第三者LLM入力セル確認後のみ。完了=evidence/claim の外部投入方針・保持/再配布条件が明示済み。
