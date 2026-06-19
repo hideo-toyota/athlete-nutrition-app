@@ -29,5 +29,7 @@
 ## 現在のノート
 - [[2026-06-07-投資哲学と規律の設計ログ]] — 原則・投資哲学の壁打ち
 - [[2026-06-14-開発と監査の記録]] — 実装・Codex監査・データ層・target-check
+- [[2026-06-17-target-checkとvalue-audit実装]] — target-check / value-audit Phase A の実装・監査
+- [[2026-06-19-有料データ層とfeature生成の進捗]] — J-Quants Premium / EDINET DB Pro の取得・棚卸し・feature生成
 
 > ※投資助言ではない。検証・規律・記録のための自分用ログ。
