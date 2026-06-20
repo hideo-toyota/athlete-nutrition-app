@@ -17,8 +17,9 @@ from . import target_check
 from . import value_audit
 from . import value_store
 from .features import build_financial_features, build_financial_features_batch, build_jquants_bulk_features
-from .research import (build_evidence, build_llm_handoff, build_research_queue,
-                       write_evidence, write_llm_handoff, write_research_queue)
+from .research import (build_evidence, build_jquants_evidence, build_llm_handoff,
+                       build_research_queue, write_evidence, write_jquants_evidence,
+                       write_llm_handoff, write_research_queue)
 from .daily_update import render_daily_summary, run_daily_update
 from .sources import edinet_db
 from .report import (render_check, render_mirror, render_review, render_target_check,
@@ -607,15 +608,33 @@ def cmd_evidence(args) -> None:
     print("  ※ raw本文は含めず、derived feature と hash/provenance参照だけを整理しています。")
 
 
+def _parse_jquants_codes(raw: str | None) -> list[str] | None:
+    if not raw:
+        return None
+    codes = [c.strip().upper() for c in raw.split(",") if c.strip()]
+    return codes or None
+
+
+def cmd_jquants_evidence(args) -> None:
+    """Point-in-time price evidence for one J-Quants securities code. No LLM, no network."""
+    asof = _valid_asof(args.asof)
+    ev = build_jquants_evidence(args.code, asof=asof)
+    res = write_jquants_evidence(ev)
+    print(f"J-Quants evidence を生成しました: {_rel(res['path'])}")
+    print(f"  securities_code: {res['securities_code']} / asof: {ev['asof']}")
+    print("  ※ 当時の株価(PIT)・指標の整理です。売買指示・順位・予測ではありません。")
+
+
 def cmd_llm_brief(args) -> None:
     """Build a bounded LLM handoff packet. It does not call an LLM API."""
     asof = _valid_asof(args.asof)
     if args.max_items is not None and args.max_items <= 0:
         raise SystemExit("--max-items は正の整数で指定してください")
-    packet = build_llm_handoff(asof=asof, max_items=args.max_items)
+    packet = build_llm_handoff(asof=asof, max_items=args.max_items,
+                               jquants_codes=_parse_jquants_codes(args.jquants_codes))
     res = write_llm_handoff(packet)
     print(f"LLM brief を生成しました: {_rel(res['md_path'])} / {_rel(res['manifest_path'])}")
-    print(f"  evidence blocks: {res['count']} / asof: {packet['asof']}")
+    print(f"  evidence blocks: {res['count']} / J-Quants blocks: {res['jquants_count']} / asof: {packet['asof']}")
     print("  ※ LLM APIは呼んでいません。provider raw本文・APIキー値・.env は含めていません。")
 
 
@@ -632,6 +651,7 @@ def cmd_daily_update(args) -> None:
         max_items=args.max_items,
         build_edinet=not args.no_edinet,
         build_jquants=not args.no_jquants,
+        jquants_codes=_parse_jquants_codes(args.jquants_codes),
         dry_run=args.dry_run,
     )
     print(render_daily_summary(result), end="")
@@ -733,12 +753,20 @@ def main() -> None:
     plb.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
     plb.add_argument("--max-items", dest="max_items", type=int, default=None,
                      help="packetに含める最大件数(任意・正の整数)")
+    plb.add_argument("--jquants-codes", dest="jquants_codes", default=None,
+                     help="当時の株価を載せる証券コード(カンマ区切り 例 7203,6758)")
+    pje = sub.add_parser("jquants-evidence",
+                         help="J-Quants 証券コードの当時の株価(PIT)evidenceを生成(LLM/ネットなし)")
+    pje.add_argument("code", help="証券コード(例 7203)")
+    pje.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の jquants derived asof)")
     pdu = sub.add_parser(
         "daily-update",
         help="(運用) derived→research→分析パケットを一括生成しClaude分析用に出力(LLM API呼び出しなし)")
     pdu.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 今日)")
     pdu.add_argument("--max-items", dest="max_items", type=int, default=None,
                      help="briefに含める最大件数(任意・正の整数)")
+    pdu.add_argument("--jquants-codes", dest="jquants_codes", default=None,
+                     help="当時の株価を載せる証券コード(カンマ区切り 例 7203,6758)")
     pdu.add_argument("--no-edinet", dest="no_edinet", action="store_true",
                      help="EDINET financials の feature 生成をスキップ")
     pdu.add_argument("--no-jquants", dest="no_jquants", action="store_true",
@@ -777,6 +805,8 @@ def main() -> None:
         cmd_evidence(args)
     elif args.command == "llm-brief":
         cmd_llm_brief(args)
+    elif args.command == "jquants-evidence":
+        cmd_jquants_evidence(args)
     elif args.command == "daily-update":
         cmd_daily_update(args)
     else:

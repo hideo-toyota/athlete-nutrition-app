@@ -9,17 +9,36 @@ from pathlib import Path
 
 from .common import DISCLAIMER, assert_no_forbidden_output
 from .evidence import build_evidence, render_evidence
+from .jquants_evidence import build_jquants_evidence, render_jquants_evidence
 from .queue import build_research_queue, render_research_queue
 
 
-def build_llm_handoff(*, asof: str | None = None, derived_root: Path | None = None, max_items: int | None = None) -> dict:
-    queue = build_research_queue(asof=asof, derived_root=derived_root)
+def build_llm_handoff(*, asof: str | None = None, derived_root: Path | None = None,
+                      max_items: int | None = None, jquants_codes: list[str] | None = None) -> dict:
+    # J-Quants price evidence (PIT). Built first so an EDINET-less run can still
+    # produce a price-only brief (the user's "当時の株価で判断" path).
+    jquants_blocks = []
+    jq_asof = None
+    for code in jquants_codes or []:
+        ev = build_jquants_evidence(code, asof=asof, derived_root=derived_root)
+        jq_asof = ev["asof"]
+        jquants_blocks.append(render_jquants_evidence(ev))
+
+    try:
+        queue = build_research_queue(asof=asof, derived_root=derived_root)
+    except SystemExit:
+        if not jquants_codes:
+            raise
+        # EDINET財務が無くても J-Quants 株価だけで brief を成立させる
+        queue = {"asof": asof or jq_asof or "UNKNOWN", "items": []}
+
     items = queue["items"][:max_items] if max_items is not None else queue["items"]
     evidence_blocks = []
     for item in items:
         ev = build_evidence(item["edinet_code"], asof=queue["asof"], derived_root=derived_root)
         evidence_blocks.append(render_evidence(ev))
-    return {"asof": queue["asof"], "queue": queue, "evidence_blocks": evidence_blocks}
+    return {"asof": queue["asof"], "queue": queue,
+            "evidence_blocks": evidence_blocks, "jquants_blocks": jquants_blocks}
 
 
 def render_llm_handoff(packet: dict) -> str:
@@ -55,6 +74,10 @@ def render_llm_handoff(packet: dict) -> str:
     ]
     for i, block in enumerate(packet["evidence_blocks"], start=1):
         out.extend(["", f"### Evidence block {i}", block])
+    if packet.get("jquants_blocks"):
+        out.extend(["", "## J-Quants price evidence (PIT・当時の株価)"])
+        for i, block in enumerate(packet["jquants_blocks"], start=1):
+            out.extend(["", f"### J-Quants block {i}", block])
     out.extend([
         "",
         "## Handoff boundary",
@@ -75,10 +98,12 @@ def write_llm_handoff(packet: dict, *, outputs_root: Path | None = None) -> dict
     md = out_dir / f"{packet['asof']}.md"
     manifest = out_dir / f"{packet['asof']}.json"
     md.write_text(render_llm_handoff(packet), encoding="utf-8")
+    jquants_blocks = packet.get("jquants_blocks") or []
     manifest.write_text(json.dumps({
         "asof": packet["asof"],
         "item_count": len(packet["queue"]["items"]),
         "evidence_count": len(packet["evidence_blocks"]),
+        "jquants_block_count": len(jquants_blocks),
         "source": "derived_features_and_local_evidence_only",
         "raw_body_included": False,
         "llm_api_called": False,
@@ -86,4 +111,5 @@ def write_llm_handoff(packet: dict, *, outputs_root: Path | None = None) -> dict
         "analysis_cleared": True,
         "analysis_basis": "personal_private_use_no_redistribution",
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    return {"md_path": md, "manifest_path": manifest, "count": len(packet["evidence_blocks"])}
+    return {"md_path": md, "manifest_path": manifest,
+            "count": len(packet["evidence_blocks"]), "jquants_count": len(jquants_blocks)}

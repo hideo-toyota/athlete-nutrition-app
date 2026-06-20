@@ -57,6 +57,7 @@ def run_daily_update(
     max_items: int | None = None,
     build_edinet: bool = True,
     build_jquants: bool = True,
+    jquants_codes: list[str] | None = None,
     dry_run: bool = False,
     root: Path | None = None,
     derived_root: Path | None = None,
@@ -110,7 +111,7 @@ def run_daily_update(
         except Exception as e:  # noqa: BLE001
             steps.append(StepResult("build-features(jquants)", "failed", type(e).__name__))
 
-    summary = {"asof": asof, "item_count": 0, "calc_features": 0, "unknown_features": 0}
+    summary = {"asof": asof, "item_count": 0, "calc_features": 0, "unknown_features": 0, "jquants_blocks": 0}
 
     # 3. research-queue (deterministic; no LLM)
     if dry_run:
@@ -134,13 +135,18 @@ def run_daily_update(
         steps.append(StepResult("research-queue", "failed", type(e).__name__))
 
     # 4. llm-brief (analysis-ready packet for Claude; gate confirmed)
-    if queue is not None and outputs.get("research_queue_md"):
+    #    J-Quants 株価コード指定があれば、EDINET財務が無くても brief を成立させる。
+    if outputs.get("research_queue_md") or jquants_codes:
         try:
             from .research import build_llm_handoff, write_llm_handoff
-            packet = build_llm_handoff(asof=asof, max_items=max_items, derived_root=derived_root)
+            packet = build_llm_handoff(asof=asof, max_items=max_items,
+                                       derived_root=derived_root, jquants_codes=jquants_codes)
             lb = write_llm_handoff(packet, outputs_root=outputs_root)
             outputs["brief_md"] = str(lb["md_path"])
-            steps.append(StepResult("llm-brief", "done", f"evidence_blocks={lb['count']}"))
+            summary["jquants_blocks"] = lb["jquants_count"]
+            steps.append(StepResult(
+                "llm-brief", "done",
+                f"evidence_blocks={lb['count']} jquants_blocks={lb['jquants_count']}"))
         except SystemExit as e:
             steps.append(StepResult("llm-brief", "skipped", str(e)))
         except Exception as e:  # noqa: BLE001
@@ -171,6 +177,7 @@ def render_daily_summary(result: dict) -> str:
         "## サマリ",
         f"- research_item: {s['item_count']} 件",
         f"- CALCULATION features: {s['calc_features']} / UNKNOWN features: {s['unknown_features']}",
+        f"- J-Quants 株価evidence(当時の株価): {s['jquants_blocks']} 件",
         "",
         "## Claudeに渡す分析パケット",
     ]
@@ -180,6 +187,7 @@ def render_daily_summary(result: dict) -> str:
             f"- `{brief}`",
             "- 読み方: UNKNOWN/不足 → 検証する仮説(断定しない) → 反証条件 → 次に読む資料 "
             "→ claim分類(FACT/CALCULATION/INFERENCE/ASSUMPTION/UNKNOWN) → discipline gate 注意。",
+            "- 当時の株価は J-Quants block の latest_close(asof以前の調整後終値)を参照。",
             "- 禁止: 具体的な売買指示・価格目標・順位付け・利益保証・将来断定。",
         ]
     else:
