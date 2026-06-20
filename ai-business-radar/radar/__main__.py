@@ -677,6 +677,25 @@ def cmd_audit_report(args) -> None:
     print("  ※ 整合性の点検です。売買順・推奨・予測ではありません。")
 
 
+def cmd_fetch_jquants(args) -> None:
+    """Fetch a few codes from J-Quants REST and build derived features.
+
+    Network egress lives in radar.sources; no API key / raw body is printed.
+    Bridges the case where only REST access (not bulk) is available.
+    """
+    asof = _valid_asof(args.asof) or date.today().isoformat()
+    codes = _parse_jquants_codes(args.codes)
+    if not codes:
+        raise SystemExit("--codes が必要です(例 7203,6758)")
+    from .features.jquants_rest import fetch_and_build
+    res = fetch_and_build(codes=codes, asof=asof)
+    cov = res["coverage"]
+    print(f"fetch-jquants: derived を生成しました（REST）: {_rel(res['features_path'])}")
+    print(f"  codes: {res['feature_rows']} / price_covered: {cov['price_covered']}"
+          f" / valuation_covered: {cov['valuation_covered']} / latest_price_date: {cov['latest_price_date']}")
+    print("  ※ APIキー値・raw本文は表示していません。ランキング/推奨/予測は生成していません。")
+
+
 def cmd_daily_update(args) -> None:
     """One-shot: derived features -> research-queue -> analysis brief for Claude.
 
@@ -808,6 +827,10 @@ def main() -> None:
     par = sub.add_parser("audit-report",
                          help="EDINET×J-Quants 整合と valuation coverage を集計(整合点検・売買順なし)")
     par.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
+    pfj = sub.add_parser("fetch-jquants",
+                         help="J-Quants REST から指定銘柄を取得し derived を生成(.env認証・ネットあり)")
+    pfj.add_argument("--codes", required=True, help="証券コード(カンマ区切り 例 7203,6758)")
+    pfj.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 今日)。asof以前のみ採用")
     pdu = sub.add_parser(
         "daily-update",
         help="(運用) derived→research→分析パケットを一括生成しClaude分析用に出力(LLM API呼び出しなし)")
@@ -860,6 +883,8 @@ def main() -> None:
         cmd_jquants_evidence(args)
     elif args.command == "audit-report":
         cmd_audit_report(args)
+    elif args.command == "fetch-jquants":
+        cmd_fetch_jquants(args)
     elif args.command == "daily-update":
         cmd_daily_update(args)
     else:
