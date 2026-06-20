@@ -106,6 +106,10 @@ class JQuantsBulkFeatureTests(unittest.TestCase):
         manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
         self.assertEqual(manifest["coverage"]["valuation_covered"], 1)
         self.assertAlmostEqual(manifest["coverage"]["valuation_coverage_ratio"], 1 / 3)
+        self.assertEqual(manifest["coverage"]["per_covered"], 1)
+        self.assertEqual(manifest["coverage"]["pbr_covered"], 1)
+        self.assertAlmostEqual(manifest["coverage"]["per_coverage_ratio"], 1 / 3)
+        self.assertAlmostEqual(manifest["coverage"]["pbr_coverage_ratio"], 1 / 3)
         self.assertEqual(manifest["valuation_alias_hits"]["eps"]["EPS"], 2)
         self.assertEqual(manifest["valuation_alias_hits"]["bps"]["BPS"], 2)
         self.assertEqual(manifest["valuation_alias_hits"]["per_method"]["eps:EPS"], 1)
@@ -113,7 +117,13 @@ class JQuantsBulkFeatureTests(unittest.TestCase):
         reasons = manifest["coverage"]["valuation_uncovered_reasons"]
         self.assertEqual(reasons.get("no_price"), 1)                       # 130A0: no price rows
         self.assertEqual(reasons.get("nonpositive_or_unusable_inputs"), 1)  # 99990: EPS/BPS=0
+        self.assertEqual(manifest["coverage"]["per_uncovered_reasons"].get("no_price"), 1)
+        self.assertEqual(manifest["coverage"]["per_uncovered_reasons"].get("nonpositive_or_unusable_inputs"), 1)
+        self.assertEqual(manifest["coverage"]["pbr_uncovered_reasons"].get("no_price"), 1)
+        self.assertEqual(manifest["coverage"]["pbr_uncovered_reasons"].get("nonpositive_or_unusable_inputs"), 1)
         self.assertIn("valuation_coverage", summary)
+        self.assertIn("per_coverage", summary)
+        self.assertIn("pbr_coverage", summary)
         self.assertIn("valuation_alias_hits", summary)
         self.assertIn("no recommendation", summary)
         self.assertNotIn("ranking", summary.lower().replace("no ranking", ""))

@@ -68,7 +68,11 @@ def _write_jquants(base: Path, asof="2026-06-18"):
         "coverage": {
             "listed_codes": 100, "valuation_covered": 84, "price_covered": 98,
             "valuation_coverage_ratio": 0.84, "price_coverage_ratio": 0.98,
+            "per_covered": 80, "per_coverage_ratio": 0.80,
+            "pbr_covered": 83, "pbr_coverage_ratio": 0.83,
             "valuation_uncovered_reasons": {"no_per_pbr_inputs": 10, "nonpositive_or_unusable_inputs": 4, "no_price": 2},
+            "per_uncovered_reasons": {"no_per_inputs": 14, "nonpositive_or_unusable_inputs": 4, "no_price": 2},
+            "pbr_uncovered_reasons": {"no_pbr_inputs": 13, "nonpositive_or_unusable_inputs": 2, "no_price": 2},
         },
         "valuation_alias_hits": {"eps": {"EPS": 80}, "bps": {"BPS": 83}, "per_method": {"eps:EPS": 80}},
     }, ensure_ascii=False, sort_keys=True), encoding="utf-8")
@@ -93,6 +97,8 @@ class AuditReportTests(unittest.TestCase):
         om = cc["metrics"]["operating_margin↔operating_margin"]
         self.assertEqual(om["checked"], 1)
         self.assertEqual(om["mismatch"], 1)             # 0.08 vs 0.20 exceeds 2pt
+        self.assertEqual(om["mismatch_examples"][0]["edinet_code"], "E02367")
+        self.assertAlmostEqual(om["mismatch_examples"][0]["delta"], 0.12)
         rg = cc["metrics"]["revenue_growth_yoy↔sales_growth_yoy"]
         self.assertEqual(rg["mismatch"], 0)             # 0.12 vs 0.12 within tolerance
 
@@ -100,7 +106,11 @@ class AuditReportTests(unittest.TestCase):
         report = build_audit_report(asof="2026-06-18", derived_root=self.derived)
         val = report["valuation"]
         self.assertAlmostEqual(val["valuation_coverage_ratio"], 0.84)
+        self.assertAlmostEqual(val["per_coverage_ratio"], 0.80)
+        self.assertAlmostEqual(val["pbr_coverage_ratio"], 0.83)
         self.assertEqual(val["valuation_uncovered_reasons"]["no_per_pbr_inputs"], 10)
+        self.assertEqual(val["per_uncovered_reasons"]["no_per_inputs"], 14)
+        self.assertEqual(val["pbr_uncovered_reasons"]["no_pbr_inputs"], 13)
         self.assertIn("eps", val["valuation_alias_hits"])
 
     def test_render_is_clean(self):
@@ -109,8 +119,28 @@ class AuditReportTests(unittest.TestCase):
         self.assertIn("cross-check", text)
         self.assertIn("valuation coverage", text)
         self.assertIn("uncovered_reasons", text)
+        self.assertIn("mismatch 明細", text)
+        self.assertIn("per_uncovered_reasons", text)
+        self.assertIn("pbr_uncovered_reasons", text)
         for token in FORBIDDEN_OUTPUT_TOKENS:
             self.assertNotIn(token, text)
+
+    def test_stale_manifest_warns_when_uncovered_reasons_are_missing(self):
+        manifest = self.derived / "features" / "jquants_equity_v1" / "2026-06-18" / "manifest.json"
+        obj = json.loads(manifest.read_text(encoding="utf-8"))
+        coverage = obj["coverage"]
+        for key in ("valuation_uncovered_reasons", "per_uncovered_reasons", "pbr_uncovered_reasons"):
+            coverage.pop(key, None)
+        manifest.write_text(json.dumps(obj, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+        report = build_audit_report(asof="2026-06-18", derived_root=self.derived)
+        self.assertTrue(report["valuation"]["needs_rebuild_for_uncovered_reasons"])
+        self.assertIn("build-jquants-features", render_audit_report(report))
+
+    def test_corrupt_edinet_derived_is_not_silently_treated_as_missing(self):
+        p = self.derived / "features" / "edinet_financials_v1" / "2026-06-18" / "E02367.json"
+        p.write_text("{broken", encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            build_audit_report(asof="2026-06-18", derived_root=self.derived)
 
     def test_valuation_only_when_no_edinet(self):
         """Report still works (valuation section) when EDINET derived is absent."""
