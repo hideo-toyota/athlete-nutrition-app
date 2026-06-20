@@ -239,6 +239,25 @@ def _doc_securities_candidates(doc: dict, company_map: dict | None = None) -> li
     return out
 
 
+_JQUANTS_CONTEXT_FEATURES = (
+    "latest_close",
+    "latest_volume",
+    "return_20d",
+    "return_60d",
+    "return_252d",
+    "per_trailing",
+    "pbr",
+    "eps_trailing",
+    "bps",
+    "sales_growth_yoy",
+    "operating_margin",
+    "net_margin",
+    "roe_proxy",
+    "equity_ratio",
+    "dividend_record_present",
+)
+
+
 def jquants_market_context(doc: dict, *, jquants: dict | None = None, company_map: dict | None = None) -> dict:
     jquants = jquants or {"by_code": {}}
     by_code = jquants.get("by_code") or {}
@@ -259,9 +278,7 @@ def jquants_market_context(doc: dict, *, jquants: dict | None = None, company_ma
                 "sector33": (jq.get("entity") or {}).get("sector33"),
                 "features": {
                     key: features.get(key) or {}
-                    for key in ("latest_close", "latest_volume", "return_20d", "return_60d",
-                                "return_252d", "per_trailing", "pbr", "eps_trailing", "bps",
-                                "dividend_record_present")
+                    for key in _JQUANTS_CONTEXT_FEATURES
                 },
                 "evidence_ref": {
                     "derived_path": rel(jquants.get("features_path")) if jquants.get("features_path") else None,
@@ -283,6 +300,64 @@ def jquants_market_context(doc: dict, *, jquants: dict | None = None, company_ma
     }
 
 
+_CROSS_CHECK_MAP = (
+    ("revenue_growth_yoy", "sales_growth_yoy", 0.02),
+    ("operating_margin", "operating_margin", 0.02),
+    ("net_margin", "net_margin", 0.02),
+    ("roe_proxy", "roe_proxy", 0.03),
+    ("equity_ratio", "equity_ratio", 0.03),
+)
+
+
+def _calc_value(features: dict, key: str):
+    m = features.get(key) or {}
+    if not isinstance(m, dict) or m.get("status") != "CALCULATION":
+        return None
+    v = m.get("value")
+    return v if isinstance(v, (int, float)) else None
+
+
+def edinet_jquants_cross_check(doc: dict, market_context: dict | None) -> dict:
+    """Compare overlapping derived ratios. This is an audit check, not a verdict."""
+    market_context = market_context or {}
+    if market_context.get("status") != "matched":
+        return {
+            "status": "UNKNOWN",
+            "reason": "J-Quants market context が未結合",
+            "checks": [],
+            "mismatches": [],
+        }
+    edinet_features = doc.get("features") or {}
+    jq_features = market_context.get("features") or {}
+    checks = []
+    mismatches = []
+    for ed_key, jq_key, tolerance in _CROSS_CHECK_MAP:
+        ed_val = _calc_value(edinet_features, ed_key)
+        jq_val = _calc_value(jq_features, jq_key)
+        if ed_val is None or jq_val is None:
+            continue
+        delta = jq_val - ed_val
+        ok = abs(delta) <= tolerance
+        row = {
+            "edinet_feature": ed_key,
+            "jquants_feature": jq_key,
+            "edinet_value": ed_val,
+            "jquants_value": jq_val,
+            "delta": delta,
+            "tolerance": tolerance,
+            "within_tolerance": ok,
+        }
+        checks.append(row)
+        if not ok:
+            mismatches.append(row)
+    return {
+        "status": "CALCULATION" if checks else "UNKNOWN",
+        "reason": None if checks else "比較可能な重複指標が不足",
+        "checks": checks,
+        "mismatches": mismatches,
+    }
+
+
 def jquants_summary(manifest: dict | None, *, manifest_path: Path | None = None) -> dict:
     if not isinstance(manifest, dict):
         return {"status": "UNKNOWN", "feature_set": JQUANTS_FEATURE_SET}
@@ -294,8 +369,10 @@ def jquants_summary(manifest: dict | None, *, manifest_path: Path | None = None)
         "coverage": manifest.get("coverage") or {},
         "distribution": {
             key: (manifest.get("distribution") or {}).get(key) or {}
-            for key in ("return_20d", "return_60d", "return_252d", "operating_margin", "roe_proxy")
+            for key in ("return_20d", "return_60d", "return_252d", "operating_margin",
+                        "roe_proxy", "per_trailing", "pbr")
         },
+        "valuation_alias_hits": manifest.get("valuation_alias_hits") or {},
         "derived_path": rel(manifest_path) if manifest_path else None,
     }
 

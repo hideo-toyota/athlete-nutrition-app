@@ -590,6 +590,9 @@ def cmd_build_jquants_features(args) -> None:
     print(f"  rows: {res['feature_rows']} / input_files: {res['input_file_count']}")
     print(f"  price_coverage: {res['coverage']['price_coverage_ratio']*100:.1f}%"
           if isinstance(res['coverage'].get('price_coverage_ratio'), (int, float)) else "  price_coverage: UNKNOWN")
+    print(f"  valuation_coverage: {res['coverage']['valuation_coverage_ratio']*100:.1f}%"
+          if isinstance(res['coverage'].get('valuation_coverage_ratio'), (int, float))
+          else "  valuation_coverage: UNKNOWN")
     print("  ※ raw本文・APIキー値は表示していません。ランキング/推奨/予測は生成していません。")
 
 

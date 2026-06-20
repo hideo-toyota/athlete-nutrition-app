@@ -6,6 +6,7 @@ from pathlib import Path
 from .common import (
     DISCLAIMER,
     assert_no_forbidden_output,
+    edinet_jquants_cross_check,
     jquants_market_context,
     load_edinet_company_map,
     load_feature_doc,
@@ -35,7 +36,14 @@ def build_evidence(entity: str, *, asof: str | None = None, derived_root: Path |
     company_map = load_edinet_company_map(asof=asof, derived_root=derived_root)
     jquants = load_jquants_context(asof=asof, derived_root=derived_root)
     market_context = jquants_market_context(doc, jquants=jquants, company_map=company_map)
-    return {"asof": asof, "doc": doc, "item": _item(doc, market_context), "jquants_market_context": market_context}
+    cross_check = edinet_jquants_cross_check(doc, market_context)
+    return {
+        "asof": asof,
+        "doc": doc,
+        "item": _item(doc, market_context),
+        "jquants_market_context": market_context,
+        "edinet_jquants_cross_check": cross_check,
+    }
 
 
 def render_evidence(evidence: dict) -> str:
@@ -80,6 +88,10 @@ def render_evidence(evidence: dict) -> str:
             f"- latest_price_date: `{mc.get('latest_price_date')}`",
             f"- latest_close: `{metric_value(mf.get('latest_close') or {})}`",
             f"- latest_volume: `{metric_value(mf.get('latest_volume') or {})}`",
+            f"- per_trailing: `{metric_value(mf.get('per_trailing') or {})}`",
+            f"- pbr: `{metric_value(mf.get('pbr') or {})}`",
+            f"- eps_trailing: `{metric_value(mf.get('eps_trailing') or {})}`",
+            f"- bps: `{metric_value(mf.get('bps') or {})}`",
             f"- return_20d: `{metric_value(mf.get('return_20d') or {})}`",
             f"- return_60d: `{metric_value(mf.get('return_60d') or {})}`",
             f"- return_252d: `{metric_value(mf.get('return_252d') or {})}`",
@@ -96,6 +108,25 @@ def render_evidence(evidence: dict) -> str:
             f"- reason: `{mc.get('reason')}`",
             f"- J-Quants feature asof: `{mc.get('jquants_asof')}` / company_map_asof: `{mc.get('company_map_asof')}`",
         ])
+    cross = evidence.get("edinet_jquants_cross_check") or {}
+    out.extend([
+        "",
+        "## EDINET vs J-Quants cross-check [CALCULATION/UNKNOWN]",
+    ])
+    if cross.get("status") == "CALCULATION":
+        out.extend([
+            "| metric | EDINET | J-Quants | delta | tolerance | result |",
+            "|---|---:|---:|---:|---:|---|",
+        ])
+        for row in cross.get("checks") or []:
+            result = "within_tolerance" if row.get("within_tolerance") else "mismatch"
+            out.append(
+                f"| {row['edinet_feature']} ↔ {row['jquants_feature']} | "
+                f"{row['edinet_value'] * 100:.1f}% | {row['jquants_value'] * 100:.1f}% | "
+                f"{row['delta'] * 100:.1f}pt | {row['tolerance'] * 100:.1f}pt | {result} |"
+            )
+    else:
+        out.append(f"- status: `UNKNOWN` / reason: `{cross.get('reason')}`")
     out.extend([
         "",
         "## 主要リスク/不足 [INFERENCE/UNKNOWN]",
@@ -123,6 +154,7 @@ def render_evidence(evidence: dict) -> str:
         "## claim tags",
         "- features: CALCULATION",
         "- J-Quants market/price context: CALCULATION/UNKNOWN",
+        "- EDINET vs J-Quants cross-check: CALCULATION/UNKNOWN",
         "- missing/固定UNKNOWN: UNKNOWN",
         "- key_risks/falsification: INFERENCE(CALCULATION依存)",
         "",

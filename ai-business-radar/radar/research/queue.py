@@ -10,6 +10,7 @@ from pathlib import Path
 from .common import (
     DISCLAIMER,
     assert_no_forbidden_output,
+    edinet_jquants_cross_check,
     jquants_market_context,
     jquants_summary,
     load_edinet_company_map,
@@ -64,12 +65,18 @@ def _market_risk(market_context: dict) -> list[str]:
     return risks
 
 
+def _cross_check_risks(cross_check: dict) -> list[str]:
+    n = len(cross_check.get("mismatches") or [])
+    return [f"edinet_jquants_mismatch_count={n}"] if n else []
+
+
 def _item(doc: dict, market_context: dict | None = None) -> dict:
     features = doc.get("features") or {}
     unknown = sorted(k for k, v in features.items() if isinstance(v, dict) and v.get("status") == "UNKNOWN")
     calculated = sorted(k for k, v in features.items() if isinstance(v, dict) and v.get("status") == "CALCULATION")
     code = doc.get("edinet_code") or "UNKNOWN"
     market_context = market_context or {"status": "UNKNOWN", "features": {}}
+    cross_check = edinet_jquants_cross_check(doc, market_context)
     evidence_refs = [{
         "derived_path": rel(doc.get("_path")),
         "feature_set": doc.get("feature_set"),
@@ -98,8 +105,9 @@ def _item(doc: dict, market_context: dict | None = None) -> dict:
         "evidence_refs": evidence_refs,
         "computed_features": calculated,
         "unknown_features": unknown,
-        "key_risks": _risks(doc) + _market_risk(market_context),
+        "key_risks": _risks(doc) + _market_risk(market_context) + _cross_check_risks(cross_check),
         "jquants_market_context": market_context,
+        "edinet_jquants_cross_check": cross_check,
         "falsification": [
             "次回同じfeature_setでUNKNOWNが増えたら、根拠不足として保留する",
             "revenue_growth_yoy / operating_margin / net_margin のいずれかが悪化したら、仮説を再点検する",
@@ -116,6 +124,7 @@ def _item(doc: dict, market_context: dict | None = None) -> dict:
         "claim_tags": {
             "features": "CALCULATION",
             "jquants_market_context": market_context.get("claim", "UNKNOWN"),
+            "edinet_jquants_cross_check": cross_check.get("status", "UNKNOWN"),
             "unknowns": "UNKNOWN",
             "risks": "INFERENCE(CALCULATION依存)",
         },
@@ -147,17 +156,23 @@ def render_research_queue(queue: dict) -> str:
         "",
         f"> {DISCLAIMER}",
         "",
-        "| edinet_code | sec_code | price_date | close | per | pbr | 20d | 60d | CALCULATION | UNKNOWN | key_risks | evidence |",
-        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|",
+        "| edinet_code | sec_code | price_date | close | PER | PBR | 20d | 60d | xcheck | CALCULATION | UNKNOWN | key_risks | evidence |",
+        "|---|---|---|---:|---:|---:|---:|---:|---|---:|---:|---|---|",
     ]
     for item in queue["items"]:
         mc = item.get("jquants_market_context") or {}
         mf = mc.get("features") or {}
+        xcheck = item.get("edinet_jquants_cross_check") or {}
+        xcheck_text = (
+            f"{len(xcheck.get('mismatches') or [])}/{len(xcheck.get('checks') or [])}"
+            if xcheck.get("status") == "CALCULATION" else "UNKNOWN"
+        )
         out.append(
             f"| {item['edinet_code']} | {mc.get('securities_code') or 'UNKNOWN'} | "
             f"{mc.get('latest_price_date') or 'UNKNOWN'} | {metric_value(mf.get('latest_close') or {})} | "
             f"{metric_value(mf.get('per_trailing') or {})} | {metric_value(mf.get('pbr') or {})} | "
             f"{metric_value(mf.get('return_20d') or {})} | {metric_value(mf.get('return_60d') or {})} | "
+            f"{xcheck_text} | "
             f"{len(item['computed_features'])} | {len(item['unknown_features'])} | "
             f"{'; '.join(item['key_risks'])} | `python3 -m radar evidence {item['edinet_code']} --asof {queue['asof']}` |"
         )
@@ -172,6 +187,9 @@ def render_research_queue(queue: dict) -> str:
             f"- feature_set: `{summary.get('feature_set')}` / asof: `{summary.get('asof')}`",
             f"- latest_price_date: `{coverage.get('latest_price_date')}`",
             f"- price_coverage: `{_pct(coverage.get('price_coverage_ratio'))}` / summary_coverage: `{_pct(coverage.get('summary_coverage_ratio'))}`",
+            f"- valuation_coverage: `{_pct(coverage.get('valuation_coverage_ratio'))}`",
+            f"- PER median: `{metric_value({'status': 'CALCULATION', 'value': ((summary.get('distribution') or {}).get('per_trailing') or {}).get('median'), 'unit': 'x'})}`"
+            f" / PBR median: `{metric_value({'status': 'CALCULATION', 'value': ((summary.get('distribution') or {}).get('pbr') or {}).get('median'), 'unit': 'x'})}`",
         ])
     else:
         out.append("- J-Quants local features: UNKNOWN")
@@ -200,10 +218,12 @@ def write_research_queue(queue: dict, *, outputs_root: Path | None = None) -> di
         w.writerow(["type", "edinet_code", "extraction_reason_id", "calculation_count",
                     "unknown_count", "securities_code", "latest_price_date", "latest_close",
                     "per_trailing", "pbr", "return_20d", "return_60d",
+                    "cross_check_count", "cross_check_mismatch_count",
                     "discipline_status", "evidence_command"])
         for item in queue["items"]:
             mc = item.get("jquants_market_context") or {}
             mf = mc.get("features") or {}
+            xcheck = item.get("edinet_jquants_cross_check") or {}
             w.writerow([
                 item["type"], item["edinet_code"], item["extraction_reason_id"],
                 len(item["computed_features"]), len(item["unknown_features"]),
@@ -214,6 +234,8 @@ def write_research_queue(queue: dict, *, outputs_root: Path | None = None) -> di
                 (mf.get("pbr") or {}).get("value"),
                 (mf.get("return_20d") or {}).get("value"),
                 (mf.get("return_60d") or {}).get("value"),
+                len(xcheck.get("checks") or []),
+                len(xcheck.get("mismatches") or []),
                 item["discipline_status"],
                 f"python3 -m radar evidence {item['edinet_code']} --asof {queue['asof']}",
             ])

@@ -307,11 +307,16 @@ _SHARES_KEYS = ("Shares", "ShEoF", "ShsEoF", "IssuedShares", "NumShares")
 
 
 def _first_float(row: dict, keys: tuple[str, ...]):
+    value, _ = _first_float_with_key(row, keys)
+    return value
+
+
+def _first_float_with_key(row: dict, keys: tuple[str, ...]):
     for k in keys:
         v = _float_or_none(row.get(k))
         if v is not None:
-            return v
-    return None
+            return v, k
+    return None, None
 
 
 def _financial_features(rows: list[dict]):
@@ -327,7 +332,10 @@ def _financial_features(rows: list[dict]):
             "equity_ratio": None,
             "eps": None,
             "bps": None,
+            "eps_source": None,
+            "bps_source": None,
             "shares": None,
+            "shares_source": None,
             "net_profit": None,
             "equity": None,
         }
@@ -339,6 +347,9 @@ def _financial_features(rows: list[dict]):
     prev_eq = _float_or_none(previous.get("Eq")) if previous else None
     ta = _float_or_none(current.get("TA"))
     avg_eq = ((eq + prev_eq) / 2) if eq is not None and prev_eq is not None else None
+    eps, eps_source = _first_float_with_key(current, _EPS_KEYS)
+    bps, bps_source = _first_float_with_key(current, _BPS_KEYS)
+    shares, shares_source = _first_float_with_key(current, _SHARES_KEYS)
     return {
         "latest_disclosure_date": current.get("DiscDate"),
         "sales_growth_yoy": (sales / prev_sales - 1) if sales is not None and prev_sales is not None and prev_sales > 0 else None,
@@ -346,9 +357,12 @@ def _financial_features(rows: list[dict]):
         "net_margin": _ratio(np, sales),
         "roe_proxy": _ratio(np, avg_eq),
         "equity_ratio": _ratio(eq, ta),
-        "eps": _first_float(current, _EPS_KEYS),
-        "bps": _first_float(current, _BPS_KEYS),
-        "shares": _first_float(current, _SHARES_KEYS),
+        "eps": eps,
+        "bps": bps,
+        "eps_source": eps_source,
+        "bps_source": bps_source,
+        "shares": shares,
+        "shares_source": shares_source,
         "net_profit": np,
         "equity": eq,
     }
@@ -360,23 +374,36 @@ def _per_pbr(close, fin: dict):
     Zero/negative earnings or equity -> UNKNOWN (None), never a misleading number.
     """
     if close is None or close <= 0:
-        return None, None
+        return None, None, None, None
     per = pbr = None
+    per_method = pbr_method = None
     eps, bps = fin.get("eps"), fin.get("bps")
     shares, net_profit, equity = fin.get("shares"), fin.get("net_profit"), fin.get("equity")
     if eps is not None and eps > 0:
         per = round(close / eps, 2)
+        per_method = f"eps:{fin.get('eps_source') or 'unknown'}"
     elif shares and shares > 0 and net_profit is not None and net_profit > 0:
         per = round(close * shares / net_profit, 2)
+        per_method = f"shares_net_profit:{fin.get('shares_source') or 'unknown'}"
     if bps is not None and bps > 0:
         pbr = round(close / bps, 2)
+        pbr_method = f"bps:{fin.get('bps_source') or 'unknown'}"
     elif shares and shares > 0 and equity is not None and equity > 0:
         pbr = round(close * shares / equity, 2)
-    return per, pbr
+        pbr_method = f"shares_equity:{fin.get('shares_source') or 'unknown'}"
+    return per, pbr, per_method, pbr_method
 
 
 def _format_ratio(value):
     return "UNKNOWN" if value is None else f"{value * 100:.1f}%"
+
+
+def _format_distribution_value(key: str, value):
+    if value is None:
+        return "UNKNOWN"
+    if key in {"per_trailing", "pbr"}:
+        return f"{value:.2f}x"
+    return _format_ratio(value)
 
 
 def build_jquants_bulk_features(
@@ -420,6 +447,13 @@ def build_jquants_bulk_features(
     per_vals = []
     pbr_vals = []
     valuation_covered = 0
+    valuation_alias_hits = {
+        "eps": Counter(),
+        "bps": Counter(),
+        "shares": Counter(),
+        "per_method": Counter(),
+        "pbr_method": Counter(),
+    }
     price_covered = 0
     summary_covered = 0
     dividend_covered = 0
@@ -454,11 +488,19 @@ def build_jquants_bulk_features(
             if f["roe_proxy"] is not None:
                 roe.append(f["roe_proxy"])
             close_val = latest[1] if latest else None
-            per, pbr = _per_pbr(close_val, f)
+            per, pbr, per_method, pbr_method = _per_pbr(close_val, f)
+            if f.get("eps_source") and f.get("eps") is not None:
+                valuation_alias_hits["eps"][f["eps_source"]] += 1
+            if f.get("bps_source") and f.get("bps") is not None:
+                valuation_alias_hits["bps"][f["bps_source"]] += 1
+            if f.get("shares_source") and f.get("shares") is not None:
+                valuation_alias_hits["shares"][f["shares_source"]] += 1
             if per is not None:
                 per_vals.append(per)
+                valuation_alias_hits["per_method"][per_method or "unknown"] += 1
             if pbr is not None:
                 pbr_vals.append(pbr)
+                valuation_alias_hits["pbr_method"][pbr_method or "unknown"] += 1
             if per is not None or pbr is not None:
                 valuation_covered += 1
 
@@ -556,6 +598,7 @@ def build_jquants_bulk_features(
             "per_trailing": dist(per_vals),
             "pbr": dist(pbr_vals),
         },
+        "valuation_alias_hits": {k: dict(v) for k, v in valuation_alias_hits.items()},
         "market_counts": market_counts.most_common(),
         "sector33_counts_top": sector_counts.most_common(20),
         "warnings": [
@@ -581,16 +624,18 @@ def build_jquants_bulk_features(
         f"- listed_codes: {len(master)}",
         f"- price_coverage: {_format_ratio(summary['coverage']['price_coverage_ratio'])}",
         f"- summary_coverage: {_format_ratio(summary['coverage']['summary_coverage_ratio'])}",
+        f"- valuation_coverage: {_format_ratio(summary['coverage']['valuation_coverage_ratio'])}",
         f"- dividend_coverage: {_format_ratio(summary['coverage']['dividend_coverage_ratio'])}",
         f"- latest_price_date: {summary['coverage']['latest_price_date']}",
+        f"- valuation_alias_hits: `{json.dumps(summary['valuation_alias_hits'], ensure_ascii=False, sort_keys=True)}`",
         "",
         "## Distribution",
     ]
     for key, data in summary["distribution"].items():
         lines.append(
-            f"- {key}: count={data['count']}, median={_format_ratio(data['median'])}, "
+            f"- {key}: count={data['count']}, median={_format_distribution_value(key, data['median'])}, "
             f"positive_rate={_format_ratio(data['positive_rate'])}, "
-            f"p10={_format_ratio(data['p10'])}, p90={_format_ratio(data['p90'])}"
+            f"p10={_format_distribution_value(key, data['p10'])}, p90={_format_distribution_value(key, data['p90'])}"
         )
     lines.extend([
         "",

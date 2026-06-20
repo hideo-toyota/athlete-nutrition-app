@@ -63,10 +63,15 @@ def _render_jquants_summary(summary: dict | None) -> list[str]:
         ]
     coverage = summary.get("coverage") or {}
     dist = summary.get("distribution") or {}
+    per = (dist.get("per_trailing") or {}).get("median")
+    pbr = (dist.get("pbr") or {}).get("median")
     out.extend([
         f"- feature_set/asof: `{summary.get('feature_set')}` / `{summary.get('asof')}`",
         f"- latest_price_date: `{coverage.get('latest_price_date')}`",
         f"- price_coverage: `{_pct(coverage.get('price_coverage_ratio'))}` / summary_coverage: `{_pct(coverage.get('summary_coverage_ratio'))}`",
+        f"- valuation_coverage: `{_pct(coverage.get('valuation_coverage_ratio'))}`",
+        f"- PER trailing median: `{'UNKNOWN' if not isinstance(per, (int, float)) else f'{per:.2f}x'}`"
+        f" / PBR median: `{'UNKNOWN' if not isinstance(pbr, (int, float)) else f'{pbr:.2f}x'}`",
         f"- return_20d median: `{_pct((dist.get('return_20d') or {}).get('median'))}` / positive_rate: `{_pct((dist.get('return_20d') or {}).get('positive_rate'))}`",
         f"- return_60d median: `{_pct((dist.get('return_60d') or {}).get('median'))}` / positive_rate: `{_pct((dist.get('return_60d') or {}).get('positive_rate'))}`",
         f"- return_252d median: `{_pct((dist.get('return_252d') or {}).get('median'))}` / positive_rate: `{_pct((dist.get('return_252d') or {}).get('positive_rate'))}`",

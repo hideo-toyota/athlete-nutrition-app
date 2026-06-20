@@ -56,7 +56,9 @@ python3 -m radar llm-brief --asof YYYY-MM-DD
   LLM投入用packet生成(`llm-brief`, API呼び出しなし)は実装済み。
   `research-queue` / `evidence` / `llm-brief` は EDINET financials を主入力にし、
   `edinet_company_map_v1` があれば J-Quants `jquants_equity_v1` の株価/出来高/20・60・252営業日リターンを
-  補助コンテキストとして含める(売買順・推奨・予測ではない)。
+  補助コンテキストとして含める(売買順・推奨・予測ではない)。J-Quants 側で trailing PER/PBR が取得できる場合は
+  `valuation_coverage` と alias hit(EPS/BPS列名)を manifest に残し、EDINET evidence には PER/PBR と
+  EDINET財務 × J-Quants summary の cross-check を表示する。
   `daily-update` は EDINET companies raw が同じ asof にあれば `edinet_company_map_v1` も自動生成し、
   EDINET evidence/brief に J-Quants の当時株価コンテキストを結合する。
   provider raw本文の Claude等LLM投入と自動API送信は未実装・`LICENSE_MATRIX.md` の確認対象。

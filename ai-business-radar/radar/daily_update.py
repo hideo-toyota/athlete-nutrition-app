@@ -149,6 +149,7 @@ def run_daily_update(
         "jquants_context_status": "UNKNOWN",
         "jquants_latest_price_date": None,
         "jquants_price_coverage_ratio": None,
+        "jquants_valuation_coverage_ratio": None,
         "jquants_blocks": 0,
     }
 
@@ -172,6 +173,7 @@ def run_daily_update(
         summary["jquants_context_status"] = jq_summary.get("status", "UNKNOWN")
         summary["jquants_latest_price_date"] = jq_coverage.get("latest_price_date")
         summary["jquants_price_coverage_ratio"] = jq_coverage.get("price_coverage_ratio")
+        summary["jquants_valuation_coverage_ratio"] = jq_coverage.get("valuation_coverage_ratio")
         steps.append(StepResult("research-queue", "done", f"items={rq['count']}"))
     except SystemExit as e:
         steps.append(StepResult("research-queue", "skipped", str(e)))
@@ -208,6 +210,10 @@ def render_daily_summary(result: dict) -> str:
     s = result["summary"]
     coverage = s.get("jquants_price_coverage_ratio")
     coverage_text = f"{coverage * 100:.1f}%" if isinstance(coverage, (int, float)) else "UNKNOWN"
+    valuation_coverage = s.get("jquants_valuation_coverage_ratio")
+    valuation_coverage_text = (
+        f"{valuation_coverage * 100:.1f}%" if isinstance(valuation_coverage, (int, float)) else "UNKNOWN"
+    )
     title = f"# Daily Update — {result['asof']}" + ("  (dry-run)" if result["dry_run"] else "")
     lines = [
         title,
@@ -225,7 +231,7 @@ def render_daily_summary(result: dict) -> str:
         f"- CALCULATION features: {s['calc_features']} / UNKNOWN features: {s['unknown_features']}",
         f"- J-Quants 市場コンテキスト: {s.get('jquants_context_status', 'UNKNOWN')}"
         f" / latest_price_date={s.get('jquants_latest_price_date') or 'UNKNOWN'}"
-        f" / price_coverage={coverage_text}",
+        f" / price_coverage={coverage_text} / valuation_coverage={valuation_coverage_text}",
         f"- J-Quants 単独evidence(--jquants-codes指定時): {s['jquants_blocks']} 件",
         "",
         "## Claudeに渡す分析パケット",

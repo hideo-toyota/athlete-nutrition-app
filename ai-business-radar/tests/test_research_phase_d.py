@@ -137,6 +137,11 @@ def _write_jquants(base: Path, asof="2026-06-18"):
             "pbr": _measured(1.01, unit="x"),
             "eps_trailing": _measured(200.0, unit="JPY"),
             "bps": _measured(2505.0, unit="JPY"),
+            "sales_growth_yoy": _measured(0.12),
+            "operating_margin": _measured(0.08),
+            "net_margin": _measured(0.04),
+            "roe_proxy": _measured(0.10),
+            "equity_ratio": _measured(0.25),
             "dividend_record_present": _measured(True, unit="bool"),
         },
         "source_dates": {
@@ -158,15 +163,26 @@ def _write_jquants(base: Path, asof="2026-06-18"):
             "price_covered": 1,
             "summary_covered": 1,
             "dividend_covered": 1,
+            "valuation_covered": 1,
             "latest_price_date": "2026-06-18",
             "price_coverage_ratio": 1.0,
             "summary_coverage_ratio": 1.0,
             "dividend_coverage_ratio": 1.0,
+            "valuation_coverage_ratio": 1.0,
         },
         "distribution": {
             "return_20d": {"count": 1, "median": 0.05, "positive_rate": 1.0, "p10": None, "p90": None},
             "return_60d": {"count": 1, "median": -0.02, "positive_rate": 0.0, "p10": None, "p90": None},
             "return_252d": {"count": 1, "median": 0.12, "positive_rate": 1.0, "p10": None, "p90": None},
+            "per_trailing": {"count": 1, "median": 12.65, "positive_rate": 1.0, "p10": None, "p90": None},
+            "pbr": {"count": 1, "median": 1.01, "positive_rate": 1.0, "p10": None, "p90": None},
+        },
+        "valuation_alias_hits": {
+            "eps": {"EPS": 1},
+            "bps": {"BPS": 1},
+            "shares": {},
+            "per_method": {"eps:EPS": 1},
+            "pbr_method": {"bps:BPS": 1},
         },
     }, ensure_ascii=False, sort_keys=True), encoding="utf-8")
 
@@ -195,6 +211,7 @@ class ResearchPhaseDTests(unittest.TestCase):
             text = Path(res["md_path"]).read_text(encoding="utf-8")
             self.assertIn("J-Quants local context", text)
             self.assertIn("2,530 JPY", text)
+            self.assertIn("12.65 x", text)
             self.assertIn("2026-06-18", text)
             self.assertNotIn(SENTINEL, text)
             for token in FORBIDDEN_OUTPUT_TOKENS:
@@ -210,9 +227,11 @@ class ResearchPhaseDTests(unittest.TestCase):
         self.assertIn("8.0%", text)
         self.assertIn("J-Quants market/price context", text)
         self.assertIn("2,530 JPY", text)
-        self.assertIn("return_60d", text)
-        self.assertIn("per_trailing", text)   # valuation flows through the EDINET->J-Quants join
+        self.assertIn("per_trailing", text)
         self.assertIn("12.65 x", text)
+        self.assertIn("EDINET vs J-Quants cross-check", text)
+        self.assertIn("within_tolerance", text)
+        self.assertIn("return_60d", text)
         self.assertIn("1.01 x", text)
         self.assertIn("check buy <TICKER> <AMOUNT_JPY> <SECTOR>", text)
         self.assertNotIn(SENTINEL, text)
@@ -239,7 +258,10 @@ class ResearchPhaseDTests(unittest.TestCase):
         self.assertIn("LICENSE_MATRIX E5", text)
         self.assertIn("J-Quants market context", text)
         self.assertIn("price_coverage", text)
+        self.assertIn("valuation_coverage", text)
+        self.assertIn("PER trailing median", text)
         self.assertIn("2,530 JPY", text)
+        self.assertIn("12.65 x", text)
         self.assertIn("UNKNOWN / 不足", text)
         self.assertIn("discipline check 未通過", text)
         self.assertFalse(manifest["raw_body_included"])
