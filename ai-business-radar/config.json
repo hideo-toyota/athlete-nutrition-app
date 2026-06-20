@@ -35,7 +35,7 @@
     "backoff_base_sec": 2,
     "timeout_sec": 10,
     "max_response_bytes": 1048576,
-    "daily_request_budget": 400,
+    "daily_request_budget": 1000,
     "providers": {
       "jquants": {
         "base_url": "https://api.jquants.com/v2",
