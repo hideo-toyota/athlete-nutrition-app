@@ -16,6 +16,13 @@ from .common import DISCLAIMER, ROOT, assert_no_forbidden_output, latest_asof, m
 JQUANTS_FEATURE_SET = "jquants_equity_v1"
 _SEC_RE = re.compile(r"^[0-9A-Z]{4,5}$")
 
+VALUATION_ORDER = (
+    "per_trailing",
+    "pbr",
+    "eps_trailing",
+    "bps",
+)
+
 FUNDAMENTAL_ORDER = (
     "sales_growth_yoy",
     "operating_margin",
@@ -94,10 +101,19 @@ def render_jquants_evidence(evidence: dict) -> str:
         f"- return_20d / 60d / 252d: {metric_value(feats.get('return_20d') or {})}"
         f" / {metric_value(feats.get('return_60d') or {})} / {metric_value(feats.get('return_252d') or {})}",
         "",
-        "## ファンダ(J-Quants summary由来) [CALCULATION/UNKNOWN]",
+        "## バリュエーション(trailing) [CALCULATION/UNKNOWN]",
         "| feature | status | value |",
         "|---|---|---|",
     ]
+    for key in VALUATION_ORDER:
+        m = feats.get(key) or {}
+        out.append(f"| {key} | {m.get('status', 'UNKNOWN')} | {metric_value(m)} |")
+    out.extend([
+        "",
+        "## ファンダ(J-Quants summary由来) [CALCULATION/UNKNOWN]",
+        "| feature | status | value |",
+        "|---|---|---|",
+    ])
     for key in FUNDAMENTAL_ORDER:
         m = feats.get(key) or {}
         out.append(f"| {key} | {m.get('status', 'UNKNOWN')} | {metric_value(m)} |")
@@ -110,7 +126,9 @@ def render_jquants_evidence(evidence: dict) -> str:
         "",
         "## 注意",
         "- latest_close は調整後終値(adjusted close when available)。「当時の株価」= asof以前の最終取引日。",
-        "- roe_proxy は監査済ROEではない(proxy)。valuation(PER/PBR等)は EDINET 突合が必要で未算出。",
+        "- per_trailing/pbr は trailing(直近本決算ベース)。予想PERではない。EPS/BPS が無い銘柄は UNKNOWN。",
+        "- per/pbr の EPS/BPS は bulk の列エイリアス由来。coverage は summary の valuation_coverage_ratio で要確認。",
+        "- roe_proxy は監査済ROEではない(proxy)。赤字/債務超過は per/pbr を UNKNOWN にしている。",
         "- 売買指示・順位・予測ではありません。最終判断は人間、discipline check 未通過。",
         "",
     ])

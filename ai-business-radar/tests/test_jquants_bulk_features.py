@@ -46,14 +46,14 @@ def _fixture(root: Path):
         price_rows.append({"Date": day, "Code": "72030", "C": 100 + i, "AC": 100 + i, "Vo": 1000 + i, "AVo": 1000 + i})
     price_rows.append({"Date": "2026-06-18", "Code": "99990", "C": 50, "AC": 50, "Vo": 10, "AVo": 10})
     _write_gz(raw / "equities/bars/daily/premium/live/equities_bars_daily_20260618.csv.gz", price_header, price_rows)
-    summary_header = ["DiscDate", "DiscTime", "Code", "DiscNo", "DocType", "CurPerType", "CurPerEn", "Sales", "OP", "NP", "Eq", "TA"]
+    summary_header = ["DiscDate", "DiscTime", "Code", "DiscNo", "DocType", "CurPerType", "CurPerEn", "Sales", "OP", "NP", "Eq", "TA", "EPS", "BPS"]
     _write_gz(
         raw / "fins/summary/historical/2026/fins_summary_202606.csv.gz",
         summary_header,
         [
-            {"DiscDate": "2025-06-01", "DiscTime": "15:00", "Code": "72030", "DiscNo": "1", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2025-03-31", "Sales": "1000", "OP": "80", "NP": "50", "Eq": "400", "TA": "2000"},
-            {"DiscDate": "2026-06-01", "DiscTime": "15:00", "Code": "72030", "DiscNo": "2", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2026-03-31", "Sales": "1200", "OP": "120", "NP": "60", "Eq": "500", "TA": "2200"},
-            {"DiscDate": "2026-06-01", "DiscTime": "15:00", "Code": "99990", "DiscNo": "3", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2026-03-31", "Sales": "0", "OP": "0", "NP": "0", "Eq": "0", "TA": "0"},
+            {"DiscDate": "2025-06-01", "DiscTime": "15:00", "Code": "72030", "DiscNo": "1", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2025-03-31", "Sales": "1000", "OP": "80", "NP": "50", "Eq": "400", "TA": "2000", "EPS": "16", "BPS": "200"},
+            {"DiscDate": "2026-06-01", "DiscTime": "15:00", "Code": "72030", "DiscNo": "2", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2026-03-31", "Sales": "1200", "OP": "120", "NP": "60", "Eq": "500", "TA": "2200", "EPS": "20", "BPS": "250"},
+            {"DiscDate": "2026-06-01", "DiscTime": "15:00", "Code": "99990", "DiscNo": "3", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2026-03-31", "Sales": "0", "OP": "0", "NP": "0", "Eq": "0", "TA": "0", "EPS": "0", "BPS": "0"},
         ],
     )
     _write_gz(
@@ -92,6 +92,16 @@ class JQuantsBulkFeatureTests(unittest.TestCase):
         self.assertAlmostEqual(first["features"]["operating_margin"]["value"], 0.1)
         self.assertEqual(first["features"]["dividend_record_present"]["value"], True)
         self.assertEqual(first["features"]["return_20d"]["unit"], "ratio")
+        # trailing PER/PBR from latest_close and last-FY EPS/BPS (J-Quants alone)
+        close = first["features"]["latest_close"]["value"]
+        self.assertEqual(first["features"]["eps_trailing"]["value"], 20.0)
+        self.assertEqual(first["features"]["per_trailing"]["unit"], "x")
+        self.assertAlmostEqual(first["features"]["per_trailing"]["value"], round(close / 20, 2))
+        self.assertAlmostEqual(first["features"]["pbr"]["value"], round(close / 250, 2))
+        # zero-earnings / zero-equity company must be UNKNOWN, never a misleading number
+        zero = docs[2]
+        self.assertEqual(zero["features"]["per_trailing"]["status"], "UNKNOWN")
+        self.assertEqual(zero["features"]["pbr"]["status"], "UNKNOWN")
         summary = Path(res["summary_path"]).read_text(encoding="utf-8")
         self.assertIn("no recommendation", summary)
         self.assertNotIn("ranking", summary.lower().replace("no ranking", ""))

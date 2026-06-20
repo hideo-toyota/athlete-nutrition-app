@@ -299,6 +299,21 @@ def _return(points: list[tuple[date, float, float | None]], periods: int):
     return last / base - 1
 
 
+# Per-share / share-count column aliases. Real bulk column names must be verified
+# against raw on the Mac; coverage in the summary tells whether an alias matched.
+_EPS_KEYS = ("EPS", "EPSCons", "EarningsPerShare")
+_BPS_KEYS = ("BPS", "BPSCons", "BookValuePerShare")
+_SHARES_KEYS = ("Shares", "ShEoF", "ShsEoF", "IssuedShares", "NumShares")
+
+
+def _first_float(row: dict, keys: tuple[str, ...]):
+    for k in keys:
+        v = _float_or_none(row.get(k))
+        if v is not None:
+            return v
+    return None
+
+
 def _financial_features(rows: list[dict]):
     current = rows[-1] if rows else None
     previous = rows[-2] if len(rows) >= 2 else None
@@ -310,6 +325,11 @@ def _financial_features(rows: list[dict]):
             "net_margin": None,
             "roe_proxy": None,
             "equity_ratio": None,
+            "eps": None,
+            "bps": None,
+            "shares": None,
+            "net_profit": None,
+            "equity": None,
         }
     sales = _float_or_none(current.get("Sales"))
     prev_sales = _float_or_none(previous.get("Sales")) if previous else None
@@ -326,7 +346,33 @@ def _financial_features(rows: list[dict]):
         "net_margin": _ratio(np, sales),
         "roe_proxy": _ratio(np, avg_eq),
         "equity_ratio": _ratio(eq, ta),
+        "eps": _first_float(current, _EPS_KEYS),
+        "bps": _first_float(current, _BPS_KEYS),
+        "shares": _first_float(current, _SHARES_KEYS),
+        "net_profit": np,
+        "equity": eq,
     }
+
+
+def _per_pbr(close, fin: dict):
+    """Trailing PER/PBR from current price + last-FY per-share (or totals + shares).
+
+    Zero/negative earnings or equity -> UNKNOWN (None), never a misleading number.
+    """
+    if close is None or close <= 0:
+        return None, None
+    per = pbr = None
+    eps, bps = fin.get("eps"), fin.get("bps")
+    shares, net_profit, equity = fin.get("shares"), fin.get("net_profit"), fin.get("equity")
+    if eps is not None and eps > 0:
+        per = round(close / eps, 2)
+    elif shares and shares > 0 and net_profit is not None and net_profit > 0:
+        per = round(close * shares / net_profit, 2)
+    if bps is not None and bps > 0:
+        pbr = round(close / bps, 2)
+    elif shares and shares > 0 and equity is not None and equity > 0:
+        pbr = round(close * shares / equity, 2)
+    return per, pbr
 
 
 def _format_ratio(value):
@@ -371,6 +417,9 @@ def build_jquants_bulk_features(
     sales_growth = []
     op_margin = []
     roe = []
+    per_vals = []
+    pbr_vals = []
+    valuation_covered = 0
     price_covered = 0
     summary_covered = 0
     dividend_covered = 0
@@ -404,6 +453,14 @@ def build_jquants_bulk_features(
                 op_margin.append(f["operating_margin"])
             if f["roe_proxy"] is not None:
                 roe.append(f["roe_proxy"])
+            close_val = latest[1] if latest else None
+            per, pbr = _per_pbr(close_val, f)
+            if per is not None:
+                per_vals.append(per)
+            if pbr is not None:
+                pbr_vals.append(pbr)
+            if per is not None or pbr is not None:
+                valuation_covered += 1
 
             doc = {
                 "schema_version": SCHEMA_VERSION,
@@ -437,6 +494,10 @@ def build_jquants_bulk_features(
                     "net_margin": _measured(f["net_margin"], unit="ratio"),
                     "roe_proxy": _measured(f["roe_proxy"], unit="ratio", note="NP / average Eq proxy"),
                     "equity_ratio": _measured(f["equity_ratio"], unit="ratio"),
+                    "eps_trailing": _measured(f["eps"], unit="JPY", note="last-FY EPS (bulk alias; verify coverage)"),
+                    "bps": _measured(f["bps"], unit="JPY", note="BPS (bulk alias; verify coverage)"),
+                    "per_trailing": _measured(per, unit="x", note="trailing: latest_close / last-FY EPS (or close*shares/NP)"),
+                    "pbr": _measured(pbr, unit="x", note="latest_close / BPS (or close*shares/Eq)"),
                     "dividend_record_present": _measured(bool(div), unit="bool", status="CALCULATION"),
                 },
                 "source_dates": {
@@ -482,6 +543,8 @@ def build_jquants_bulk_features(
             "price_coverage_ratio": price_covered / len(master) if master else None,
             "summary_coverage_ratio": summary_covered / len(master) if master else None,
             "dividend_coverage_ratio": dividend_covered / len(master) if master else None,
+            "valuation_covered": valuation_covered,
+            "valuation_coverage_ratio": valuation_covered / len(master) if master else None,
         },
         "distribution": {
             "return_20d": dist(ret20),
@@ -490,6 +553,8 @@ def build_jquants_bulk_features(
             "sales_growth_yoy": dist(sales_growth),
             "operating_margin": dist(op_margin),
             "roe_proxy": dist(roe),
+            "per_trailing": dist(per_vals),
+            "pbr": dist(pbr_vals),
         },
         "market_counts": market_counts.most_common(),
         "sector33_counts_top": sector_counts.most_common(20),

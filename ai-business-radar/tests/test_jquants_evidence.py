@@ -44,6 +44,10 @@ def _write_jquants(base: Path, code="72030", asof="2026-06-18", close=1234.0):
             "net_margin": _m(0.04, "ratio"),
             "roe_proxy": _m(0.10, "ratio"),
             "equity_ratio": _m(0.40, "ratio"),
+            "eps_trailing": _m(80.0, "JPY"),
+            "bps": _m(700.0, "JPY"),
+            "per_trailing": _m(15.43, "x"),
+            "pbr": _m(1.76, "x"),
             "dividend_record_present": _m(True, "bool", status="CALCULATION"),
         },
         "source_dates": {"latest_price_date": "2026-06-17",
@@ -66,6 +70,10 @@ class JquantsEvidenceTests(unittest.TestCase):
         self.assertIn("1,234 JPY", text)          # PIT adjusted close
         self.assertIn("2026-06-17", text)         # latest_price_date
         self.assertIn("テスト自動車", text)
+        self.assertIn("バリュエーション", text)    # PER/PBR section
+        self.assertIn("per_trailing", text)
+        self.assertIn("15.43 x", text)            # trailing PER
+        self.assertIn("1.76 x", text)             # PBR
         for token in FORBIDDEN_OUTPUT_TOKENS:
             self.assertNotIn(token, text)
 
