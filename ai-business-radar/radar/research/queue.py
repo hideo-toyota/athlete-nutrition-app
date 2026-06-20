@@ -147,8 +147,8 @@ def render_research_queue(queue: dict) -> str:
         "",
         f"> {DISCLAIMER}",
         "",
-        "| edinet_code | sec_code | price_date | close | 20d | 60d | CALCULATION | UNKNOWN | key_risks | evidence |",
-        "|---|---|---|---:|---:|---:|---:|---:|---|---|",
+        "| edinet_code | sec_code | price_date | close | per | pbr | 20d | 60d | CALCULATION | UNKNOWN | key_risks | evidence |",
+        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|",
     ]
     for item in queue["items"]:
         mc = item.get("jquants_market_context") or {}
@@ -156,6 +156,7 @@ def render_research_queue(queue: dict) -> str:
         out.append(
             f"| {item['edinet_code']} | {mc.get('securities_code') or 'UNKNOWN'} | "
             f"{mc.get('latest_price_date') or 'UNKNOWN'} | {metric_value(mf.get('latest_close') or {})} | "
+            f"{metric_value(mf.get('per_trailing') or {})} | {metric_value(mf.get('pbr') or {})} | "
             f"{metric_value(mf.get('return_20d') or {})} | {metric_value(mf.get('return_60d') or {})} | "
             f"{len(item['computed_features'])} | {len(item['unknown_features'])} | "
             f"{'; '.join(item['key_risks'])} | `python3 -m radar evidence {item['edinet_code']} --asof {queue['asof']}` |"
@@ -179,7 +180,7 @@ def render_research_queue(queue: dict) -> str:
         "## 注意",
         "- 並べ替えは edinet_code のみ。魅力度・売買順ではありません。",
         "- J-Quants price context は調査の時点確認用です。魅力度・売買順ではありません。",
-        "- 時価総額/発行済株式数 dataset 未取得のため valuation_status は UNKNOWN。",
+        "- per/pbr は J-Quants trailing(直近本決算ベース・予想PERではない)。EDINET由来 valuation_status は別途 UNKNOWN。",
         "- 第三者LLM入力は LICENSE_MATRIX E5/J5 本人確認 2026-06-20 済(個人の私的分析利用・再配布/公開なし)。",
         "",
     ])
@@ -198,7 +199,8 @@ def write_research_queue(queue: dict, *, outputs_root: Path | None = None) -> di
         w = csv.writer(f)
         w.writerow(["type", "edinet_code", "extraction_reason_id", "calculation_count",
                     "unknown_count", "securities_code", "latest_price_date", "latest_close",
-                    "return_20d", "return_60d", "discipline_status", "evidence_command"])
+                    "per_trailing", "pbr", "return_20d", "return_60d",
+                    "discipline_status", "evidence_command"])
         for item in queue["items"]:
             mc = item.get("jquants_market_context") or {}
             mf = mc.get("features") or {}
@@ -208,6 +210,8 @@ def write_research_queue(queue: dict, *, outputs_root: Path | None = None) -> di
                 mc.get("securities_code"),
                 mc.get("latest_price_date"),
                 (mf.get("latest_close") or {}).get("value"),
+                (mf.get("per_trailing") or {}).get("value"),
+                (mf.get("pbr") or {}).get("value"),
                 (mf.get("return_20d") or {}).get("value"),
                 (mf.get("return_60d") or {}).get("value"),
                 item["discipline_status"],

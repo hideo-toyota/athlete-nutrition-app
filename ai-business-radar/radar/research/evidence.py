@@ -83,6 +83,9 @@ def render_evidence(evidence: dict) -> str:
             f"- return_20d: `{metric_value(mf.get('return_20d') or {})}`",
             f"- return_60d: `{metric_value(mf.get('return_60d') or {})}`",
             f"- return_252d: `{metric_value(mf.get('return_252d') or {})}`",
+            f"- per_trailing: `{metric_value(mf.get('per_trailing') or {})}` / pbr: `{metric_value(mf.get('pbr') or {})}`"
+            "  (trailing・予想PERではない)",
+            f"- eps_trailing: `{metric_value(mf.get('eps_trailing') or {})}` / bps: `{metric_value(mf.get('bps') or {})}`",
             f"- dividend_record_present: `{metric_value(mf.get('dividend_record_present') or {})}`",
             f"- derived_ref: `{(mc.get('evidence_ref') or {}).get('derived_path')}`",
             f"- input_manifest_digest: `{(mc.get('evidence_ref') or {}).get('input_manifest_digest')}`",

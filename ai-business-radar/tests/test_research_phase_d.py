@@ -133,6 +133,10 @@ def _write_jquants(base: Path, asof="2026-06-18"):
             "return_20d": _measured(0.05),
             "return_60d": _measured(-0.02),
             "return_252d": _measured(0.12),
+            "per_trailing": _measured(12.65, unit="x"),
+            "pbr": _measured(1.01, unit="x"),
+            "eps_trailing": _measured(200.0, unit="JPY"),
+            "bps": _measured(2505.0, unit="JPY"),
             "dividend_record_present": _measured(True, unit="bool"),
         },
         "source_dates": {
@@ -207,6 +211,9 @@ class ResearchPhaseDTests(unittest.TestCase):
         self.assertIn("J-Quants market/price context", text)
         self.assertIn("2,530 JPY", text)
         self.assertIn("return_60d", text)
+        self.assertIn("per_trailing", text)   # valuation flows through the EDINET->J-Quants join
+        self.assertIn("12.65 x", text)
+        self.assertIn("1.01 x", text)
         self.assertIn("check buy <TICKER> <AMOUNT_JPY> <SECTOR>", text)
         self.assertNotIn(SENTINEL, text)
         for token in FORBIDDEN_OUTPUT_TOKENS:

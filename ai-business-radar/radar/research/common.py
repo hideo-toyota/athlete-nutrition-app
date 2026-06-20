@@ -260,7 +260,8 @@ def jquants_market_context(doc: dict, *, jquants: dict | None = None, company_ma
                 "features": {
                     key: features.get(key) or {}
                     for key in ("latest_close", "latest_volume", "return_20d", "return_60d",
-                                "return_252d", "dividend_record_present")
+                                "return_252d", "per_trailing", "pbr", "eps_trailing", "bps",
+                                "dividend_record_present")
                 },
                 "evidence_ref": {
                     "derived_path": rel(jquants.get("features_path")) if jquants.get("features_path") else None,
