@@ -394,6 +394,34 @@ def _per_pbr(close, fin: dict):
     return per, pbr, per_method, pbr_method
 
 
+def _per_uncovered_reason(close, fin: dict) -> str:
+    if close is None or close <= 0:
+        return "no_price"
+    shares = fin.get("shares")
+    if fin.get("eps") is None and not (shares and shares > 0 and fin.get("net_profit") is not None):
+        return "no_per_inputs"
+    return "nonpositive_or_unusable_inputs"
+
+
+def _pbr_uncovered_reason(close, fin: dict) -> str:
+    if close is None or close <= 0:
+        return "no_price"
+    shares = fin.get("shares")
+    if fin.get("bps") is None and not (shares and shares > 0 and fin.get("equity") is not None):
+        return "no_pbr_inputs"
+    return "nonpositive_or_unusable_inputs"
+
+
+def _valuation_uncovered_reason(per_reason: str, pbr_reason: str) -> str:
+    if per_reason == "no_price" and pbr_reason == "no_price":
+        return "no_price"
+    if per_reason == "nonpositive_or_unusable_inputs" and pbr_reason == "nonpositive_or_unusable_inputs":
+        return "nonpositive_or_unusable_inputs"
+    if per_reason == "no_per_inputs" or pbr_reason == "no_pbr_inputs":
+        return "no_per_pbr_inputs"
+    return "mixed_unusable_inputs"
+
+
 def _format_ratio(value):
     return "UNKNOWN" if value is None else f"{value * 100:.1f}%"
 
@@ -448,6 +476,10 @@ def build_jquants_bulk_features(
     pbr_vals = []
     valuation_covered = 0
     valuation_uncovered_reasons = Counter()
+    per_covered = 0
+    pbr_covered = 0
+    per_uncovered_reasons = Counter()
+    pbr_uncovered_reasons = Counter()
     valuation_alias_hits = {
         "eps": Counter(),
         "bps": Counter(),
@@ -490,6 +522,8 @@ def build_jquants_bulk_features(
                 roe.append(f["roe_proxy"])
             close_val = latest[1] if latest else None
             per, pbr, per_method, pbr_method = _per_pbr(close_val, f)
+            per_reason = _per_uncovered_reason(close_val, f) if per is None else None
+            pbr_reason = _pbr_uncovered_reason(close_val, f) if pbr is None else None
             if f.get("eps_source") and f.get("eps") is not None:
                 valuation_alias_hits["eps"][f["eps_source"]] += 1
             if f.get("bps_source") and f.get("bps") is not None:
@@ -498,20 +532,20 @@ def build_jquants_bulk_features(
                 valuation_alias_hits["shares"][f["shares_source"]] += 1
             if per is not None:
                 per_vals.append(per)
+                per_covered += 1
                 valuation_alias_hits["per_method"][per_method or "unknown"] += 1
+            else:
+                per_uncovered_reasons[per_reason] += 1
             if pbr is not None:
                 pbr_vals.append(pbr)
+                pbr_covered += 1
                 valuation_alias_hits["pbr_method"][pbr_method or "unknown"] += 1
+            else:
+                pbr_uncovered_reasons[pbr_reason] += 1
             if per is not None or pbr is not None:
                 valuation_covered += 1
             else:
-                # Why is this code uncovered? Helps verify aliases on real raw.
-                if close_val is None or close_val <= 0:
-                    valuation_uncovered_reasons["no_price"] += 1
-                elif f.get("eps") is None and f.get("bps") is None and f.get("shares") is None:
-                    valuation_uncovered_reasons["no_per_pbr_inputs"] += 1
-                else:
-                    valuation_uncovered_reasons["nonpositive_or_unusable_inputs"] += 1
+                valuation_uncovered_reasons[_valuation_uncovered_reason(per_reason, pbr_reason)] += 1
 
             doc = {
                 "schema_version": SCHEMA_VERSION,
@@ -597,6 +631,12 @@ def build_jquants_bulk_features(
             "valuation_covered": valuation_covered,
             "valuation_coverage_ratio": valuation_covered / len(master) if master else None,
             "valuation_uncovered_reasons": dict(valuation_uncovered_reasons),
+            "per_covered": per_covered,
+            "per_coverage_ratio": per_covered / len(master) if master else None,
+            "per_uncovered_reasons": dict(per_uncovered_reasons),
+            "pbr_covered": pbr_covered,
+            "pbr_coverage_ratio": pbr_covered / len(master) if master else None,
+            "pbr_uncovered_reasons": dict(pbr_uncovered_reasons),
         },
         "distribution": {
             "return_20d": dist(ret20),
@@ -635,9 +675,13 @@ def build_jquants_bulk_features(
         f"- price_coverage: {_format_ratio(summary['coverage']['price_coverage_ratio'])}",
         f"- summary_coverage: {_format_ratio(summary['coverage']['summary_coverage_ratio'])}",
         f"- valuation_coverage: {_format_ratio(summary['coverage']['valuation_coverage_ratio'])}",
+        f"- per_coverage: {_format_ratio(summary['coverage']['per_coverage_ratio'])}",
+        f"- pbr_coverage: {_format_ratio(summary['coverage']['pbr_coverage_ratio'])}",
         f"- dividend_coverage: {_format_ratio(summary['coverage']['dividend_coverage_ratio'])}",
         f"- latest_price_date: {summary['coverage']['latest_price_date']}",
         f"- valuation_alias_hits: `{json.dumps(summary['valuation_alias_hits'], ensure_ascii=False, sort_keys=True)}`",
+        f"- per_uncovered_reasons: `{json.dumps(summary['coverage']['per_uncovered_reasons'], ensure_ascii=False, sort_keys=True)}`",
+        f"- pbr_uncovered_reasons: `{json.dumps(summary['coverage']['pbr_uncovered_reasons'], ensure_ascii=False, sort_keys=True)}`",
         "",
         "## Distribution",
     ]

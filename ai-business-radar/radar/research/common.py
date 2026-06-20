@@ -87,7 +87,7 @@ def load_feature_docs(*, asof: str | None = None, derived_root: Path | None = No
     if not d.exists():
         raise SystemExit(f"derived feature asof directory が見つかりません: {d}")
     docs = []
-    for p in sorted(d.glob("*.json")):
+    for p in sorted(d.glob("E*.json")):
         try:
             obj = json.loads(p.read_text(encoding="utf-8"))
         except json.JSONDecodeError as e:

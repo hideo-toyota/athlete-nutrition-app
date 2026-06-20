@@ -200,6 +200,7 @@ class ResearchPhaseDTests(unittest.TestCase):
 
     def test_research_queue_schema_and_no_forbidden_terms(self):
         q = build_research_queue(asof="2026-06-18", derived_root=self.base / "data" / "derived")
+        self.assertEqual(len(q["items"]), 1)
         self.assertEqual(q["items"][0]["type"], "research_item")
         self.assertEqual(q["items"][0]["discipline_status"], "未通過")
         self.assertEqual(q["items"][0]["coverage_priority"], 0)
@@ -217,6 +218,17 @@ class ResearchPhaseDTests(unittest.TestCase):
             for token in FORBIDDEN_OUTPUT_TOKENS:
                 self.assertNotIn(token, text)
             self.assertTrue(Path(res["csv_path"]).exists())
+
+    def test_research_queue_ignores_build_manifest_json(self):
+        d = self.base / "data" / "derived" / "features" / "edinet_financials_v1" / "2026-06-18"
+        (d / "build_manifest.json").write_text(json.dumps({
+            "feature_set": "edinet_financials_v1",
+            "asof": "2026-06-18",
+            "built_count": 1,
+        }, ensure_ascii=False), encoding="utf-8")
+        q = build_research_queue(asof="2026-06-18", derived_root=self.base / "data" / "derived")
+        self.assertEqual(len(q["items"]), 1)
+        self.assertEqual(q["items"][0]["edinet_code"], "E02367")
 
     def test_evidence_uses_features_but_not_source_snapshot_values(self):
         ev = build_evidence("E02367", asof="2026-06-18", derived_root=self.base / "data" / "derived")

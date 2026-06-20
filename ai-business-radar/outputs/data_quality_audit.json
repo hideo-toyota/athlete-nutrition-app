@@ -1,0 +1,303 @@
+{
+  "asof": "2026-06-20",
+  "cross_check": {
+    "cross_checked_items": 770,
+    "item_count": 790,
+    "metrics": {
+      "equity_ratio↔equity_ratio": {
+        "checked": 770,
+        "max_abs_delta": 0.4336083163401281,
+        "median_abs_delta": 0.010707412564550323,
+        "mismatch": 217,
+        "mismatch_examples": [
+          {
+            "abs_delta": 0.4336083163401281,
+            "delta": 0.4336083163401281,
+            "edinet_code": "E01891",
+            "edinet_value": 0.15844334784268366,
+            "jquants_value": 0.5920516641828117,
+            "securities_code": "69930"
+          },
+          {
+            "abs_delta": 0.25633292868908497,
+            "delta": -0.25633292868908497,
+            "edinet_code": "E02057",
+            "edinet_value": 0.7133253219014899,
+            "jquants_value": 0.4569923932124049,
+            "securities_code": "67860"
+          },
+          {
+            "abs_delta": 0.2367096399279348,
+            "delta": 0.2367096399279348,
+            "edinet_code": "E00919",
+            "edinet_value": 0.24233146671896333,
+            "jquants_value": 0.47904110664689814,
+            "securities_code": "45020"
+          },
+          {
+            "abs_delta": 0.1712050890915583,
+            "delta": 0.1712050890915583,
+            "edinet_code": "E01480",
+            "edinet_value": 0.5199571581578007,
+            "jquants_value": 0.691162247249359,
+            "securities_code": "61010"
+          },
+          {
+            "abs_delta": 0.15429992951829447,
+            "delta": 0.15429992951829447,
+            "edinet_code": "E01474",
+            "edinet_value": 0.4211295538499817,
+            "jquants_value": 0.5754294833682762,
+            "securities_code": "60160"
+          }
+        ],
+        "mismatch_rate": 0.2818181818181818,
+        "tolerance": 0.03
+      },
+      "net_margin↔net_margin": {
+        "checked": 770,
+        "max_abs_delta": 1.6025568734617415,
+        "median_abs_delta": 0.004124479756160243,
+        "mismatch": 198,
+        "mismatch_examples": [
+          {
+            "abs_delta": 1.6025568734617415,
+            "delta": -1.6025568734617415,
+            "edinet_code": "E01300",
+            "edinet_value": -0.15247435485192962,
+            "jquants_value": -1.755031228313671,
+            "securities_code": "57210"
+          },
+          {
+            "abs_delta": 0.6143959168328035,
+            "delta": -0.6143959168328035,
+            "edinet_code": "E02070",
+            "edinet_value": 1.5897668666662546,
+            "jquants_value": 0.9753709498334511,
+            "securities_code": "67360"
+          },
+          {
+            "abs_delta": 0.5410073648470394,
+            "delta": -0.5410073648470394,
+            "edinet_code": "E01790",
+            "edinet_value": 0.41879969412674006,
+            "jquants_value": -0.12220767072029934,
+            "securities_code": "67070"
+          },
+          {
+            "abs_delta": 0.42073680037425115,
+            "delta": -0.42073680037425115,
+            "edinet_code": "E01875",
+            "edinet_value": -0.20142836864586006,
+            "jquants_value": -0.6221651690201112,
+            "securities_code": "66590"
+          },
+          {
+            "abs_delta": 0.34824784741140663,
+            "delta": -0.34824784741140663,
+            "edinet_code": "E01727",
+            "edinet_value": -0.09062745821206525,
+            "jquants_value": -0.4388753056234719,
+            "securities_code": "64330"
+          }
+        ],
+        "mismatch_rate": 0.2571428571428571,
+        "tolerance": 0.02
+      },
+      "operating_margin↔operating_margin": {
+        "checked": 761,
+        "max_abs_delta": 0.497294857796039,
+        "median_abs_delta": 0.004085732315715837,
+        "mismatch": 159,
+        "mismatch_examples": [
+          {
+            "abs_delta": 0.497294857796039,
+            "delta": -0.497294857796039,
+            "edinet_code": "E02046",
+            "edinet_value": 0.1494871006290913,
+            "jquants_value": -0.34780775716694773,
+            "securities_code": "78590"
+          },
+          {
+            "abs_delta": 0.3590568014192719,
+            "delta": 0.3590568014192719,
+            "edinet_code": "E01300",
+            "edinet_value": -0.4603753302187167,
+            "jquants_value": -0.10131852879944483,
+            "securities_code": "57210"
+          },
+          {
+            "abs_delta": 0.23537758880489534,
+            "delta": -0.23537758880489534,
+            "edinet_code": "E00935",
+            "edinet_value": 0.22368267134577552,
+            "jquants_value": -0.011694917459119825,
+            "securities_code": "45210"
+          },
+          {
+            "abs_delta": 0.21484166163573126,
+            "delta": 0.21484166163573126,
+            "edinet_code": "E00973",
+            "edinet_value": -0.20107643928398644,
+            "jquants_value": 0.013765222351744835,
+            "securities_code": "45520"
+          },
+          {
+            "abs_delta": 0.18783814199315554,
+            "delta": -0.18783814199315554,
+            "edinet_code": "E01875",
+            "edinet_value": -0.18742929489173962,
+            "jquants_value": -0.37526743688489517,
+            "securities_code": "66590"
+          }
+        ],
+        "mismatch_rate": 0.20893561103810776,
+        "tolerance": 0.02
+      },
+      "revenue_growth_yoy↔sales_growth_yoy": {
+        "checked": 770,
+        "max_abs_delta": 4.142803009417628,
+        "median_abs_delta": 0.01791758339857097,
+        "mismatch": 374,
+        "mismatch_examples": [
+          {
+            "abs_delta": 4.142803009417628,
+            "delta": 4.142803009417628,
+            "edinet_code": "E00839",
+            "edinet_value": 0.07793932109619561,
+            "jquants_value": 4.220742330513824,
+            "securities_code": "42220"
+          },
+          {
+            "abs_delta": 1.8620741318027332,
+            "delta": 1.8620741318027332,
+            "edinet_code": "E01300",
+            "edinet_value": -0.5892034693421653,
+            "jquants_value": 1.272870662460568,
+            "securities_code": "57210"
+          },
+          {
+            "abs_delta": 0.7902748890657979,
+            "delta": 0.7902748890657979,
+            "edinet_code": "E01648",
+            "edinet_value": -0.02130274689480849,
+            "jquants_value": 0.7689721421709894,
+            "securities_code": "64940"
+          },
+          {
+            "abs_delta": 0.764623729459414,
+            "delta": 0.764623729459414,
+            "edinet_code": "E01081",
+            "edinet_value": -0.5272639510164678,
+            "jquants_value": 0.2373597784429462,
+            "securities_code": "50160"
+          },
+          {
+            "abs_delta": 0.6796657577408931,
+            "delta": 0.6796657577408931,
+            "edinet_code": "E01815",
+            "edinet_value": 0.13092595130418894,
+            "jquants_value": 0.810591709045082,
+            "securities_code": "68040"
+          }
+        ],
+        "mismatch_rate": 0.4857142857142857,
+        "tolerance": 0.02
+      },
+      "roe_proxy↔roe_proxy": {
+        "checked": 770,
+        "max_abs_delta": 1.3410635025497202,
+        "median_abs_delta": 0.006434712351479119,
+        "mismatch": 184,
+        "mismatch_examples": [
+          {
+            "abs_delta": 1.3410635025497202,
+            "delta": 1.3410635025497202,
+            "edinet_code": "E00839",
+            "edinet_value": -0.024807455121100903,
+            "jquants_value": 1.3162560474286193,
+            "securities_code": "42220"
+          },
+          {
+            "abs_delta": 1.2258309535364305,
+            "delta": -1.2258309535364305,
+            "edinet_code": "E00867",
+            "edinet_value": -0.22759611148993175,
+            "jquants_value": -1.453427065026362,
+            "securities_code": "78860"
+          },
+          {
+            "abs_delta": 0.6350953073094543,
+            "delta": -0.6350953073094543,
+            "edinet_code": "E01300",
+            "edinet_value": -0.032892014402114686,
+            "jquants_value": -0.6679873217115689,
+            "securities_code": "57210"
+          },
+          {
+            "abs_delta": 0.6307388441385783,
+            "delta": 0.6307388441385783,
+            "edinet_code": "E01308",
+            "edinet_value": -0.22804410729647298,
+            "jquants_value": 0.40269473684210527,
+            "securities_code": "57070"
+          },
+          {
+            "abs_delta": 0.5969303446421963,
+            "delta": 0.5969303446421963,
+            "edinet_code": "E01891",
+            "edinet_value": -1.1874668037246068,
+            "jquants_value": -0.5905364590824105,
+            "securities_code": "69930"
+          }
+        ],
+        "mismatch_rate": 0.23896103896103896,
+        "tolerance": 0.03
+      }
+    }
+  },
+  "valuation": {
+    "asof": "2026-06-20",
+    "feature_set": "jquants_equity_v1",
+    "listed_codes": 4443,
+    "manifest_path": "data/derived/features/jquants_equity_v1/2026-06-20/manifest.json",
+    "needs_rebuild_for_uncovered_reasons": false,
+    "pbr_coverage_ratio": 0.8401980643709206,
+    "pbr_covered": 3733,
+    "pbr_uncovered_reasons": {
+      "no_pbr_inputs": 588,
+      "no_price": 104,
+      "nonpositive_or_unusable_inputs": 18
+    },
+    "per_coverage_ratio": 0.7503938780103534,
+    "per_covered": 3334,
+    "per_uncovered_reasons": {
+      "no_per_inputs": 584,
+      "no_price": 104,
+      "nonpositive_or_unusable_inputs": 421
+    },
+    "price_coverage_ratio": 0.9765923925275715,
+    "valuation_alias_hits": {
+      "bps": {
+        "BPS": 3751
+      },
+      "eps": {
+        "EPS": 3755
+      },
+      "pbr_method": {
+        "bps:BPS": 3733
+      },
+      "per_method": {
+        "eps:EPS": 3334
+      },
+      "shares": {}
+    },
+    "valuation_coverage_ratio": 0.8419986495611074,
+    "valuation_covered": 3741,
+    "valuation_uncovered_reasons": {
+      "no_per_pbr_inputs": 584,
+      "no_price": 104,
+      "nonpositive_or_unusable_inputs": 14
+    }
+  }
+}
