@@ -39,6 +39,17 @@
 - Daloopa由来の数値は citation + as_of が無い限り FACT 扱いしない。vendor計算・要約・DCF は INFERENCE/ASSUMPTION として分離し、売買判断に直結させない。
 - 自動発注しない。外部送信は通知のみ。
 
+## 分析ハンドオフ(第三者LLM入力ゲート = 2026-06-20 解禁)
+- **LICENSE_MATRIX E5/J5 を本人確認(2026-06-20)済**。前提=**個人の私的分析利用・第三者再配布/公開なし**。
+- 運用フロー: `python3 -m radar daily-update`(または `sync`→`build-features`→`daily-update`)で **分析パケット `outputs/llm_handoff/<asof>.md`** を生成 → **あなた(窓口)がその brief を読んで分析**する。
+- brief を読むときの出力規律(必須):
+  1. **UNKNOWN / 不足を先に**出す(原則3)。
+  2. 検証する**仮説は断定しない**。必ず**反証条件**を添える(原則4)。
+  3. 主張は **FACT / CALCULATION / INFERENCE / ASSUMPTION / UNKNOWN** を混ぜない(`CLAIMS.md`)。
+  4. **最終判断は人間**。discipline check 未通過と明記。買いを検討するなら必ず `discipline-auditor`(`radar check`)を通す。
+- **禁止(解禁後も維持)**: 具体的な売買指示・価格目標・順位付け・利益保証・将来断定・買い候補化。raw一括再配布・公開も禁止。
+- daily-update は **LLM API を呼ばない**(パケット生成まで)。分析はあなたが brief を読んで行う。raw本文・APIキー・.env は brief に含まれない。
+
 ## 検証対象(この道具の存在意義)
 - 「あなたの裁量(②解釈エッジ)が、**何もしない(DCAインデックス)に勝てるか**」。
 - 勝てないと出たら、それは失敗でなく**検証の成功**(=「黙ってDCA」という真実)。

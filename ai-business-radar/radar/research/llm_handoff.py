@@ -28,7 +28,8 @@ def render_llm_handoff(packet: dict) -> str:
         "",
         f"_asof: {packet['asof']} / input: derived features + local evidence only_",
         "",
-        "> LICENSE_MATRIX E5(第三者LLM入力)の確認が済むまで、このpacketはローカル確認用です。",
+        "> LICENSE_MATRIX E5/J5(第三者LLM入力)= 本人確認 2026-06-20(個人の私的分析利用・第三者再配布/公開なし)。"
+        "このpacketは Claude 等に渡して分析してよい。raw一括再配布・公開は引き続き禁止。",
         "",
         f"> {DISCLAIMER}",
         "",
@@ -81,6 +82,8 @@ def write_llm_handoff(packet: dict, *, outputs_root: Path | None = None) -> dict
         "source": "derived_features_and_local_evidence_only",
         "raw_body_included": False,
         "llm_api_called": False,
-        "third_party_llm_gate": "LICENSE_MATRIX_E5_REQUIRED",
+        "third_party_llm_gate": "LICENSE_MATRIX_E5_J5_CONFIRMED_2026-06-20",
+        "analysis_cleared": True,
+        "analysis_basis": "personal_private_use_no_redistribution",
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return {"md_path": md, "manifest_path": manifest, "count": len(packet["evidence_blocks"])}

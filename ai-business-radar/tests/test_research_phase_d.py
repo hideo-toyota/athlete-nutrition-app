@@ -134,7 +134,8 @@ class ResearchPhaseDTests(unittest.TestCase):
         self.assertIn("discipline check 未通過", text)
         self.assertFalse(manifest["raw_body_included"])
         self.assertFalse(manifest["llm_api_called"])
-        self.assertEqual(manifest["third_party_llm_gate"], "LICENSE_MATRIX_E5_REQUIRED")
+        self.assertEqual(manifest["third_party_llm_gate"], "LICENSE_MATRIX_E5_J5_CONFIRMED_2026-06-20")
+        self.assertTrue(manifest["analysis_cleared"])
         for token in FORBIDDEN_OUTPUT_TOKENS:
             self.assertNotIn(token, text)
 

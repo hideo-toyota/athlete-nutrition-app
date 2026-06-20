@@ -116,7 +116,7 @@ def render_research_queue(queue: dict) -> str:
         "## 注意",
         "- 並べ替えは edinet_code のみ。魅力度・売買順ではありません。",
         "- 価格/時価総額 dataset 未取得のため valuation_status は UNKNOWN。",
-        "- このファイルを第三者LLMへ渡す運用は LICENSE_MATRIX の確認対象です。",
+        "- 第三者LLM入力は LICENSE_MATRIX E5/J5 本人確認 2026-06-20 済(個人の私的分析利用・再配布/公開なし)。",
         "",
     ])
     text = "\n".join(out)

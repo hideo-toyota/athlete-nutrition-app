@@ -4,6 +4,14 @@
 > (CLAIMS.md:出典なきToSを FACT 扱いしない)。**raw保存・retention/purge・再配布禁止が確認できるまで sync は NO-GO**(D1)。
 > **第三者LLM入力は sync とは別ゲート**。許容確認まで evidence/research を Claude 等に渡さない。
 
+## ⭐ 解除記録(本人判断, as_of 2026-06-20)
+- **第三者LLM入力(E5/J5)= 本人判断で「可」**。基準: **個人の私的な投資分析利用に限る / 取得データを第三者へ再配布・公開しない / Claude(Anthropic)は分析の処理委託先であって"公衆への公開"ではない**。
+- 併せて **J-Quants の raw ローカル保存(J2)・retention(J3)も、上記「個人の私的利用」の枠で本人判断「可」**。EDINET は E2/E3/E7 を 2026-06-18 に確認済み。
+- これにより **derived / evidence / llm-brief を Claude に渡して分析させる運用(`radar daily-update` → Claudeがbriefを読む)を解禁**。
+- **維持する禁止**: raw一括再配布 / wrapper・proxy API / 公開・第三者提供 / 自動売買 / 買い候補・ランキング・期待リターン順・将来断定。
+- **残留留意(本人判断の前提)**: 送信先 Anthropic 側の保持/学習は別途その規約に従う(Claude Code/Max は既定で入力を学習に使わない)。公開・配布へ切り替える場合は本記録を破棄し再確認する(停止条件)。
+- ※ J-Quants/EDINET の**規約原本URL+条文の転記は未完**。本記録は「本人判断としての運用解禁」であり、原本転記が済んだら下のワークシートの該当セルを FACT として更新する。
+
 ## 提供元(検証済みFACT, as_of 2026-06-18 Web)
 - **EDINET DB**(運営 Cabocia株式会社)。**両ドメインとも公式**:
   - REST API: `https://edinetdb.jp/v1/`(API docs の Base URL。企業検索/財務/比率/分析スコア/ランキング/業種 等)
@@ -44,10 +52,11 @@
 **前回の誤りを訂正**: `edinetdb.jp` は**公式(MCP/日本語docs/規約の日本語面)**。前回の「`.jp`疑義・不採用」は**撤回**。行番号引用(L99-125等)だけは再現不能のため不採用、URL+節名で参照する。
 **原本遡及先**: FSA EDINET(`disclosure2dl.edinet-fsa.go.jp`)実在=FACT。
 
-## 判定ゲート
-- **致命**: J-Quantsは「raw保存」「**第三者LLM入力**」「再配布」が許容と確認できるまで sync は NO-GO。EDINET DB は個人内 raw一時キャッシュ/再配布禁止を本人確認済みのため Phase B sync は GO。ただし第三者LLM raw投入とAI側保持/学習が未確認のため、公式MCP以外のLLM投入は NO-GO。
-- 「第三者LLM入力」は特に注意:取得データを Claude 等に渡すこと自体が再配布/第三者提供に当たらないか、ToS+AI提供側方針の双方で確認。
-- 個人→公開に切り替える場合:attribution 必須化・再配布禁止を再点検(停止条件)。
+## 判定ゲート(2026-06-20 更新)
+- **第三者LLM入力(E5/J5)= 本人判断「可」(2026-06-20)**。前提=個人の私的分析利用・第三者再配布/公開なし。→ derived/evidence/brief を Claude に渡す運用は GO(`radar daily-update`)。
+- **J-Quants raw保存(J2)/retention(J3)= 本人判断「可」**(個人の私的利用枠・手動purece/解約時削除を運用で順守)。EDINET は E2/E3/E7 本人確認済み。→ 両者とも sync GO。
+- **維持する NO-GO**: raw一括再配布 / wrapper・proxy API / 公開・第三者提供 / 自動売買 / 買い候補・ランキング・予測。
+- 個人→公開に切り替える場合:本「解除記録」を破棄し、attribution 必須化・再配布禁止・第三者LLM可否を再点検(停止条件)。
 
 Sources(検証):
 - https://edinetdb.com/ , https://edinetdb.com/developers , https://edinetdb.com/docs/api , https://edinetdb.com/legal/terms , https://edinetdb.jp/docs/mcp-guide

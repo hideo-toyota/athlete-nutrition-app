@@ -19,6 +19,7 @@ from . import value_store
 from .features import build_financial_features, build_financial_features_batch, build_jquants_bulk_features
 from .research import (build_evidence, build_llm_handoff, build_research_queue,
                        write_evidence, write_llm_handoff, write_research_queue)
+from .daily_update import render_daily_summary, run_daily_update
 from .sources import edinet_db
 from .report import (render_check, render_mirror, render_review, render_target_check,
                      render_value_audit, render_value_review)
@@ -618,6 +619,26 @@ def cmd_llm_brief(args) -> None:
     print("  ※ LLM APIは呼んでいません。provider raw本文・APIキー値・.env は含めていません。")
 
 
+def cmd_daily_update(args) -> None:
+    """One-shot: derived features -> research-queue -> analysis brief for Claude.
+
+    Does not call any LLM API and does not run network sync (run `sync` first).
+    """
+    asof = _valid_asof(args.asof)
+    if args.max_items is not None and args.max_items <= 0:
+        raise SystemExit("--max-items は正の整数で指定してください")
+    result = run_daily_update(
+        asof=asof,
+        max_items=args.max_items,
+        build_edinet=not args.no_edinet,
+        build_jquants=not args.no_jquants,
+        dry_run=args.dry_run,
+    )
+    print(render_daily_summary(result), end="")
+    if any(s.status == "failed" for s in result["steps"]):
+        raise SystemExit("daily-update: 失敗ステップがあります(上記サマリ参照)")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="radar",
                                  description="Personal Equity Research Radar")
@@ -712,6 +733,18 @@ def main() -> None:
     plb.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
     plb.add_argument("--max-items", dest="max_items", type=int, default=None,
                      help="packetに含める最大件数(任意・正の整数)")
+    pdu = sub.add_parser(
+        "daily-update",
+        help="(運用) derived→research→分析パケットを一括生成しClaude分析用に出力(LLM API呼び出しなし)")
+    pdu.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 今日)")
+    pdu.add_argument("--max-items", dest="max_items", type=int, default=None,
+                     help="briefに含める最大件数(任意・正の整数)")
+    pdu.add_argument("--no-edinet", dest="no_edinet", action="store_true",
+                     help="EDINET financials の feature 生成をスキップ")
+    pdu.add_argument("--no-jquants", dest="no_jquants", action="store_true",
+                     help="J-Quants bulk の feature 生成をスキップ")
+    pdu.add_argument("--dry-run", dest="dry_run", action="store_true",
+                     help="計画だけ表示(書込・生成しない)")
     args = ap.parse_args()
 
     if args.command == "mirror":
@@ -744,6 +777,8 @@ def main() -> None:
         cmd_evidence(args)
     elif args.command == "llm-brief":
         cmd_llm_brief(args)
+    elif args.command == "daily-update":
+        cmd_daily_update(args)
     else:
         ap.print_help()
 

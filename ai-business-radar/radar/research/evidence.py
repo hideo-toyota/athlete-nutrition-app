@@ -83,7 +83,7 @@ def render_evidence(evidence: dict) -> str:
         "- missing/固定UNKNOWN: UNKNOWN",
         "- key_risks/falsification: INFERENCE(CALCULATION依存)",
         "",
-        "> この evidence は provider raw 本文を含みません。第三者LLMへ渡す運用は LICENSE_MATRIX の確認対象です。",
+        "> この evidence は provider raw 本文を含みません。第三者LLM入力は LICENSE_MATRIX E5/J5 本人確認 2026-06-20 済(個人の私的分析利用)。",
         "",
     ])
     text = "\n".join(out)
