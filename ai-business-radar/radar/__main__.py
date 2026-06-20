@@ -22,9 +22,10 @@ from .features import (
     build_financial_features_batch,
     build_jquants_bulk_features,
 )
-from .research import (build_evidence, build_jquants_evidence, build_llm_handoff,
-                       build_research_queue, write_evidence, write_jquants_evidence,
-                       write_llm_handoff, write_research_queue)
+from .research import (build_audit_report, build_evidence, build_jquants_evidence,
+                       build_llm_handoff, build_research_queue, write_audit_report,
+                       write_evidence, write_jquants_evidence, write_llm_handoff,
+                       write_research_queue)
 from .daily_update import render_daily_summary, run_daily_update
 from .sources import edinet_db
 from .report import (render_check, render_mirror, render_review, render_target_check,
@@ -659,6 +660,23 @@ def cmd_llm_brief(args) -> None:
     print("  ※ LLM APIは呼んでいません。provider raw本文・APIキー値・.env は含めていません。")
 
 
+def cmd_audit_report(args) -> None:
+    """Aggregate EDINET×J-Quants cross-check + J-Quants valuation coverage.
+
+    Discipline/honesty instrument: integrity check only, no ranking/advice.
+    """
+    asof = _valid_asof(args.asof)
+    report = build_audit_report(asof=asof)
+    res = write_audit_report(report)
+    cc = report["cross_check"]
+    val = report["valuation"]
+    vr = val.get("valuation_coverage_ratio")
+    print(f"data quality audit を生成しました: {_rel(res['md_path'])} / {_rel(res['manifest_path'])}")
+    print(f"  cross-checked items: {cc.get('cross_checked_items', 0)} / metrics: {len(cc.get('metrics') or {})}")
+    print(f"  valuation_coverage: {vr*100:.1f}%" if isinstance(vr, (int, float)) else "  valuation_coverage: UNKNOWN")
+    print("  ※ 整合性の点検です。売買順・推奨・予測ではありません。")
+
+
 def cmd_daily_update(args) -> None:
     """One-shot: derived features -> research-queue -> analysis brief for Claude.
 
@@ -787,6 +805,9 @@ def main() -> None:
                          help="J-Quants 証券コードの当時の株価(PIT)evidenceを生成(LLM/ネットなし)")
     pje.add_argument("code", help="証券コード(例 7203)")
     pje.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の jquants derived asof)")
+    par = sub.add_parser("audit-report",
+                         help="EDINET×J-Quants 整合と valuation coverage を集計(整合点検・売買順なし)")
+    par.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
     pdu = sub.add_parser(
         "daily-update",
         help="(運用) derived→research→分析パケットを一括生成しClaude分析用に出力(LLM API呼び出しなし)")
@@ -837,6 +858,8 @@ def main() -> None:
         cmd_llm_brief(args)
     elif args.command == "jquants-evidence":
         cmd_jquants_evidence(args)
+    elif args.command == "audit-report":
+        cmd_audit_report(args)
     elif args.command == "daily-update":
         cmd_daily_update(args)
     else:

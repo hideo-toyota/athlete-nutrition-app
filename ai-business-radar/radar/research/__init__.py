@@ -7,6 +7,7 @@ from .queue import build_research_queue, write_research_queue
 from .evidence import build_evidence, write_evidence
 from .jquants_evidence import build_jquants_evidence, render_jquants_evidence, write_jquants_evidence
 from .llm_handoff import build_llm_handoff, write_llm_handoff
+from .audit_report import build_audit_report, render_audit_report, write_audit_report
 
 __all__ = [
     "build_research_queue",
@@ -18,4 +19,7 @@ __all__ = [
     "write_jquants_evidence",
     "build_llm_handoff",
     "write_llm_handoff",
+    "build_audit_report",
+    "render_audit_report",
+    "write_audit_report",
 ]

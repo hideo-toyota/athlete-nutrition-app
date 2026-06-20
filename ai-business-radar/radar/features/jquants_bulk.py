@@ -447,6 +447,7 @@ def build_jquants_bulk_features(
     per_vals = []
     pbr_vals = []
     valuation_covered = 0
+    valuation_uncovered_reasons = Counter()
     valuation_alias_hits = {
         "eps": Counter(),
         "bps": Counter(),
@@ -503,6 +504,14 @@ def build_jquants_bulk_features(
                 valuation_alias_hits["pbr_method"][pbr_method or "unknown"] += 1
             if per is not None or pbr is not None:
                 valuation_covered += 1
+            else:
+                # Why is this code uncovered? Helps verify aliases on real raw.
+                if close_val is None or close_val <= 0:
+                    valuation_uncovered_reasons["no_price"] += 1
+                elif f.get("eps") is None and f.get("bps") is None and f.get("shares") is None:
+                    valuation_uncovered_reasons["no_per_pbr_inputs"] += 1
+                else:
+                    valuation_uncovered_reasons["nonpositive_or_unusable_inputs"] += 1
 
             doc = {
                 "schema_version": SCHEMA_VERSION,
@@ -587,6 +596,7 @@ def build_jquants_bulk_features(
             "dividend_coverage_ratio": dividend_covered / len(master) if master else None,
             "valuation_covered": valuation_covered,
             "valuation_coverage_ratio": valuation_covered / len(master) if master else None,
+            "valuation_uncovered_reasons": dict(valuation_uncovered_reasons),
         },
         "distribution": {
             "return_20d": dist(ret20),

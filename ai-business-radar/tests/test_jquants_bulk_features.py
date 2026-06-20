@@ -110,6 +110,9 @@ class JQuantsBulkFeatureTests(unittest.TestCase):
         self.assertEqual(manifest["valuation_alias_hits"]["bps"]["BPS"], 2)
         self.assertEqual(manifest["valuation_alias_hits"]["per_method"]["eps:EPS"], 1)
         self.assertEqual(manifest["valuation_alias_hits"]["pbr_method"]["bps:BPS"], 1)
+        reasons = manifest["coverage"]["valuation_uncovered_reasons"]
+        self.assertEqual(reasons.get("no_price"), 1)                       # 130A0: no price rows
+        self.assertEqual(reasons.get("nonpositive_or_unusable_inputs"), 1)  # 99990: EPS/BPS=0
         self.assertIn("valuation_coverage", summary)
         self.assertIn("valuation_alias_hits", summary)
         self.assertIn("no recommendation", summary)
