@@ -1,6 +1,6 @@
 """Deterministic research outputs from derived features.
 
-No network, no raw-body reads, no third-party LLM handoff, no advice.
+No network, no raw-body reads, no LLM API call, no advice.
 """
 
 from .queue import build_research_queue, write_research_queue

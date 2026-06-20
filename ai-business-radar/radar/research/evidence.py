@@ -3,7 +3,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .common import DISCLAIMER, assert_no_forbidden_output, load_feature_doc, metric_value, rel, valid_edinet_code
+from .common import (
+    DISCLAIMER,
+    assert_no_forbidden_output,
+    jquants_market_context,
+    load_edinet_company_map,
+    load_feature_doc,
+    load_jquants_context,
+    metric_value,
+    rel,
+    valid_edinet_code,
+)
 from .queue import _item
 
 
@@ -22,7 +32,10 @@ FEATURE_ORDER = (
 
 def build_evidence(entity: str, *, asof: str | None = None, derived_root: Path | None = None) -> dict:
     asof, doc = load_feature_doc(entity, asof=asof, derived_root=derived_root)
-    return {"asof": asof, "doc": doc, "item": _item(doc)}
+    company_map = load_edinet_company_map(asof=asof, derived_root=derived_root)
+    jquants = load_jquants_context(asof=asof, derived_root=derived_root)
+    market_context = jquants_market_context(doc, jquants=jquants, company_map=company_map)
+    return {"asof": asof, "doc": doc, "item": _item(doc, market_context), "jquants_market_context": market_context}
 
 
 def render_evidence(evidence: dict) -> str:
@@ -54,6 +67,32 @@ def render_evidence(evidence: dict) -> str:
             f"| {key} | {m.get('status', 'UNKNOWN')} | {metric_value(m)} | "
             f"{m.get('unit') or ''} | {', '.join(m.get('source_fields') or [])} | {claim} |"
         )
+    mc = evidence.get("jquants_market_context") or {}
+    mf = mc.get("features") or {}
+    out.extend([
+        "",
+        "## J-Quants market/price context [CALCULATION/UNKNOWN]",
+    ])
+    if mc.get("status") == "matched":
+        out.extend([
+            f"- securities_code: `{mc.get('securities_code')}`",
+            f"- feature_set/asof: `{mc.get('feature_set')}` / `{mc.get('jquants_asof')}`",
+            f"- latest_price_date: `{mc.get('latest_price_date')}`",
+            f"- latest_close: `{metric_value(mf.get('latest_close') or {})}`",
+            f"- latest_volume: `{metric_value(mf.get('latest_volume') or {})}`",
+            f"- return_20d: `{metric_value(mf.get('return_20d') or {})}`",
+            f"- return_60d: `{metric_value(mf.get('return_60d') or {})}`",
+            f"- return_252d: `{metric_value(mf.get('return_252d') or {})}`",
+            f"- dividend_record_present: `{metric_value(mf.get('dividend_record_present') or {})}`",
+            f"- derived_ref: `{(mc.get('evidence_ref') or {}).get('derived_path')}`",
+            f"- input_manifest_digest: `{(mc.get('evidence_ref') or {}).get('input_manifest_digest')}`",
+        ])
+    else:
+        out.extend([
+            "- securities_code: `UNKNOWN`",
+            f"- reason: `{mc.get('reason')}`",
+            f"- J-Quants feature asof: `{mc.get('jquants_asof')}` / company_map_asof: `{mc.get('company_map_asof')}`",
+        ])
     out.extend([
         "",
         "## 主要リスク/不足 [INFERENCE/UNKNOWN]",
@@ -80,6 +119,7 @@ def render_evidence(evidence: dict) -> str:
         "",
         "## claim tags",
         "- features: CALCULATION",
+        "- J-Quants market/price context: CALCULATION/UNKNOWN",
         "- missing/固定UNKNOWN: UNKNOWN",
         "- key_risks/falsification: INFERENCE(CALCULATION依存)",
         "",

@@ -16,7 +16,12 @@ from . import journal
 from . import target_check
 from . import value_audit
 from . import value_store
-from .features import build_financial_features, build_financial_features_batch, build_jquants_bulk_features
+from .features import (
+    build_edinet_company_map,
+    build_financial_features,
+    build_financial_features_batch,
+    build_jquants_bulk_features,
+)
 from .research import (build_evidence, build_jquants_evidence, build_llm_handoff,
                        build_research_queue, write_evidence, write_jquants_evidence,
                        write_llm_handoff, write_research_queue)
@@ -588,6 +593,19 @@ def cmd_build_jquants_features(args) -> None:
     print("  ※ raw本文・APIキー値は表示していません。ランキング/推奨/予測は生成していません。")
 
 
+def cmd_build_company_map(args) -> None:
+    """Build EDINET code -> securities code derived map. Reads companies raw only."""
+    asof = _valid_asof(args.asof)
+    if asof is None:
+        raise SystemExit("--asof が必要です")
+    res = build_edinet_company_map(raw_dir=args.raw_dir, asof=asof)
+    print(f"build-company-map [{res['provider']}:{res['dataset']}]: derived map を生成しました")
+    print(f"  companies: {_rel(res['companies_path'])}")
+    print(f"  manifest: {_rel(res['manifest_path'])}")
+    print(f"  rows: {res['row_count']} / mapped: {res['mapped_securities_code_count']} / input_files: {res['input_file_count']}")
+    print("  ※ raw本文・APIキー値は表示していません。売買指示・推奨・予測は生成していません。")
+
+
 def cmd_research_queue(args) -> None:
     """Phase D0: deterministic research items from derived features. No LLM handoff."""
     asof = _valid_asof(args.asof)
@@ -741,6 +759,13 @@ def main() -> None:
         description="取得済み J-Quants Bulk からローカルderived featureを生成します。ランキング/推奨/予測は出しません。",
     )
     pjq.add_argument("--asof", required=True, help="基準日 YYYY-MM-DD。asof以前のbulk行のみ採用")
+    pcm = sub.add_parser(
+        "build-company-map",
+        help="EDINET companies raw から EDINETコード↔証券コードのderived mapを生成(ネット/APIキーなし)",
+        description="EDINET companies raw から research/evidence 用のコード対応表を生成します。売買指示・推奨・予測は出しません。",
+    )
+    pcm.add_argument("--raw-dir", required=True, help="data/raw/edinet-db/companies/<asof> ディレクトリ")
+    pcm.add_argument("--asof", required=True, help="基準日 YYYY-MM-DD")
     prq = sub.add_parser("research-queue",
                          help="(Phase D0) derived feature から調査項目を生成(売買指示なし・LLM投入なし)")
     prq.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
@@ -799,6 +824,8 @@ def main() -> None:
         cmd_build_features(args)
     elif args.command == "build-jquants-features":
         cmd_build_jquants_features(args)
+    elif args.command == "build-company-map":
+        cmd_build_company_map(args)
     elif args.command == "research-queue":
         cmd_research_queue(args)
     elif args.command == "evidence":

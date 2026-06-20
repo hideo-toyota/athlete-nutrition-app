@@ -77,11 +77,103 @@ def _write_doc(base: Path, code="E02367", asof="2026-06-18"):
     return p
 
 
+def _write_company_map(base: Path, asof="2026-06-18"):
+    d = base / "data" / "derived" / "features" / "edinet_company_map_v1" / asof
+    d.mkdir(parents=True, exist_ok=True)
+    row = {
+        "schema_version": "1",
+        "feature_set": "edinet_company_map_v1",
+        "feature_registry_version": "1",
+        "asof": asof,
+        "provider": "edinet-db",
+        "dataset": "companies",
+        "edinet_code": "E02367",
+        "securities_code": "72030",
+        "sec_code": "72030",
+        "listing_status": "listed",
+        "industry": "輸送用機器",
+        "company_name": SENTINEL,
+        "claim": "FACT",
+    }
+    (d / "companies.jsonl").write_text(json.dumps(row, ensure_ascii=False) + "\n", encoding="utf-8")
+    (d / "manifest.json").write_text(json.dumps({
+        "feature_set": "edinet_company_map_v1",
+        "asof": asof,
+        "row_count": 1,
+    }, ensure_ascii=False), encoding="utf-8")
+
+
+def _write_jquants(base: Path, asof="2026-06-18"):
+    d = base / "data" / "derived" / "features" / "jquants_equity_v1" / asof
+    d.mkdir(parents=True, exist_ok=True)
+    doc = {
+        "schema_version": "1",
+        "feature_set": "jquants_equity_v1",
+        "feature_registry_version": "1",
+        "generated_at": "2026-06-18T00:00:00+00:00",
+        "asof": asof,
+        "provider": "jquants",
+        "dataset": "bulk:master+prices+financials+dividends",
+        "securities_code": "72030",
+        "entity": {
+            "company_name": SENTINEL,
+            "market": "プライム",
+            "sector33": "輸送用機器",
+            "margin_type": "貸借",
+            "master_date": asof,
+        },
+        "input": {
+            "input_manifest_digest": "jq-digest",
+            "normalization_version": "1",
+            "raw_root": str(base / "data" / "raw" / "jquants" / "bulk"),
+        },
+        "features": {
+            "latest_close": _measured(2530, unit="JPY"),
+            "latest_volume": _measured(1234000, unit="shares"),
+            "return_20d": _measured(0.05),
+            "return_60d": _measured(-0.02),
+            "return_252d": _measured(0.12),
+            "dividend_record_present": _measured(True, unit="bool"),
+        },
+        "source_dates": {
+            "latest_price_date": "2026-06-18",
+            "latest_financial_disclosure_date": "2026-05-10",
+            "latest_dividend_pub_date": "2026-05-10",
+        },
+        "warnings": ["not rendered"],
+    }
+    (d / "features.jsonl").write_text(json.dumps(doc, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    (d / "manifest.json").write_text(json.dumps({
+        "schema_version": "1",
+        "feature_set": "jquants_equity_v1",
+        "generated_at": "2026-06-18T00:00:00+00:00",
+        "asof": asof,
+        "provider": "jquants",
+        "coverage": {
+            "listed_codes": 1,
+            "price_covered": 1,
+            "summary_covered": 1,
+            "dividend_covered": 1,
+            "latest_price_date": "2026-06-18",
+            "price_coverage_ratio": 1.0,
+            "summary_coverage_ratio": 1.0,
+            "dividend_coverage_ratio": 1.0,
+        },
+        "distribution": {
+            "return_20d": {"count": 1, "median": 0.05, "positive_rate": 1.0, "p10": None, "p90": None},
+            "return_60d": {"count": 1, "median": -0.02, "positive_rate": 0.0, "p10": None, "p90": None},
+            "return_252d": {"count": 1, "median": 0.12, "positive_rate": 1.0, "p10": None, "p90": None},
+        },
+    }, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+
+
 class ResearchPhaseDTests(unittest.TestCase):
     def setUp(self):
         self.td = tempfile.TemporaryDirectory()
         self.base = Path(self.td.name)
         _write_doc(self.base)
+        _write_company_map(self.base)
+        _write_jquants(self.base)
 
     def tearDown(self):
         self.td.cleanup()
@@ -91,10 +183,15 @@ class ResearchPhaseDTests(unittest.TestCase):
         self.assertEqual(q["items"][0]["type"], "research_item")
         self.assertEqual(q["items"][0]["discipline_status"], "未通過")
         self.assertEqual(q["items"][0]["coverage_priority"], 0)
+        self.assertEqual(q["items"][0]["ticker"], "72030")
+        self.assertEqual(q["items"][0]["jquants_market_context"]["status"], "matched")
         self.assertIn("valuation_status", q["items"][0]["unknown_features"])
         with tempfile.TemporaryDirectory() as od:
             res = write_research_queue(q, outputs_root=Path(od))
             text = Path(res["md_path"]).read_text(encoding="utf-8")
+            self.assertIn("J-Quants local context", text)
+            self.assertIn("2,530 JPY", text)
+            self.assertIn("2026-06-18", text)
             self.assertNotIn(SENTINEL, text)
             for token in FORBIDDEN_OUTPUT_TOKENS:
                 self.assertNotIn(token, text)
@@ -107,6 +204,9 @@ class ResearchPhaseDTests(unittest.TestCase):
             text = Path(res["path"]).read_text(encoding="utf-8")
         self.assertIn("operating_margin", text)
         self.assertIn("8.0%", text)
+        self.assertIn("J-Quants market/price context", text)
+        self.assertIn("2,530 JPY", text)
+        self.assertIn("return_60d", text)
         self.assertIn("check buy <TICKER> <AMOUNT_JPY> <SECTOR>", text)
         self.assertNotIn(SENTINEL, text)
         for token in FORBIDDEN_OUTPUT_TOKENS:
@@ -130,6 +230,9 @@ class ResearchPhaseDTests(unittest.TestCase):
             manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
         self.assertNotIn(SENTINEL, text)
         self.assertIn("LICENSE_MATRIX E5", text)
+        self.assertIn("J-Quants market context", text)
+        self.assertIn("price_coverage", text)
+        self.assertIn("2,530 JPY", text)
         self.assertIn("UNKNOWN / 不足", text)
         self.assertIn("discipline check 未通過", text)
         self.assertFalse(manifest["raw_body_included"])

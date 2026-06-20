@@ -47,6 +47,10 @@ def _edinet_raw_dir(root: Path, asof: str) -> Path:
     return root / "data" / "raw" / "edinet-db" / "financials" / asof
 
 
+def _edinet_company_raw_dir(root: Path, asof: str) -> Path:
+    return root / "data" / "raw" / "edinet-db" / "companies" / asof
+
+
 def _jquants_bulk_dir(root: Path) -> Path:
     return root / "data" / "raw" / "jquants" / "bulk"
 
@@ -93,7 +97,33 @@ def run_daily_update(
         except Exception as e:  # noqa: BLE001 - never leak raw; report type only
             steps.append(StepResult("build-features(edinet)", "failed", type(e).__name__))
 
-    # 2. J-Quants bulk raw -> derived features (local only; no network/API key)
+    # 2. EDINET companies raw -> derived code map. This bridge lets EDINET
+    #    financial items carry J-Quants price context in research/evidence.
+    company_dir = _edinet_company_raw_dir(root, asof)
+    if not build_edinet:
+        steps.append(StepResult("build-company-map(edinet)", "skipped", "--no-edinet"))
+    elif not company_dir.exists():
+        steps.append(StepResult("build-company-map(edinet)", "skipped", f"companies raw無し: {company_dir}"))
+    elif dry_run:
+        steps.append(StepResult("build-company-map(edinet)", "planned", f"raw_dir={company_dir}"))
+    else:
+        try:
+            from .features import build_edinet_company_map
+            res = build_edinet_company_map(
+                raw_dir=str(company_dir),
+                asof=asof,
+                raw_root=root / "data" / "raw",
+                derived_root=derived_root,
+            )
+            steps.append(StepResult(
+                "build-company-map(edinet)", "done",
+                f"rows={res['row_count']} mapped={res['mapped_securities_code_count']}"))
+        except SystemExit as e:
+            steps.append(StepResult("build-company-map(edinet)", "failed", str(e)))
+        except Exception as e:  # noqa: BLE001
+            steps.append(StepResult("build-company-map(edinet)", "failed", type(e).__name__))
+
+    # 3. J-Quants bulk raw -> derived features (local only; no network/API key)
     jq_dir = _jquants_bulk_dir(root)
     if not build_jquants:
         steps.append(StepResult("build-features(jquants)", "skipped", "--no-jquants"))
@@ -111,9 +141,18 @@ def run_daily_update(
         except Exception as e:  # noqa: BLE001
             steps.append(StepResult("build-features(jquants)", "failed", type(e).__name__))
 
-    summary = {"asof": asof, "item_count": 0, "calc_features": 0, "unknown_features": 0, "jquants_blocks": 0}
+    summary = {
+        "asof": asof,
+        "item_count": 0,
+        "calc_features": 0,
+        "unknown_features": 0,
+        "jquants_context_status": "UNKNOWN",
+        "jquants_latest_price_date": None,
+        "jquants_price_coverage_ratio": None,
+        "jquants_blocks": 0,
+    }
 
-    # 3. research-queue (deterministic; no LLM)
+    # 4. research-queue (deterministic; no LLM)
     if dry_run:
         steps.append(StepResult("research-queue", "planned"))
         steps.append(StepResult("llm-brief", "planned"))
@@ -128,13 +167,18 @@ def run_daily_update(
         summary["item_count"] = rq["count"]
         summary["calc_features"] = sum(len(i["computed_features"]) for i in queue["items"])
         summary["unknown_features"] = sum(len(i["unknown_features"]) for i in queue["items"])
+        jq_summary = ((queue.get("auxiliary") or {}).get("jquants_summary") or {})
+        jq_coverage = jq_summary.get("coverage") or {}
+        summary["jquants_context_status"] = jq_summary.get("status", "UNKNOWN")
+        summary["jquants_latest_price_date"] = jq_coverage.get("latest_price_date")
+        summary["jquants_price_coverage_ratio"] = jq_coverage.get("price_coverage_ratio")
         steps.append(StepResult("research-queue", "done", f"items={rq['count']}"))
     except SystemExit as e:
         steps.append(StepResult("research-queue", "skipped", str(e)))
     except Exception as e:  # noqa: BLE001
         steps.append(StepResult("research-queue", "failed", type(e).__name__))
 
-    # 4. llm-brief (analysis-ready packet for Claude; gate confirmed)
+    # 5. llm-brief (analysis-ready packet for Claude; gate confirmed)
     #    J-Quants 株価コード指定があれば、EDINET財務が無くても brief を成立させる。
     if outputs.get("research_queue_md") or jquants_codes:
         try:
@@ -162,6 +206,8 @@ def render_daily_summary(result: dict) -> str:
     from .research.common import assert_no_forbidden_output
 
     s = result["summary"]
+    coverage = s.get("jquants_price_coverage_ratio")
+    coverage_text = f"{coverage * 100:.1f}%" if isinstance(coverage, (int, float)) else "UNKNOWN"
     title = f"# Daily Update — {result['asof']}" + ("  (dry-run)" if result["dry_run"] else "")
     lines = [
         title,
@@ -177,7 +223,10 @@ def render_daily_summary(result: dict) -> str:
         "## サマリ",
         f"- research_item: {s['item_count']} 件",
         f"- CALCULATION features: {s['calc_features']} / UNKNOWN features: {s['unknown_features']}",
-        f"- J-Quants 株価evidence(当時の株価): {s['jquants_blocks']} 件",
+        f"- J-Quants 市場コンテキスト: {s.get('jquants_context_status', 'UNKNOWN')}"
+        f" / latest_price_date={s.get('jquants_latest_price_date') or 'UNKNOWN'}"
+        f" / price_coverage={coverage_text}",
+        f"- J-Quants 単独evidence(--jquants-codes指定時): {s['jquants_blocks']} 件",
         "",
         "## Claudeに渡す分析パケット",
     ]
@@ -187,7 +236,8 @@ def render_daily_summary(result: dict) -> str:
             f"- `{brief}`",
             "- 読み方: UNKNOWN/不足 → 検証する仮説(断定しない) → 反証条件 → 次に読む資料 "
             "→ claim分類(FACT/CALCULATION/INFERENCE/ASSUMPTION/UNKNOWN) → discipline gate 注意。",
-            "- 当時の株価は J-Quants block の latest_close(asof以前の調整後終値)を参照。",
+            "- 当時の株価は research/evidence 内の J-Quants market context、または"
+            " --jquants-codes 指定時の J-Quants block の latest_close(asof以前の調整後終値)を参照。",
             "- 禁止: 具体的な売買指示・価格目標・順位付け・利益保証・将来断定。",
         ]
     else:

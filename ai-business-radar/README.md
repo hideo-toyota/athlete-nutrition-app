@@ -34,6 +34,7 @@ python3 -m radar sync --provider edinet-db --dataset companies --asof YYYY-MM-DD
 python3 -m radar sync --provider edinet-db --dataset financials --code E02144 --years 1 --period annual --asof YYYY-MM-DD
 python3 -m radar sync --provider edinet-db --dataset financials --codes-file data/metadata/edinetdb_company_codes_YYYYMMDD.txt --offset 0 --limit 400 --years 1 --period annual --asof YYYY-MM-DD
 python3 -m radar build-features --provider edinet-db --dataset financials --raw-path data/raw/edinet-db/financials/<asof>/<file>.json --asof YYYY-MM-DD
+python3 -m radar build-company-map --raw-dir data/raw/edinet-db/companies/<asof> --asof YYYY-MM-DD
 python3 -m radar build-jquants-features --asof YYYY-MM-DD
 python3 -m radar research-queue --asof YYYY-MM-DD
 python3 -m radar evidence E02144 --asof YYYY-MM-DD
@@ -49,9 +50,15 @@ python3 -m radar llm-brief --asof YYYY-MM-DD
   J-Quants はユーザー許可済み Premium Bulk raw をローカル取得済みの場合に限り、`build-jquants-features`
   で `data/derived/features/jquants_equity_v1` を生成できる(API sync ではない・ネット/APIキーなし)。
   Claude等LLMへの取得本文投入は `LICENSE_MATRIX.md` の確認対象。
-  Phase C minimal feature生成(EDINET DB financials raw → data/derived)、J-Quants Bulk local feature生成、
+  Phase C minimal feature生成(EDINET DB financials raw → data/derived)、EDINET companies derived map、
+  J-Quants Bulk local feature生成、
   derivedだけを読む D0 research_queue/evidence、
   LLM投入用packet生成(`llm-brief`, API呼び出しなし)は実装済み。
+  `research-queue` / `evidence` / `llm-brief` は EDINET financials を主入力にし、
+  `edinet_company_map_v1` があれば J-Quants `jquants_equity_v1` の株価/出来高/20・60・252営業日リターンを
+  補助コンテキストとして含める(売買順・推奨・予測ではない)。
+  `daily-update` は EDINET companies raw が同じ asof にあれば `edinet_company_map_v1` も自動生成し、
+  EDINET evidence/brief に J-Quants の当時株価コンテキストを結合する。
   provider raw本文の Claude等LLM投入と自動API送信は未実装・`LICENSE_MATRIX.md` の確認対象。
 
 ## 使い方プロンプト集

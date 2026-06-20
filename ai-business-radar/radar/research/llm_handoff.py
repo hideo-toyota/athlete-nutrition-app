@@ -37,8 +37,44 @@ def build_llm_handoff(*, asof: str | None = None, derived_root: Path | None = No
     for item in items:
         ev = build_evidence(item["edinet_code"], asof=queue["asof"], derived_root=derived_root)
         evidence_blocks.append(render_evidence(ev))
-    return {"asof": queue["asof"], "queue": queue,
-            "evidence_blocks": evidence_blocks, "jquants_blocks": jquants_blocks}
+    return {
+        "asof": queue["asof"],
+        "queue": queue,
+        "evidence_blocks": evidence_blocks,
+        "jquants_blocks": jquants_blocks,
+        "jquants_summary": (queue.get("auxiliary") or {}).get("jquants_summary"),
+    }
+
+
+def _pct(value) -> str:
+    return "UNKNOWN" if not isinstance(value, (int, float)) else f"{value * 100:.1f}%"
+
+
+def _render_jquants_summary(summary: dict | None) -> list[str]:
+    summary = summary or {}
+    out = [
+        "## J-Quants market context",
+    ]
+    if summary.get("status") != "CALCULATION":
+        return out + [
+            "- J-Quants local features: UNKNOWN",
+            "- 個別証券コードとの結合が無い場合、evidence 側も UNKNOWN として扱う。",
+            "",
+        ]
+    coverage = summary.get("coverage") or {}
+    dist = summary.get("distribution") or {}
+    out.extend([
+        f"- feature_set/asof: `{summary.get('feature_set')}` / `{summary.get('asof')}`",
+        f"- latest_price_date: `{coverage.get('latest_price_date')}`",
+        f"- price_coverage: `{_pct(coverage.get('price_coverage_ratio'))}` / summary_coverage: `{_pct(coverage.get('summary_coverage_ratio'))}`",
+        f"- return_20d median: `{_pct((dist.get('return_20d') or {}).get('median'))}` / positive_rate: `{_pct((dist.get('return_20d') or {}).get('positive_rate'))}`",
+        f"- return_60d median: `{_pct((dist.get('return_60d') or {}).get('median'))}` / positive_rate: `{_pct((dist.get('return_60d') or {}).get('positive_rate'))}`",
+        f"- return_252d median: `{_pct((dist.get('return_252d') or {}).get('median'))}` / positive_rate: `{_pct((dist.get('return_252d') or {}).get('positive_rate'))}`",
+        f"- derived_ref: `{summary.get('derived_path')}`",
+        "- 用途: 市場/価格文脈の確認。売買順・魅力度順ではない。",
+        "",
+    ])
+    return out
 
 
 def render_llm_handoff(packet: dict) -> str:
@@ -67,6 +103,7 @@ def render_llm_handoff(packet: dict) -> str:
         "5. claim分類表",
         "6. discipline gate 注意",
         "",
+        *_render_jquants_summary(packet.get("jquants_summary")),
         "## Research queue",
         render_research_queue(packet["queue"]),
         "",
@@ -104,6 +141,8 @@ def write_llm_handoff(packet: dict, *, outputs_root: Path | None = None) -> dict
         "item_count": len(packet["queue"]["items"]),
         "evidence_count": len(packet["evidence_blocks"]),
         "jquants_block_count": len(jquants_blocks),
+        "jquants_context_status": (packet.get("jquants_summary") or {}).get("status", "UNKNOWN"),
+        "jquants_feature_asof": (packet.get("jquants_summary") or {}).get("asof"),
         "source": "derived_features_and_local_evidence_only",
         "raw_body_included": False,
         "llm_api_called": False,
