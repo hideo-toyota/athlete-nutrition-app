@@ -91,7 +91,7 @@ python3 -m radar sync --provider edinet-db --dataset financials --codes-file dat
 ```
 - `--asof` は厳密 `YYYY-MM-DD`(既存 mirror/score/target-check と同実装)。
 - `--codes-file` は `data/metadata` 配下の EDINETコード一覧に限定。空行・`#`コメント・CSVヘッダは無視。
-- `--code` と `--codes-file` は排他。batch は `data_layer.daily_request_budget` 以下の `--limit` で小分け実行し、同一 `asof` の既存 batch manifest の `total_attempts` を既使用分として扱う。
+- `--code` と `--codes-file` は排他。batch は `data_layer.daily_request_budget` 以下の `--limit` で小分け実行し、同一 `run_date` の既存 batch manifest の `total_attempts` を既使用分として扱う。
 - batch は既存 raw+provenance が hash/PIT/params 一致なら再取得せず `skipped_existing` にする。壊れた sidecar は再取得対象。
 - batch は最初の失敗で停止し、manifest に redacted class のみ記録し、CLI は非0で停止する。`next_offset` / `retry_offset` を使って失敗地点から再開する。
 - 既存 6コマンド + value-audit + `data-check` の I/O は不変(純加法)。

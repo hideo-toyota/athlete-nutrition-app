@@ -235,17 +235,24 @@ def _daily_request_budget(cfg: dict) -> int | None:
     return _positive_int(budget, "data_layer.daily_request_budget")
 
 
-def _batch_attempts_used(metadata_dir: Path, asof: str) -> int:
+def _batch_run_date(clock=None) -> str:
+    now = clock() if clock else datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    return now.astimezone(_JST).date().isoformat()
+
+
+def _batch_attempts_used(metadata_dir: Path, run_date: str) -> int:
     root = Path(metadata_dir).resolve()
     if not root.exists():
         return 0
     total = 0
-    for p in root.glob(f"edinetdb_financials_batch_{asof}_offset-*_limit-*.json"):
+    for p in root.glob("edinetdb_financials_batch_*_offset-*_limit-*.json"):
         try:
             d = json.loads(p.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        if d.get("provider") == PROVIDER and d.get("dataset") == DATASET_FINANCIALS:
+        if d.get("provider") == PROVIDER and d.get("dataset") == DATASET_FINANCIALS and d.get("run_date") == run_date:
             attempts = d.get("total_attempts")
             if isinstance(attempts, int) and attempts > 0:
                 total += attempts
@@ -549,7 +556,8 @@ def sync_financials_batch(
     max_bytes = int(dl.get("max_response_bytes", live.DEFAULT_MAX_BYTES))
     timeout = dl.get("timeout_sec", live.DEFAULT_TIMEOUT)
     base_http_client = http_client or live.UrllibClient(timeout, max_bytes)
-    prior_attempts = _batch_attempts_used(Path(metadata_dir), asof)
+    run_date = _batch_run_date(clock)
+    prior_attempts = _batch_attempts_used(Path(metadata_dir), run_date)
     request_count = 0
 
     def counted_http_client(url, headers):
@@ -606,6 +614,7 @@ def sync_financials_batch(
         "provider": PROVIDER,
         "dataset": DATASET_FINANCIALS,
         "asof": asof,
+        "run_date": run_date,
         "offset": offset,
         "limit": limit,
         "years": years,
@@ -635,6 +644,7 @@ def sync_financials_batch(
         "provider": PROVIDER,
         "dataset": DATASET_FINANCIALS,
         "asof": asof,
+        "run_date": run_date,
         "offset": offset,
         "limit": limit,
         "years": years,
