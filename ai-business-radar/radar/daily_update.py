@@ -189,10 +189,18 @@ def run_daily_update(
                                        derived_root=derived_root, jquants_codes=jquants_codes)
             lb = write_llm_handoff(packet, outputs_root=outputs_root)
             outputs["brief_md"] = str(lb["md_path"])
+            prompt = write_discord_prompt(result_like={
+                "asof": asof,
+                "brief_md": str(lb["md_path"]),
+                "evidence_count": lb["count"],
+                "jquants_count": lb["jquants_count"],
+            }, outputs_root=outputs_root)
+            outputs["discord_prompt_md"] = str(prompt["path"])
             summary["jquants_blocks"] = lb["jquants_count"]
             steps.append(StepResult(
                 "llm-brief", "done",
                 f"evidence_blocks={lb['count']} jquants_blocks={lb['jquants_count']}"))
+            steps.append(StepResult("discord-prompt", "done", str(prompt["path"])))
         except SystemExit as e:
             steps.append(StepResult("llm-brief", "skipped", str(e)))
         except Exception as e:  # noqa: BLE001
@@ -201,6 +209,59 @@ def run_daily_update(
         steps.append(StepResult("llm-brief", "skipped", "derived無しのため未生成"))
 
     return {"asof": asof, "dry_run": dry_run, "steps": steps, "outputs": outputs, "summary": summary}
+
+
+def render_discord_prompt(*, asof: str, brief_md: str, evidence_count: int, jquants_count: int) -> str:
+    """Short prompt to paste into Discord/Claude Code.
+
+    It references the local handoff file instead of pasting the whole packet.
+    No provider raw body, API key, or env value is included.
+    """
+    from .research.common import assert_no_forbidden_output
+
+    lines = [
+        f"# Discord LLM Prompt — {asof}",
+        "",
+        "以下のローカル分析packetを読み、投資助言ではなく調査メモとして要約してください。",
+        "",
+        f"- packet: `{brief_md}`",
+        f"- evidence_blocks: {evidence_count}",
+        f"- jquants_blocks: {jquants_count}",
+        "",
+        "必須ルール:",
+        "- まず UNKNOWN / 不足データを列挙する。",
+        "- FACT / CALCULATION / INFERENCE / ASSUMPTION / UNKNOWN を分ける。",
+        "- 検証対象の仮説、反証条件、次に読む資料を短く出す。",
+        "- discipline check 未通過であり、最終判断は人間と明記する。",
+        "- 売買指示、価格目標、順位付け、利益保証、将来断定は禁止。",
+        "- provider raw本文、APIキー、.env、認証情報を要求しない。",
+        "",
+        "出力形式:",
+        "1. UNKNOWN / 不足",
+        "2. 検証対象の仮説(断定しない)",
+        "3. 反証条件",
+        "4. 次に読む資料",
+        "5. claim分類表",
+        "6. discipline gate 注意",
+        "",
+    ]
+    text = "\n".join(lines)
+    assert_no_forbidden_output(text)
+    return text
+
+
+def write_discord_prompt(*, result_like: dict, outputs_root: Path | None = None) -> dict:
+    root = outputs_root or (ROOT / "outputs")
+    out_dir = root / "discord"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"llm_prompt_{result_like['asof']}.md"
+    path.write_text(render_discord_prompt(
+        asof=result_like["asof"],
+        brief_md=result_like["brief_md"],
+        evidence_count=result_like["evidence_count"],
+        jquants_count=result_like["jquants_count"],
+    ), encoding="utf-8")
+    return {"path": path}
 
 
 def render_daily_summary(result: dict) -> str:
@@ -246,6 +307,14 @@ def render_daily_summary(result: dict) -> str:
             " --jquants-codes 指定時の J-Quants block の latest_close(asof以前の調整後終値)を参照。",
             "- 禁止: 具体的な売買指示・価格目標・順位付け・利益保証・将来断定。",
         ]
+        prompt = result["outputs"].get("discord_prompt_md")
+        if prompt:
+            lines += [
+                "",
+                "## Discordに貼る短い指示",
+                f"- `{prompt}`",
+                "- この短い指示を貼ると、Claude側は上記packetを読む前提で、禁止事項と出力形式を固定できる。",
+            ]
     else:
         lines.append("- (今回は derived データが無く未生成。先に sync / build-features を実行)")
     text = "\n".join(lines) + "\n"

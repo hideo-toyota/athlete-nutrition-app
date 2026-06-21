@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from radar.daily_update import render_daily_summary, run_daily_update
+from radar.daily_update import render_daily_summary, render_discord_prompt, run_daily_update
 from radar.research.common import FORBIDDEN_OUTPUT_TOKENS
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -169,14 +169,23 @@ class DailyUpdatePipelineTests(unittest.TestCase):
             self.assertEqual(statuses["llm-brief"], "done")
             self.assertEqual(result["summary"]["item_count"], 1)
             brief = Path(result["outputs"]["brief_md"])
+            prompt = Path(result["outputs"]["discord_prompt_md"])
             self.assertTrue(brief.exists())
+            self.assertTrue(prompt.exists())
             text = brief.read_text(encoding="utf-8")
+            prompt_text = prompt.read_text(encoding="utf-8")
             self.assertNotIn(SENTINEL, text)
+            self.assertNotIn(SENTINEL, prompt_text)
             self.assertIn("LICENSE_MATRIX E5", text)
+            self.assertIn(str(brief), prompt_text)
+            self.assertIn("UNKNOWN / 不足", prompt_text)
+            self.assertIn("provider raw本文", prompt_text)
             for token in FORBIDDEN_OUTPUT_TOKENS:
                 self.assertNotIn(token, text)
+                self.assertNotIn(token, prompt_text)
             summary = render_daily_summary(result)
             self.assertIn(str(brief), summary)
+            self.assertIn(str(prompt), summary)
             self.assertNotIn(SENTINEL, summary)
 
     def test_brief_manifest_marks_gate_confirmed(self):
@@ -222,7 +231,20 @@ class DailyUpdatePipelineTests(unittest.TestCase):
             summary = render_daily_summary(result)
             self.assertIn("J-Quants 市場コンテキスト: CALCULATION", summary)
             self.assertIn("latest_price_date=2026-06-18", summary)
-            self.assertIn("valuation_coverage=100.0%", summary)
+        self.assertIn("valuation_coverage=100.0%", summary)
+
+    def test_render_discord_prompt_is_fixed_and_clean(self):
+        text = render_discord_prompt(
+            asof="2026-06-18",
+            brief_md="outputs/llm_handoff/2026-06-18.md",
+            evidence_count=3,
+            jquants_count=1,
+        )
+        self.assertIn("outputs/llm_handoff/2026-06-18.md", text)
+        self.assertIn("FACT / CALCULATION / INFERENCE / ASSUMPTION / UNKNOWN", text)
+        self.assertIn("discipline check 未通過", text)
+        for token in FORBIDDEN_OUTPUT_TOKENS:
+            self.assertNotIn(token, text)
 
 
 class DailyUpdateCliTests(unittest.TestCase):

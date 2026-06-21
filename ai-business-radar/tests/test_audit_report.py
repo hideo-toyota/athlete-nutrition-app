@@ -99,6 +99,8 @@ class AuditReportTests(unittest.TestCase):
         self.assertEqual(om["mismatch"], 1)             # 0.08 vs 0.20 exceeds 2pt
         self.assertEqual(om["mismatch_examples"][0]["edinet_code"], "E02367")
         self.assertAlmostEqual(om["mismatch_examples"][0]["delta"], 0.12)
+        self.assertAlmostEqual(om["p90_abs_delta"], 0.12)
+        self.assertEqual(om["calibration_signal"], "sample_too_small")
         rg = cc["metrics"]["revenue_growth_yoy↔sales_growth_yoy"]
         self.assertEqual(rg["mismatch"], 0)             # 0.12 vs 0.12 within tolerance
 
@@ -120,6 +122,8 @@ class AuditReportTests(unittest.TestCase):
         self.assertIn("valuation coverage", text)
         self.assertIn("uncovered_reasons", text)
         self.assertIn("mismatch 明細", text)
+        self.assertIn("校正信号", text)
+        self.assertIn("p90|Δ|", text)
         self.assertIn("per_uncovered_reasons", text)
         self.assertIn("pbr_uncovered_reasons", text)
         for token in FORBIDDEN_OUTPUT_TOKENS:

@@ -57,16 +57,68 @@ def aggregate_cross_checks(queue: dict, *, max_examples_per_metric: int = 5) -> 
     for key, agg in sorted(per_metric.items()):
         deltas = agg["abs_deltas"]
         examples = sorted(agg["mismatch_examples"], key=lambda x: x["abs_delta"], reverse=True)
+        tolerance = agg["tolerance"]
+        median = statistics.median(deltas) if deltas else None
+        p75 = _percentile(deltas, 0.75)
+        p90 = _percentile(deltas, 0.90)
+        max_delta = max(deltas) if deltas else None
+        mismatch_rate = (agg["mismatch"] / agg["checked"]) if agg["checked"] else None
         metrics[key] = {
             "checked": agg["checked"],
             "mismatch": agg["mismatch"],
-            "mismatch_rate": (agg["mismatch"] / agg["checked"]) if agg["checked"] else None,
-            "tolerance": agg["tolerance"],
-            "median_abs_delta": statistics.median(deltas) if deltas else None,
-            "max_abs_delta": max(deltas) if deltas else None,
+            "mismatch_rate": mismatch_rate,
+            "tolerance": tolerance,
+            "median_abs_delta": median,
+            "p75_abs_delta": p75,
+            "p90_abs_delta": p90,
+            "max_abs_delta": max_delta,
+            "calibration_signal": _calibration_signal(
+                checked=agg["checked"],
+                mismatch_rate=mismatch_rate,
+                tolerance=tolerance,
+                median_abs_delta=median,
+                p90_abs_delta=p90,
+                max_abs_delta=max_delta,
+            ),
             "mismatch_examples": examples[:max_examples_per_metric],
         }
     return {"item_count": len(items), "cross_checked_items": cross_checked_items, "metrics": metrics}
+
+
+def _percentile(values: list[float], q: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    if len(ordered) == 1:
+        return ordered[0]
+    pos = (len(ordered) - 1) * q
+    lo = int(pos)
+    hi = min(lo + 1, len(ordered) - 1)
+    frac = pos - lo
+    return ordered[lo] * (1 - frac) + ordered[hi] * frac
+
+
+def _calibration_signal(*, checked: int, mismatch_rate, tolerance, median_abs_delta,
+                        p90_abs_delta, max_abs_delta) -> str:
+    """Human-review signal only. It must not auto-change tolerance."""
+    if checked < 20:
+        return "sample_too_small"
+    if not isinstance(mismatch_rate, (int, float)):
+        return "unknown"
+    if not isinstance(tolerance, (int, float)) or tolerance <= 0:
+        return "tolerance_missing_or_zero"
+    median = median_abs_delta if isinstance(median_abs_delta, (int, float)) else 0.0
+    p90 = p90_abs_delta if isinstance(p90_abs_delta, (int, float)) else 0.0
+    mx = max_abs_delta if isinstance(max_abs_delta, (int, float)) else 0.0
+    if mismatch_rate >= 0.40:
+        return "definition_or_period_review"
+    if median > tolerance:
+        return "systematic_shift_or_tolerance_review"
+    if p90 > tolerance * 3 or mx > tolerance * 10:
+        return "outlier_review"
+    if mismatch_rate >= 0.20:
+        return "monitor_definition_drift"
+    return "ok"
 
 
 def valuation_coverage_view(jquants: dict) -> dict:
@@ -148,18 +200,21 @@ def render_audit_report(report: dict) -> str:
     if metrics:
         out.extend([
             "",
-            "| metric | checked | mismatch | mismatch率 | tolerance | median|Δ| | max|Δ| |",
-            "|---|---:|---:|---:|---:|---:|---:|",
+            "| metric | checked | mismatch | mismatch率 | tolerance | median|Δ| | p90|Δ| | max|Δ| | 校正信号 |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---|",
         ])
         for key, m in metrics.items():
             out.append(
                 f"| {key} | {m['checked']} | {m['mismatch']} | {_pct(m['mismatch_rate'])} | "
-                f"{_pt(m['tolerance'])} | {_pt(m['median_abs_delta'])} | {_pt(m['max_abs_delta'])} |"
+                f"{_pt(m['tolerance'])} | {_pt(m['median_abs_delta'])} | {_pt(m.get('p90_abs_delta'))} | "
+                f"{_pt(m['max_abs_delta'])} | `{m.get('calibration_signal', 'unknown')}` |"
             )
         out.extend([
             "",
             "- mismatch率が高い指標は、tolerance が厳しすぎるか、片側のデータ品質/定義差を示す(要点検)。",
             "- median|Δ| が tolerance に近い指標は、tolerance 見直しの候補。",
+            "- p90|Δ| が tolerance を大きく超え、median|Δ| が小さい場合は、全体調整より外れ値/期間差/定義差を優先点検。",
+            "- 校正信号は自動判定ではなく、次に見るべきデータ品質タスクのラベル。",
         ])
         examples = [
             (key, example)
