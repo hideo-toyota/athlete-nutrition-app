@@ -1,31 +1,16 @@
 {
   "asof": "2026-06-20",
   "cross_check": {
-    "cross_checked_items": 770,
-    "item_count": 790,
+    "cross_checked_items": 780,
+    "item_count": 800,
     "metrics": {
       "equity_ratio↔equity_ratio": {
-        "checked": 770,
-        "max_abs_delta": 0.4336083163401281,
-        "median_abs_delta": 0.010707412564550323,
-        "mismatch": 217,
+        "calibration_signal": "ok",
+        "checked": 321,
+        "max_abs_delta": 0.2367096399279348,
+        "median_abs_delta": 0.0,
+        "mismatch": 12,
         "mismatch_examples": [
-          {
-            "abs_delta": 0.4336083163401281,
-            "delta": 0.4336083163401281,
-            "edinet_code": "E01891",
-            "edinet_value": 0.15844334784268366,
-            "jquants_value": 0.5920516641828117,
-            "securities_code": "69930"
-          },
-          {
-            "abs_delta": 0.25633292868908497,
-            "delta": -0.25633292868908497,
-            "edinet_code": "E02057",
-            "edinet_value": 0.7133253219014899,
-            "jquants_value": 0.4569923932124049,
-            "securities_code": "67860"
-          },
           {
             "abs_delta": 0.2367096399279348,
             "delta": 0.2367096399279348,
@@ -43,215 +28,153 @@
             "securities_code": "61010"
           },
           {
-            "abs_delta": 0.15429992951829447,
-            "delta": 0.15429992951829447,
-            "edinet_code": "E01474",
-            "edinet_value": 0.4211295538499817,
-            "jquants_value": 0.5754294833682762,
-            "securities_code": "60160"
+            "abs_delta": 0.08390521734022793,
+            "delta": 0.08390521734022793,
+            "edinet_code": "E00932",
+            "edinet_value": 0.7366959748358884,
+            "jquants_value": 0.8206011921761164,
+            "securities_code": "45190"
+          },
+          {
+            "abs_delta": 0.08358968257438704,
+            "delta": 0.08358968257438704,
+            "edinet_code": "E01122",
+            "edinet_value": 0.5034194022732288,
+            "jquants_value": 0.5870090848476158,
+            "securities_code": "52010"
+          },
+          {
+            "abs_delta": 0.06549358483106305,
+            "delta": 0.06549358483106305,
+            "edinet_code": "E01593",
+            "edinet_value": 0.4876860314776984,
+            "jquants_value": 0.5531796163087614,
+            "securities_code": "72590"
           }
         ],
-        "mismatch_rate": 0.2818181818181818,
+        "mismatch_rate": 0.037383177570093455,
+        "p75_abs_delta": 2.9225524189158136e-05,
+        "p90_abs_delta": 0.009336310127866843,
+        "period_mismatch": 459,
         "tolerance": 0.03
       },
       "net_margin↔net_margin": {
-        "checked": 770,
-        "max_abs_delta": 1.6025568734617415,
-        "median_abs_delta": 0.004124479756160243,
-        "mismatch": 198,
-        "mismatch_examples": [
-          {
-            "abs_delta": 1.6025568734617415,
-            "delta": -1.6025568734617415,
-            "edinet_code": "E01300",
-            "edinet_value": -0.15247435485192962,
-            "jquants_value": -1.755031228313671,
-            "securities_code": "57210"
-          },
-          {
-            "abs_delta": 0.6143959168328035,
-            "delta": -0.6143959168328035,
-            "edinet_code": "E02070",
-            "edinet_value": 1.5897668666662546,
-            "jquants_value": 0.9753709498334511,
-            "securities_code": "67360"
-          },
-          {
-            "abs_delta": 0.5410073648470394,
-            "delta": -0.5410073648470394,
-            "edinet_code": "E01790",
-            "edinet_value": 0.41879969412674006,
-            "jquants_value": -0.12220767072029934,
-            "securities_code": "67070"
-          },
-          {
-            "abs_delta": 0.42073680037425115,
-            "delta": -0.42073680037425115,
-            "edinet_code": "E01875",
-            "edinet_value": -0.20142836864586006,
-            "jquants_value": -0.6221651690201112,
-            "securities_code": "66590"
-          },
-          {
-            "abs_delta": 0.34824784741140663,
-            "delta": -0.34824784741140663,
-            "edinet_code": "E01727",
-            "edinet_value": -0.09062745821206525,
-            "jquants_value": -0.4388753056234719,
-            "securities_code": "64330"
-          }
-        ],
-        "mismatch_rate": 0.2571428571428571,
+        "calibration_signal": "ok",
+        "checked": 321,
+        "max_abs_delta": 0.002240102700445723,
+        "median_abs_delta": 0.0,
+        "mismatch": 0,
+        "mismatch_examples": [],
+        "mismatch_rate": 0.0,
+        "p75_abs_delta": 1.2632076464041964e-05,
+        "p90_abs_delta": 5.8549557069839664e-05,
+        "period_mismatch": 459,
         "tolerance": 0.02
       },
       "operating_margin↔operating_margin": {
-        "checked": 761,
-        "max_abs_delta": 0.497294857796039,
-        "median_abs_delta": 0.004085732315715837,
-        "mismatch": 159,
+        "calibration_signal": "ok",
+        "checked": 315,
+        "max_abs_delta": 0.026406919660250917,
+        "median_abs_delta": 0.0,
+        "mismatch": 1,
         "mismatch_examples": [
           {
-            "abs_delta": 0.497294857796039,
-            "delta": -0.497294857796039,
-            "edinet_code": "E02046",
-            "edinet_value": 0.1494871006290913,
-            "jquants_value": -0.34780775716694773,
-            "securities_code": "78590"
-          },
-          {
-            "abs_delta": 0.3590568014192719,
-            "delta": 0.3590568014192719,
-            "edinet_code": "E01300",
-            "edinet_value": -0.4603753302187167,
-            "jquants_value": -0.10131852879944483,
-            "securities_code": "57210"
-          },
-          {
-            "abs_delta": 0.23537758880489534,
-            "delta": -0.23537758880489534,
-            "edinet_code": "E00935",
-            "edinet_value": 0.22368267134577552,
-            "jquants_value": -0.011694917459119825,
-            "securities_code": "45210"
-          },
-          {
-            "abs_delta": 0.21484166163573126,
-            "delta": 0.21484166163573126,
-            "edinet_code": "E00973",
-            "edinet_value": -0.20107643928398644,
-            "jquants_value": 0.013765222351744835,
-            "securities_code": "45520"
-          },
-          {
-            "abs_delta": 0.18783814199315554,
-            "delta": -0.18783814199315554,
-            "edinet_code": "E01875",
-            "edinet_value": -0.18742929489173962,
-            "jquants_value": -0.37526743688489517,
-            "securities_code": "66590"
+            "abs_delta": 0.026406919660250917,
+            "delta": -0.026406919660250917,
+            "edinet_code": "E01602",
+            "edinet_value": 0.03931478739707525,
+            "jquants_value": 0.012907867736824332,
+            "securities_code": "64730"
           }
         ],
-        "mismatch_rate": 0.20893561103810776,
+        "mismatch_rate": 0.0031746031746031746,
+        "p75_abs_delta": 1.0781860694371315e-05,
+        "p90_abs_delta": 7.133292222931132e-05,
+        "period_mismatch": 455,
         "tolerance": 0.02
       },
       "revenue_growth_yoy↔sales_growth_yoy": {
-        "checked": 770,
-        "max_abs_delta": 4.142803009417628,
-        "median_abs_delta": 0.01791758339857097,
-        "mismatch": 374,
+        "calibration_signal": "outlier_review",
+        "checked": 321,
+        "max_abs_delta": 0.39788752013073236,
+        "median_abs_delta": 0.0,
+        "mismatch": 11,
         "mismatch_examples": [
           {
-            "abs_delta": 4.142803009417628,
-            "delta": 4.142803009417628,
-            "edinet_code": "E00839",
-            "edinet_value": 0.07793932109619561,
-            "jquants_value": 4.220742330513824,
-            "securities_code": "42220"
+            "abs_delta": 0.39788752013073236,
+            "delta": -0.39788752013073236,
+            "edinet_code": "E01678",
+            "edinet_value": 0.07949734440169354,
+            "jquants_value": -0.3183901757290388,
+            "securities_code": "64810"
           },
           {
-            "abs_delta": 1.8620741318027332,
-            "delta": 1.8620741318027332,
-            "edinet_code": "E01300",
-            "edinet_value": -0.5892034693421653,
-            "jquants_value": 1.272870662460568,
-            "securities_code": "57210"
+            "abs_delta": 0.21601166832663443,
+            "delta": -0.21601166832663443,
+            "edinet_code": "E02100",
+            "edinet_value": 0.21601166832663443,
+            "jquants_value": 0.0,
+            "securities_code": "66620"
           },
           {
-            "abs_delta": 0.7902748890657979,
-            "delta": 0.7902748890657979,
-            "edinet_code": "E01648",
-            "edinet_value": -0.02130274689480849,
-            "jquants_value": 0.7689721421709894,
-            "securities_code": "64940"
+            "abs_delta": 0.14573392930457563,
+            "delta": -0.14573392930457563,
+            "edinet_code": "E01726",
+            "edinet_value": 0.09788988012465327,
+            "jquants_value": -0.047844049179922354,
+            "securities_code": "62680"
           },
           {
-            "abs_delta": 0.764623729459414,
-            "delta": 0.764623729459414,
-            "edinet_code": "E01081",
-            "edinet_value": -0.5272639510164678,
-            "jquants_value": 0.2373597784429462,
-            "securities_code": "50160"
+            "abs_delta": 0.12737055520898322,
+            "delta": -0.12737055520898322,
+            "edinet_code": "E01902",
+            "edinet_value": 0.12737055520898322,
+            "jquants_value": 0.0,
+            "securities_code": "69990"
           },
           {
-            "abs_delta": 0.6796657577408931,
-            "delta": 0.6796657577408931,
-            "edinet_code": "E01815",
-            "edinet_value": 0.13092595130418894,
-            "jquants_value": 0.810591709045082,
-            "securities_code": "68040"
+            "abs_delta": 0.11077506314285879,
+            "delta": -0.11077506314285879,
+            "edinet_code": "E01975",
+            "edinet_value": 0.11105084913293051,
+            "jquants_value": 0.00027578599007171967,
+            "securities_code": "65940"
           }
         ],
-        "mismatch_rate": 0.4857142857142857,
+        "mismatch_rate": 0.03426791277258567,
+        "p75_abs_delta": 1.3592568195441856e-05,
+        "p90_abs_delta": 7.818409045490249e-05,
+        "period_mismatch": 459,
         "tolerance": 0.02
       },
       "roe_proxy↔roe_proxy": {
-        "checked": 770,
-        "max_abs_delta": 1.3410635025497202,
-        "median_abs_delta": 0.006434712351479119,
-        "mismatch": 184,
+        "calibration_signal": "ok",
+        "checked": 321,
+        "max_abs_delta": 0.05848085511286358,
+        "median_abs_delta": 1.3066296230684893e-06,
+        "mismatch": 2,
         "mismatch_examples": [
           {
-            "abs_delta": 1.3410635025497202,
-            "delta": 1.3410635025497202,
-            "edinet_code": "E00839",
-            "edinet_value": -0.024807455121100903,
-            "jquants_value": 1.3162560474286193,
-            "securities_code": "42220"
+            "abs_delta": 0.05848085511286358,
+            "delta": -0.05848085511286358,
+            "edinet_code": "E01480",
+            "edinet_value": 0.23419744194015343,
+            "jquants_value": 0.17571658682728986,
+            "securities_code": "61010"
           },
           {
-            "abs_delta": 1.2258309535364305,
-            "delta": -1.2258309535364305,
-            "edinet_code": "E00867",
-            "edinet_value": -0.22759611148993175,
-            "jquants_value": -1.453427065026362,
-            "securities_code": "78860"
-          },
-          {
-            "abs_delta": 0.6350953073094543,
-            "delta": -0.6350953073094543,
-            "edinet_code": "E01300",
-            "edinet_value": -0.032892014402114686,
-            "jquants_value": -0.6679873217115689,
-            "securities_code": "57210"
-          },
-          {
-            "abs_delta": 0.6307388441385783,
-            "delta": 0.6307388441385783,
-            "edinet_code": "E01308",
-            "edinet_value": -0.22804410729647298,
-            "jquants_value": 0.40269473684210527,
-            "securities_code": "57070"
-          },
-          {
-            "abs_delta": 0.5969303446421963,
-            "delta": 0.5969303446421963,
-            "edinet_code": "E01891",
-            "edinet_value": -1.1874668037246068,
-            "jquants_value": -0.5905364590824105,
-            "securities_code": "69930"
+            "abs_delta": 0.04508595356313966,
+            "delta": -0.04508595356313966,
+            "edinet_code": "E02100",
+            "edinet_value": -0.28032658769098573,
+            "jquants_value": -0.3254125412541254,
+            "securities_code": "66620"
           }
         ],
-        "mismatch_rate": 0.23896103896103896,
+        "mismatch_rate": 0.006230529595015576,
+        "p75_abs_delta": 9.688725260403874e-05,
+        "p90_abs_delta": 0.0017912110662516578,
+        "period_mismatch": 459,
         "tolerance": 0.03
       }
     }
