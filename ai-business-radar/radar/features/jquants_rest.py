@@ -27,6 +27,7 @@ from .jquants_bulk import (
     _measured,
     _output_dir,
     _per_pbr,
+    _financial_period_label,
     _ratio,
     _return,
     _valid_asof,
@@ -88,18 +89,35 @@ def _rest_financials(statements: list[dict], asof_date: date) -> dict:
         return {"latest_disclosure_date": None, "sales_growth_yoy": None, "operating_margin": None,
                 "net_margin": None, "roe_proxy": None, "equity_ratio": None, "eps": None, "bps": None,
                 "eps_source": None, "bps_source": None, "shares": None, "shares_source": None,
-                "net_profit": None, "equity": None}
-    sales, _ = _pick(cur, _REST_SALES)
-    prev_sales, _ = _pick(prev, _REST_SALES) if prev else (None, None)
-    op, _ = _pick(cur, _REST_OP)
-    np, _ = _pick(cur, _REST_NP)
-    eq, _ = _pick(cur, _REST_EQ)
-    prev_eq, _ = _pick(prev, _REST_EQ) if prev else (None, None)
-    ta, _ = _pick(cur, _REST_TA)
+                "net_profit": None, "equity": None, "current_period": None,
+                "previous_period": None, "used_fields": {}}
+    sales, sales_source = _pick(cur, _REST_SALES)
+    prev_sales, prev_sales_source = _pick(prev, _REST_SALES) if prev else (None, None)
+    op, op_source = _pick(cur, _REST_OP)
+    np, np_source = _pick(cur, _REST_NP)
+    eq, eq_source = _pick(cur, _REST_EQ)
+    prev_eq, prev_eq_source = _pick(prev, _REST_EQ) if prev else (None, None)
+    ta, ta_source = _pick(cur, _REST_TA)
     avg_eq = ((eq + prev_eq) / 2) if eq is not None and prev_eq is not None else None
     eps, eps_source = _pick(cur, _REST_EPS)
     bps, bps_source = _pick(cur, _REST_BPS)
     shares, shares_source = _pick(cur, _REST_SHARES)
+    used_fields = {
+        "current": {
+            "sales": {"field": sales_source, "value": sales},
+            "operating_income": {"field": op_source, "value": op},
+            "net_income": {"field": np_source, "value": np},
+            "equity": {"field": eq_source, "value": eq},
+            "total_assets": {"field": ta_source, "value": ta},
+            "eps": {"field": eps_source, "value": eps},
+            "bps": {"field": bps_source, "value": bps},
+            "shares": {"field": shares_source, "value": shares},
+        },
+        "previous": {
+            "sales": {"field": prev_sales_source, "value": prev_sales},
+            "equity": {"field": prev_eq_source, "value": prev_eq},
+        },
+    }
     return {
         "latest_disclosure_date": cur.get("DisclosedDate"),
         "sales_growth_yoy": (sales / prev_sales - 1) if sales is not None and prev_sales not in (None, 0) and prev_sales > 0 else None,
@@ -109,6 +127,23 @@ def _rest_financials(statements: list[dict], asof_date: date) -> dict:
         "equity_ratio": _ratio(eq, ta),
         "eps": eps, "bps": bps, "eps_source": eps_source, "bps_source": bps_source,
         "shares": shares, "shares_source": shares_source, "net_profit": np, "equity": eq,
+        "current_period": _financial_period_label({
+            "CurPerEn": cur.get("CurrentPeriodEndDate"),
+            "DiscDate": cur.get("DisclosedDate"),
+            "DiscTime": cur.get("DisclosedTime"),
+            "DiscNo": cur.get("DisclosureNumber"),
+            "CurPerType": cur.get("TypeOfCurrentPeriod"),
+            "DocType": cur.get("TypeOfDocument"),
+        }),
+        "previous_period": _financial_period_label({
+            "CurPerEn": prev.get("CurrentPeriodEndDate"),
+            "DiscDate": prev.get("DisclosedDate"),
+            "DiscTime": prev.get("DisclosedTime"),
+            "DiscNo": prev.get("DisclosureNumber"),
+            "CurPerType": prev.get("TypeOfCurrentPeriod"),
+            "DocType": prev.get("TypeOfDocument"),
+        }) if prev else None,
+        "used_fields": used_fields,
     }
 
 
@@ -215,6 +250,11 @@ def build_jquants_features_from_payloads(
                     "latest_price_date": latest[0].isoformat() if latest else None,
                     "latest_financial_disclosure_date": f["latest_disclosure_date"],
                     "latest_dividend_pub_date": None,
+                },
+                "source_snapshot": {
+                    "financial_current_period": f.get("current_period"),
+                    "financial_previous_period": f.get("previous_period"),
+                    "used_fields": f.get("used_fields") or {},
                 },
                 "warnings": ["not_a_recommendation", "not_a_ranking", "roe_proxy_is_not_audited_roe"],
             }

@@ -66,8 +66,14 @@ def _market_risk(market_context: dict) -> list[str]:
 
 
 def _cross_check_risks(cross_check: dict) -> list[str]:
+    risks = []
     n = len(cross_check.get("mismatches") or [])
-    return [f"edinet_jquants_mismatch_count={n}"] if n else []
+    p = len(cross_check.get("period_mismatches") or [])
+    if n:
+        risks.append(f"edinet_jquants_mismatch_count={n}")
+    if p:
+        risks.append(f"edinet_jquants_period_mismatch_count={p}")
+    return risks
 
 
 def _item(doc: dict, market_context: dict | None = None) -> dict:

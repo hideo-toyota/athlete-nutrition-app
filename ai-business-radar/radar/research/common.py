@@ -274,6 +274,7 @@ def jquants_market_context(doc: dict, *, jquants: dict | None = None, company_ma
                 "latest_price_date": (jq.get("source_dates") or {}).get("latest_price_date"),
                 "latest_financial_disclosure_date": (jq.get("source_dates") or {}).get("latest_financial_disclosure_date"),
                 "latest_dividend_pub_date": (jq.get("source_dates") or {}).get("latest_dividend_pub_date"),
+                "source_snapshot": jq.get("source_snapshot") or {},
                 "market": (jq.get("entity") or {}).get("market"),
                 "sector33": (jq.get("entity") or {}).get("sector33"),
                 "features": {
@@ -317,6 +318,42 @@ def _calc_value(features: dict, key: str):
     return v if isinstance(v, (int, float)) else None
 
 
+def _period_year(label: dict | None):
+    if not isinstance(label, dict):
+        return None
+    fiscal_year = label.get("fiscal_year")
+    if isinstance(fiscal_year, int):
+        return fiscal_year
+    if isinstance(fiscal_year, float) and fiscal_year.is_integer():
+        return int(fiscal_year)
+    for key in ("period_end", "fiscal_year_end", "fiscalYearEnd"):
+        value = label.get(key)
+        if isinstance(value, str) and len(value) >= 4 and value[:4].isdigit():
+            return int(value[:4])
+    return None
+
+
+def _period_alignment(doc: dict, market_context: dict) -> dict:
+    ed_current = (doc.get("source_snapshot") or {}).get("current_period")
+    jq_current = ((market_context.get("source_snapshot") or {}).get("financial_current_period"))
+    ed_year = _period_year(ed_current)
+    jq_year = _period_year(jq_current)
+    if ed_year is None or jq_year is None:
+        return {
+            "period_status": "UNKNOWN",
+            "period_comparable": True,
+            "edinet_period_year": ed_year,
+            "jquants_period_year": jq_year,
+        }
+    comparable = ed_year == jq_year
+    return {
+        "period_status": "matched" if comparable else "period_mismatch",
+        "period_comparable": comparable,
+        "edinet_period_year": ed_year,
+        "jquants_period_year": jq_year,
+    }
+
+
 def edinet_jquants_cross_check(doc: dict, market_context: dict | None) -> dict:
     """Compare overlapping derived ratios. This is an audit check, not a verdict."""
     market_context = market_context or {}
@@ -329,15 +366,17 @@ def edinet_jquants_cross_check(doc: dict, market_context: dict | None) -> dict:
         }
     edinet_features = doc.get("features") or {}
     jq_features = market_context.get("features") or {}
+    period = _period_alignment(doc, market_context)
     checks = []
     mismatches = []
+    period_mismatches = []
     for ed_key, jq_key, tolerance in _CROSS_CHECK_MAP:
         ed_val = _calc_value(edinet_features, ed_key)
         jq_val = _calc_value(jq_features, jq_key)
         if ed_val is None or jq_val is None:
             continue
         delta = jq_val - ed_val
-        ok = abs(delta) <= tolerance
+        ok = None if not period["period_comparable"] else abs(delta) <= tolerance
         row = {
             "edinet_feature": ed_key,
             "jquants_feature": jq_key,
@@ -346,8 +385,12 @@ def edinet_jquants_cross_check(doc: dict, market_context: dict | None) -> dict:
             "delta": delta,
             "tolerance": tolerance,
             "within_tolerance": ok,
+            **period,
         }
         checks.append(row)
+        if ok is None:
+            period_mismatches.append(row)
+            continue
         if not ok:
             mismatches.append(row)
     return {
@@ -355,6 +398,8 @@ def edinet_jquants_cross_check(doc: dict, market_context: dict | None) -> dict:
         "reason": None if checks else "比較可能な重複指標が不足",
         "checks": checks,
         "mismatches": mismatches,
+        "period_mismatches": period_mismatches,
+        "period_status": period["period_status"],
     }
 
 

@@ -39,8 +39,11 @@ def aggregate_cross_checks(queue: dict, *, max_examples_per_metric: int = 5) -> 
         for row in cc.get("checks") or []:
             key = f"{row['edinet_feature']}↔{row['jquants_feature']}"
             agg = per_metric.setdefault(
-                key, {"checked": 0, "mismatch": 0, "abs_deltas": [], "tolerance": row.get("tolerance"),
+                key, {"checked": 0, "mismatch": 0, "period_mismatch": 0, "abs_deltas": [], "tolerance": row.get("tolerance"),
                       "mismatch_examples": []})
+            if row.get("within_tolerance") is None:
+                agg["period_mismatch"] += 1
+                continue
             agg["checked"] += 1
             agg["abs_deltas"].append(abs(row["delta"]))
             if not row.get("within_tolerance"):
@@ -66,6 +69,7 @@ def aggregate_cross_checks(queue: dict, *, max_examples_per_metric: int = 5) -> 
         metrics[key] = {
             "checked": agg["checked"],
             "mismatch": agg["mismatch"],
+            "period_mismatch": agg["period_mismatch"],
             "mismatch_rate": mismatch_rate,
             "tolerance": tolerance,
             "median_abs_delta": median,
@@ -200,12 +204,12 @@ def render_audit_report(report: dict) -> str:
     if metrics:
         out.extend([
             "",
-            "| metric | checked | mismatch | mismatch率 | tolerance | median|Δ| | p90|Δ| | max|Δ| | 校正信号 |",
-            "|---|---:|---:|---:|---:|---:|---:|---:|---|",
+            "| metric | checked | mismatch | period_mismatch | mismatch率 | tolerance | median|Δ| | p90|Δ| | max|Δ| | 校正信号 |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|",
         ])
         for key, m in metrics.items():
             out.append(
-                f"| {key} | {m['checked']} | {m['mismatch']} | {_pct(m['mismatch_rate'])} | "
+                f"| {key} | {m['checked']} | {m['mismatch']} | {m.get('period_mismatch', 0)} | {_pct(m['mismatch_rate'])} | "
                 f"{_pt(m['tolerance'])} | {_pt(m['median_abs_delta'])} | {_pt(m.get('p90_abs_delta'))} | "
                 f"{_pt(m['max_abs_delta'])} | `{m.get('calibration_signal', 'unknown')}` |"
             )
@@ -214,6 +218,7 @@ def render_audit_report(report: dict) -> str:
             "- mismatch率が高い指標は、tolerance が厳しすぎるか、片側のデータ品質/定義差を示す(要点検)。",
             "- median|Δ| が tolerance に近い指標は、tolerance 見直しの候補。",
             "- p90|Δ| が tolerance を大きく超え、median|Δ| が小さい場合は、全体調整より外れ値/期間差/定義差を優先点検。",
+            "- period_mismatch は EDINET と J-Quants の対象FYが違うため、mismatch率の分母から除外。",
             "- 校正信号は自動判定ではなく、次に見るべきデータ品質タスクのラベル。",
         ])
         examples = [

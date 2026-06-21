@@ -116,7 +116,11 @@ def render_evidence(evidence: dict) -> str:
             "|---|---:|---:|---:|---:|---|",
         ])
         for row in cross.get("checks") or []:
-            result = "within_tolerance" if row.get("within_tolerance") else "mismatch"
+            result = (
+                "period_mismatch"
+                if row.get("within_tolerance") is None
+                else ("within_tolerance" if row.get("within_tolerance") else "mismatch")
+            )
             out.append(
                 f"| {row['edinet_feature']} ↔ {row['jquants_feature']} | "
                 f"{row['edinet_value'] * 100:.1f}% | {row['jquants_value'] * 100:.1f}% | "

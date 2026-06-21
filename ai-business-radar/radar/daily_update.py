@@ -191,7 +191,7 @@ def run_daily_update(
             outputs["brief_md"] = str(lb["md_path"])
             prompt = write_discord_prompt(result_like={
                 "asof": asof,
-                "brief_md": str(lb["md_path"]),
+                "brief_md": _display_path(lb["md_path"]),
                 "evidence_count": lb["count"],
                 "jquants_count": lb["jquants_count"],
             }, outputs_root=outputs_root)
@@ -264,6 +264,14 @@ def write_discord_prompt(*, result_like: dict, outputs_root: Path | None = None)
     return {"path": path}
 
 
+def _display_path(path) -> str:
+    p = Path(path)
+    try:
+        return str(p.resolve().relative_to(ROOT))
+    except (OSError, ValueError):
+        return str(p)
+
+
 def render_daily_summary(result: dict) -> str:
     """Discord-friendly markdown summary. Contains no raw bodies and no forbidden terms."""
     from .research.common import assert_no_forbidden_output
@@ -300,7 +308,7 @@ def render_daily_summary(result: dict) -> str:
     brief = result["outputs"].get("brief_md")
     if brief:
         lines += [
-            f"- `{brief}`",
+            f"- `{_display_path(brief)}`",
             "- 読み方: UNKNOWN/不足 → 検証する仮説(断定しない) → 反証条件 → 次に読む資料 "
             "→ claim分類(FACT/CALCULATION/INFERENCE/ASSUMPTION/UNKNOWN) → discipline gate 注意。",
             "- 当時の株価は research/evidence 内の J-Quants market context、または"
@@ -312,7 +320,7 @@ def render_daily_summary(result: dict) -> str:
             lines += [
                 "",
                 "## Discordに貼る短い指示",
-                f"- `{prompt}`",
+                f"- `{_display_path(prompt)}`",
                 "- この短い指示を貼ると、Claude側は上記packetを読む前提で、禁止事項と出力形式を固定できる。",
             ]
     else:

@@ -62,6 +62,9 @@ class JquantsRestBuildTests(unittest.TestCase):
         self.assertAlmostEqual(feats["pbr"]["value"], round(close / 250, 2))
         self.assertAlmostEqual(feats["operating_margin"]["value"], 0.1)
         self.assertEqual(doc["entity"]["company_name"], "トヨタ自動車")
+        self.assertEqual(doc["source_snapshot"]["financial_current_period"]["period_end"], "2026-03-31")
+        self.assertEqual(doc["source_snapshot"]["financial_previous_period"]["period_end"], "2025-03-31")
+        self.assertEqual(doc["source_snapshot"]["used_fields"]["current"]["sales"]["field"], "NetSales")
 
     def test_pit_excludes_future_dates(self):
         with tempfile.TemporaryDirectory() as td:

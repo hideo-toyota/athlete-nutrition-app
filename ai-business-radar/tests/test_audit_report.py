@@ -27,6 +27,7 @@ def _write_edinet(base: Path, asof="2026-06-18"):
     doc = {
         "feature_set": "edinet_financials_v1", "asof": asof, "edinet_code": "E02367",
         "input": {"raw_hash_normalized": "h", "raw_hash_compressed": "h"},
+        "source_snapshot": {"current_period": {"fiscal_year": 2026}, "previous_period": {"fiscal_year": 2025}},
         "features": {
             "revenue_growth_yoy": _m(0.12),
             "operating_margin": _m(0.08),   # vs J-Quants 0.20 -> mismatch (>2pt)
@@ -54,6 +55,10 @@ def _write_jquants(base: Path, asof="2026-06-18"):
     (d / "features.jsonl").write_text(json.dumps({
         "feature_set": "jquants_equity_v1", "asof": asof, "securities_code": "72030",
         "entity": {"market": "プライム", "sector33": "輸送用機器"}, "input": {},
+        "source_snapshot": {
+            "financial_current_period": {"period_end": "2026-03-31"},
+            "financial_previous_period": {"period_end": "2025-03-31"},
+        },
         "features": {
             "latest_close": _m(2530, unit="JPY"),
             "per_trailing": _m(12.6, unit="x"), "pbr": _m(1.0, unit="x"),
@@ -128,6 +133,20 @@ class AuditReportTests(unittest.TestCase):
         self.assertIn("pbr_uncovered_reasons", text)
         for token in FORBIDDEN_OUTPUT_TOKENS:
             self.assertNotIn(token, text)
+
+    def test_period_mismatch_is_excluded_from_mismatch_rate(self):
+        ed = self.derived / "features" / "edinet_financials_v1" / "2026-06-18" / "E02367.json"
+        doc = json.loads(ed.read_text(encoding="utf-8"))
+        doc["source_snapshot"]["current_period"] = {"fiscal_year": 2025}
+        ed.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        report = build_audit_report(asof="2026-06-18", derived_root=self.derived)
+        om = report["cross_check"]["metrics"]["operating_margin↔operating_margin"]
+        self.assertEqual(om["checked"], 0)
+        self.assertEqual(om["mismatch"], 0)
+        self.assertEqual(om["period_mismatch"], 1)
+        text = render_audit_report(report)
+        self.assertIn("period_mismatch", text)
+        self.assertIn("分母から除外", text)
 
     def test_stale_manifest_warns_when_uncovered_reasons_are_missing(self):
         manifest = self.derived / "features" / "jquants_equity_v1" / "2026-06-18" / "manifest.json"

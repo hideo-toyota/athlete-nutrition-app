@@ -98,6 +98,10 @@ class JQuantsBulkFeatureTests(unittest.TestCase):
         self.assertEqual(first["features"]["per_trailing"]["unit"], "x")
         self.assertAlmostEqual(first["features"]["per_trailing"]["value"], round(close / 20, 2))
         self.assertAlmostEqual(first["features"]["pbr"]["value"], round(close / 250, 2))
+        self.assertEqual(first["source_snapshot"]["financial_current_period"]["period_end"], "2026-03-31")
+        self.assertEqual(first["source_snapshot"]["financial_previous_period"]["period_end"], "2025-03-31")
+        self.assertEqual(first["source_snapshot"]["used_fields"]["current"]["sales"]["field"], "Sales")
+        self.assertEqual(first["source_snapshot"]["used_fields"]["current"]["sales"]["value"], 1200.0)
         # zero-earnings / zero-equity company must be UNKNOWN, never a misleading number
         zero = docs[2]
         self.assertEqual(zero["features"]["per_trailing"]["status"], "UNKNOWN")

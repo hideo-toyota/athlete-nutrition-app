@@ -338,6 +338,9 @@ def _financial_features(rows: list[dict]):
             "shares_source": None,
             "net_profit": None,
             "equity": None,
+            "current_period": None,
+            "previous_period": None,
+            "used_fields": {},
         }
     sales = _float_or_none(current.get("Sales"))
     prev_sales = _float_or_none(previous.get("Sales")) if previous else None
@@ -350,6 +353,22 @@ def _financial_features(rows: list[dict]):
     eps, eps_source = _first_float_with_key(current, _EPS_KEYS)
     bps, bps_source = _first_float_with_key(current, _BPS_KEYS)
     shares, shares_source = _first_float_with_key(current, _SHARES_KEYS)
+    used_fields = {
+        "current": {
+            "sales": {"field": "Sales", "value": sales},
+            "operating_income": {"field": "OP", "value": op},
+            "net_income": {"field": "NP", "value": np},
+            "equity": {"field": "Eq", "value": eq},
+            "total_assets": {"field": "TA", "value": ta},
+            "eps": {"field": eps_source, "value": eps},
+            "bps": {"field": bps_source, "value": bps},
+            "shares": {"field": shares_source, "value": shares},
+        },
+        "previous": {
+            "sales": {"field": "Sales", "value": prev_sales},
+            "equity": {"field": "Eq", "value": prev_eq},
+        },
+    }
     return {
         "latest_disclosure_date": current.get("DiscDate"),
         "sales_growth_yoy": (sales / prev_sales - 1) if sales is not None and prev_sales is not None and prev_sales > 0 else None,
@@ -365,6 +384,22 @@ def _financial_features(rows: list[dict]):
         "shares_source": shares_source,
         "net_profit": np,
         "equity": eq,
+        "current_period": _financial_period_label(current),
+        "previous_period": _financial_period_label(previous),
+        "used_fields": used_fields,
+    }
+
+
+def _financial_period_label(row: dict | None) -> dict | None:
+    if not isinstance(row, dict):
+        return None
+    return {
+        "period_end": row.get("CurPerEn") or row.get("CurrentPeriodEndDate"),
+        "disclosure_date": row.get("DiscDate"),
+        "disclosure_time": row.get("DiscTime"),
+        "disclosure_no": row.get("DiscNo"),
+        "period_type": row.get("CurPerType") or row.get("TypeOfCurrentPeriod"),
+        "doc_type": row.get("DocType"),
     }
 
 
@@ -589,6 +624,11 @@ def build_jquants_bulk_features(
                     "latest_price_date": latest[0].isoformat() if latest else None,
                     "latest_financial_disclosure_date": f["latest_disclosure_date"],
                     "latest_dividend_pub_date": div.get("PubDate") if div else None,
+                },
+                "source_snapshot": {
+                    "financial_current_period": f.get("current_period"),
+                    "financial_previous_period": f.get("previous_period"),
+                    "used_fields": f.get("used_fields") or {},
                 },
                 "warnings": [
                     "not_a_recommendation",
