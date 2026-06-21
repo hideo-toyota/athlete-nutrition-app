@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS LaunchAgent: periodic safe `git pull --ff-only` of the dev branch.
+  One-time install (replace __REPO_ROOT__ with the absolute repo path on the Mac):
+    sed "s|__REPO_ROOT__|$REPO_ROOT|g" com.radar.autopull.plist.template \
+      > ~/Library/LaunchAgents/com.radar.autopull.plist
+    launchctl load ~/Library/LaunchAgents/com.radar.autopull.plist
+  Stop:
+    launchctl unload ~/Library/LaunchAgents/com.radar.autopull.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.radar.autopull</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__REPO_ROOT__/ai-business-radar/scripts/auto_pull.sh</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>1800</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/tmp/radar_autopull.out</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/radar_autopull.err</string>
+</dict>
+</plist>
