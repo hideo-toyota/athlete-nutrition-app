@@ -68,6 +68,22 @@ def _write_companies_raw(base: Path, asof="2026-06-18"):
     }, ensure_ascii=False), encoding="utf-8")
 
 
+def _write_company_map(base: Path, asof="2026-06-17"):
+    d = base / "data" / "derived" / "features" / "edinet_company_map_v1" / asof
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "companies.jsonl").write_text(json.dumps({
+        "feature_set": "edinet_company_map_v1",
+        "asof": asof,
+        "edinet_code": "E02367",
+        "securities_code": "72030",
+        "sec_code": "72030",
+    }, ensure_ascii=False) + "\n", encoding="utf-8")
+    (d / "manifest.json").write_text(json.dumps({
+        "feature_set": "edinet_company_map_v1",
+        "asof": asof,
+    }, ensure_ascii=False), encoding="utf-8")
+
+
 def _write_jquants(base: Path, asof="2026-06-18"):
     d = base / "data" / "derived" / "features" / "jquants_equity_v1" / asof
     d.mkdir(parents=True, exist_ok=True)
@@ -188,6 +204,22 @@ class DailyUpdatePipelineTests(unittest.TestCase):
             self.assertIn(str(prompt), summary)
             self.assertNotIn(SENTINEL, summary)
 
+    def test_daily_update_uses_latest_derived_at_or_before_asof(self):
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _write_doc(base, asof="2026-06-18")
+            result = run_daily_update(
+                asof="2026-06-19", root=base,
+                build_edinet=False, build_jquants=False,
+                derived_root=base / "data" / "derived",
+                outputs_root=base / "outputs",
+            )
+            statuses = {s.name: s.status for s in result["steps"]}
+            self.assertEqual(statuses["research-queue"], "done")
+            self.assertEqual(statuses["llm-brief"], "done")
+            self.assertEqual(result["summary"]["item_count"], 1)
+            self.assertTrue((base / "outputs" / "llm_handoff" / "2026-06-18.md").exists())
+
     def test_brief_manifest_marks_gate_confirmed(self):
         with tempfile.TemporaryDirectory() as td:
             base = Path(td)
@@ -232,6 +264,22 @@ class DailyUpdatePipelineTests(unittest.TestCase):
             self.assertIn("J-Quants 市場コンテキスト: CALCULATION", summary)
             self.assertIn("latest_price_date=2026-06-18", summary)
         self.assertIn("valuation_coverage=100.0%", summary)
+
+    def test_daily_update_reports_existing_company_map_when_today_raw_missing(self):
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _write_doc(base)
+            _write_company_map(base, asof="2026-06-17")
+            _write_jquants(base)
+            result = run_daily_update(
+                asof="2026-06-18", root=base,
+                build_edinet=True, build_jquants=False,
+                derived_root=base / "data" / "derived", outputs_root=base / "outputs",
+            )
+            steps = {s.name: s for s in result["steps"]}
+            self.assertEqual(steps["build-company-map(edinet)"].status, "done")
+            self.assertIn("既存map使用(asof=2026-06-17)", steps["build-company-map(edinet)"].detail)
+            self.assertEqual(result["summary"]["jquants_context_status"], "CALCULATION")
 
     def test_render_discord_prompt_is_fixed_and_clean(self):
         text = render_discord_prompt(

@@ -69,7 +69,7 @@ python3 -m radar build-features \
 - feature count
 - UNKNOWN count
 - input hash
-- 注意: research_queue/evidence/LLM投入は未実装
+- 注意: Phase C feature層は research_queue/evidence/LLM投入を実装しない。後続Phase D/D1で別契約として実装済み。
 
 DoD:
 - 既存コマンドのI/O不変。
@@ -124,8 +124,8 @@ python3 -m radar build-features --provider edinet-db --dataset financials \
 - J-Quants prices/listed-info sync。
 - EDINET DB ratios / analysis scores。
 - Daloopa。
-- research_queue。
-- evidence pack。
+- Phase C内部での research_queue。
+- Phase C内部での evidence pack。
 - provider raw の Claude投入。
 - 銘柄ランキング。
 - 「割安」判定。
@@ -149,12 +149,13 @@ Claude Code には以下を重点監査させる:
 - `valuation_status` を勝手に計算していないか。
 - research_queue 的な語彙が混入していないか。
 
-## 5. 次フェーズへのゲート
-Phase C minimal がGOになっても、次は research_queue ではない。
-先に:
+## 5. 後続Phaseと現在の運用品質ゲート
+Phase C minimal 完了後、後続Phase D/D1として research_queue / evidence / llm-brief は実装済み。
+今後の運用品質タスク:
 1. feature結果の監査レビュー。
 2. missing/UNKNOWN率の確認。
 3. 必要なら field alias registry の修正。
-4. 価格dataset(J-Quants or EDINET DB prices相当)のToS/同期設計。
+4. EDINET×J-Quants cross-check の period_mismatch / mismatch 原因分解。
+5. J-Quants price/valuation context の coverage 監査。
 
-research_item 生成は、feature が安定し、第三者LLM入力ゲートを再確認してから別PLANで扱う。
+research_item / evidence / llm-brief は derived のみを読み、raw本文・APIキー・売買推奨を含めない別レイヤーとして扱う。

@@ -55,6 +55,7 @@ def aggregate_cross_checks(queue: dict, *, max_examples_per_metric: int = 5) -> 
                     "jquants_value": row.get("jquants_value"),
                     "delta": row.get("delta"),
                     "abs_delta": abs(row["delta"]),
+                    "diagnosis": _diagnose_mismatch(key, row),
                 })
     metrics = {}
     for key, agg in sorted(per_metric.items()):
@@ -87,6 +88,34 @@ def aggregate_cross_checks(queue: dict, *, max_examples_per_metric: int = 5) -> 
             "mismatch_examples": examples[:max_examples_per_metric],
         }
     return {"item_count": len(items), "cross_checked_items": cross_checked_items, "metrics": metrics}
+
+
+def _diagnose_mismatch(metric_key: str, row: dict) -> str:
+    """Human-facing triage hint for top mismatches.
+
+    This is not a FACT conclusion. It tells the operator what to inspect next so
+    we do not "fix" tolerances before checking period/definition/data issues.
+    """
+    ed = row.get("edinet_value")
+    jq = row.get("jquants_value")
+    delta = row.get("delta")
+    if row.get("period_comparable") is False:
+        return "period_mismatch: 対象FY差を先に解消"
+    if metric_key.startswith("revenue_growth_yoy"):
+        if isinstance(jq, (int, float)) and abs(jq) < 0.0000001 and isinstance(ed, (int, float)) and abs(ed) >= 0.02:
+            return "J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検"
+        return "売上定義・決算期間・前年比分母の差を点検"
+    if metric_key.startswith("operating_margin"):
+        return "営業利益定義・連結/単体・販管費/一過性項目を点検"
+    if metric_key.startswith("net_margin"):
+        return "当期利益定義・親会社帰属/非支配持分・一過性損益を点検"
+    if metric_key.startswith("roe_proxy"):
+        return "平均自己資本 vs 期末自己資本・利益定義を点検"
+    if metric_key.startswith("equity_ratio"):
+        if isinstance(delta, (int, float)) and abs(delta) >= 0.10:
+            return "自己資本/純資産定義・非支配株主持分・連結範囲を重点点検"
+        return "自己資本/純資産定義・連結範囲を点検"
+    return "定義差・入力列・期間差を点検"
 
 
 def _percentile(values: list[float], q: float) -> float | None:
@@ -229,14 +258,15 @@ def render_audit_report(report: dict) -> str:
         if examples:
             out.extend([
                 "",
-                "### mismatch 明細(絶対差が大きい順・各指標最大5件)",
-                "| metric | edinet_code | sec_code | EDINET | J-Quants | delta |",
-                "|---|---|---|---:|---:|---:|",
+                "### mismatch 原因分解(絶対差が大きい順・各指標最大5件)",
+                "| metric | edinet_code | sec_code | EDINET | J-Quants | delta | 推定原因/次点検 |",
+                "|---|---|---|---:|---:|---:|---|",
             ])
             for key, ex in examples:
                 out.append(
                     f"| {key} | {ex.get('edinet_code')} | {ex.get('securities_code')} | "
-                    f"{_pct(ex.get('edinet_value'))} | {_pct(ex.get('jquants_value'))} | {_pt(ex.get('delta'))} |"
+                    f"{_pct(ex.get('edinet_value'))} | {_pct(ex.get('jquants_value'))} | {_pt(ex.get('delta'))} | "
+                    f"{ex.get('diagnosis') or 'UNKNOWN'} |"
                 )
     out.extend([
         "",

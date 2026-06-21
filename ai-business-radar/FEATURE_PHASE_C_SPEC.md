@@ -7,7 +7,8 @@
 ## 0. 判定
 - **Phase C 設計: GO**。
 - **Phase C minimal 実装スコープ: EDINET DB financials raw → data/derived のみ**。
-- **NO-GO 維持**: research_queue / evidence / 第三者LLM入力 / ランキング / 買い候補 / 推奨 / 予測。
+- **Phase C単体のNO-GO**: research_queue / evidence / LLM handoff / ランキング / 買い候補 / 推奨 / 予測。
+  ※ research_queue / evidence / llm-brief は後続Phase D/D1で別契約として実装済み。Phase C feature層は今もネットワーク・LLM・売買判断を持たない。
 
 ## 1. 目的 / 非目的
 - 目的: Phase B sync 済みの `data/raw/edinet-db/financials/...` から、監査可能な特徴量を `data/derived` に生成する。
@@ -195,4 +196,4 @@ Phase C minimal 完了は以下すべて:
 - raw本文・APIキーを表示しない。
 - derived に source_snapshot / raw_hash / feature_registry_version / config_hash / code_commit が入る。
 - UNKNOWN が 0扱いされない。
-- research_queue / evidence / LLM投入に進んでいない。
+- Phase C feature層自体が research_queue / evidence / LLM投入を持たない。

@@ -1,8 +1,9 @@
 # LICENSE_MATRIX — データ提供元の利用条件(v3・本人確認メモ)
 
 > ⚠️ 雛形。各セルは**規約原本を読んで**出典URL+確認日付きで埋める。確認できないセルは「未確認」と書く
-> (CLAIMS.md:出典なきToSを FACT 扱いしない)。**raw保存・retention/purge・再配布禁止が確認できるまで sync は NO-GO**(D1)。
-> **第三者LLM入力は sync とは別ゲート**。許容確認まで evidence/research を Claude 等に渡さない。
+> (CLAIMS.md:出典なきToSを FACT 扱いしない)。下段のワークシートは原本転記用、上段の「解除記録」は
+> 本人判断による個人運用ゲートを記録する。両者を混同しない。
+> **維持するNO-GO**: raw一括再配布 / wrapper・proxy API / 公開・第三者提供 / 自動売買 / 買い候補・ランキング・将来断定。
 
 ## ⭐ 解除記録(本人判断, as_of 2026-06-20)
 - **第三者LLM入力(E5/J5)= 本人判断で「可」**。基準: **個人の私的な投資分析利用に限る / 取得データを第三者へ再配布・公開しない / Claude(Anthropic)は分析の処理委託先であって"公衆への公開"ではない**。
@@ -30,14 +31,14 @@
 | 規約URL | **未確認**(要記入) | `edinetdb.com/legal/terms`(AI下書き確認・本人FACT化待ち) |
 | 確認日 | 未記入 | AI下書き 2026-06-18 / 本人確認 2026-06-18 |
 | APIプログラム利用 | 未確認 | 可(REST/MCP提供。APIキー条件あり) |
-| raw ローカルキャッシュ可否 | **未確認(致命)** | 条件付き可(性能目的の一時キャッシュ。定期再取得条件あり。本人確認済み) |
-| 保存期間 / retention / purge義務 | 未確認 | 具体日数なし。定期再取得 + 手動purge運用で本人確認済み |
-| 派生特徴量生成 | 未確認 | 可(加工・分析利用可。AI所見/スコア等のCabocia著作物は別扱い) |
+| raw ローカルキャッシュ可否 | 本人判断:可(2026-06-20、個人の私的利用・非公開・非再配布)。原本転記は未完 | 条件付き可(性能目的の一時キャッシュ。定期再取得条件あり。本人確認済み) |
+| 保存期間 / retention / purge義務 | 本人判断:可(手動purge・解約/プラン変更時削除を運用で順守)。原本転記は未完 | 具体日数なし。定期再取得 + 手動purge運用で本人確認済み |
+| 派生特徴量生成 | 本人判断:可(個人の投資分析・ポートフォリオ管理)。原本転記は未完 | 可(加工・分析利用可。AI所見/スコア等のCabocia著作物は別扱い) |
 | **LLM/AI入力(分割)** | | |
-| └ 第三者LLM(Claude等)へ入力 | **未確認(致命)** | 公式MCP/Claude.ai/ChatGPT接続はdocs化。任意の第三者LLMへのraw投入・AI側保持/学習は未確認 |
+| └ 第三者LLM(Claude等)へ入力 | 本人判断:derived/evidence/brief は可(2026-06-20、個人利用・非公開)。raw本文投入/公開/配布は不可 | 本人判断:derived/evidence/brief は可。公式MCP/Claude.ai/ChatGPT接続はdocs化。raw本文の一般投入・AI側保持/学習は別途注意 |
 | └ AI提供側の保持/学習 | 未確認(Anthropic等のデータ方針も別途) | 未確認(EDINET DB側の生成AIにはAPI/MCP request payloadを渡さない旨のみ確認) |
 | └ MCP(edinetdb.jp/mcp)利用 | 該当なし | 可(公式MCP docsあり。APIキー/Google認証条件あり) |
-| └ 送信粒度(raw / derived / 要約のみ) | 未確認(粒度別に可否確認) | 公式MCP利用以外のraw/derived/要約別条件は未確認 |
+| └ 送信粒度(raw / derived / 要約のみ) | raw本文は渡さない。derived/evidence/briefのみ(本人判断GO)。公開/第三者提供は禁止 | raw本文は渡さない。derived/evidence/briefのみ(本人判断GO)。公式MCP外のraw一般投入は扱わない |
 | 再配布(一括/wrapper API) | 未確認(通常禁止想定) | 一括再配布・wrapper/proxy APIは禁止 |
 | 社外 / 公開利用 | 未確認 | 条件付き可(公開時 attribution、第三者/B2B統合は別契約) |
 | rate limit | 未確認 | Free 100/日・Pro 1,000/日・Business 10,000/日(公開docs確認。本人契約=Pro申告) |
@@ -48,13 +49,13 @@
 
 ## claim-audit(FACT / 未確認 の切り分け, as_of 2026-06-18)
 **FACT(検証可)**: EDINET DB は両ドメインとも公式(REST=.jp/v1, MCP=.jp/mcp, 規約/英語docs=.com, 運営=Cabocia)。商用可・一時キャッシュ可・公開時 attribution・一括再配布/wrapper API禁止・Free 100/日・Pro 1,000/日・AI所見の誤り可能性を規約/サイトが明記。
-**未確認(FACT扱い禁止)**: J-Quants 有料 ToS 全般、EDINET DB の具体retention日数・任意の第三者LLMへのraw投入/AI側保持/学習、FSA EDINET の具体ライセンス版(Public Data License 1.0 か否か)。
+**未確認(FACT扱い禁止)**: J-Quants 有料 ToS 全般の原本転記、EDINET DB の具体retention日数・任意の第三者LLMへのraw本文投入/AI側保持/学習、FSA EDINET の具体ライセンス版(Public Data License 1.0 か否か)。
 **前回の誤りを訂正**: `edinetdb.jp` は**公式(MCP/日本語docs/規約の日本語面)**。前回の「`.jp`疑義・不採用」は**撤回**。行番号引用(L99-125等)だけは再現不能のため不採用、URL+節名で参照する。
 **原本遡及先**: FSA EDINET(`disclosure2dl.edinet-fsa.go.jp`)実在=FACT。
 
 ## 判定ゲート(2026-06-20 更新)
 - **第三者LLM入力(E5/J5)= 本人判断「可」(2026-06-20)**。前提=個人の私的分析利用・第三者再配布/公開なし。→ derived/evidence/brief を Claude に渡す運用は GO(`radar daily-update`)。
-- **J-Quants raw保存(J2)/retention(J3)= 本人判断「可」**(個人の私的利用枠・手動purece/解約時削除を運用で順守)。EDINET は E2/E3/E7 本人確認済み。→ 両者とも sync GO。
+- **J-Quants raw保存(J2)/retention(J3)= 本人判断「可」**(個人の私的利用枠・手動purge/解約時削除を運用で順守)。EDINET は E2/E3/E7 本人確認済み。→ 両者とも sync GO。ただし J-Quants は現状 Premium Bulk local 変換と REST on-demand が中心で、広域API sync は別実装。
 - **維持する NO-GO**: raw一括再配布 / wrapper・proxy API / 公開・第三者提供 / 自動売買 / 買い候補・ランキング・予測。
 - 個人→公開に切り替える場合:本「解除記録」を破棄し、attribution 必須化・再配布禁止・第三者LLM可否を再点検(停止条件)。
 
@@ -111,10 +112,10 @@ Sources(検証):
    - キー存在確認 + 最小リクエストで疎通可否を返すだけ。raw を保存せず、取得本文を Claude にも渡さない。
    - AI下書き判定: **J1=条件付きYes / E1=Yes → 本人確認後にA1 GO候補**。本人確認前は判定不能。
 2. **B(sync=raw保存)** ← 追加で **J2/J3 と E2/E3 が「可」**(保持/purge 条件を実装に反映)。
-   - 判定: **EDINET DB は E2/E3 本人確認済み → Phase B sync GO(個人内・raw非表示・LLM非投入・手動purge)**。**J-Quants は J2/J3 未確認 → sync NO-GO**。
+   - 判定: **EDINET DB は E2/E3 本人確認済み → Phase B sync GO(個人内・raw非表示・手動purge)**。**J-Quants は本人判断で raw保存/retention GO**。ただし原本転記セルは未完のため、公開・第三者提供・wrapper用途には使わない。
 3. **第三者LLM入力(evidence/research を Claude が読む・MCP利用)** ← 追加で **J5 と E5 が「可」**【最重要】。
-   - これが「不可/未確認」の間は、**取得データを分析エージェントに渡さない**(value-audit Phase B/C もここに依存)。
-   - AI下書き判定: **J5=未確認かつ高リスク / E5=条件付き・一般raw投入は未確認 → NO-GO/判定不能**。J-Quantsは第三者閲覧・アプリ運営者サーバ蓄積/中継が私的利用外と説明しているため、Claude等へのraw投入は明示許諾確認まで禁止。
+   - 判定: **本人判断で derived/evidence/brief の Claude投入は GO(2026-06-20)**。raw本文、公開、第三者提供、wrapper/API、継続配信は引き続き禁止。
+   - AI下書きとしては J5/E5 の原本転記は未完。これは公開/外部提供に切り替える前の停止条件として残す。
 4. **公開・配布しない前提の維持** ← **J7/E7 が「再配布禁止」**を確認し、個人内利用に留める(attribution J9/E9 はメモ)。
    - AI下書き判定: **J7=禁止 / E7=禁止 → 個人内利用・非再配布前提は維持必須**。公開/第三者提供は別設計・別確認。
 

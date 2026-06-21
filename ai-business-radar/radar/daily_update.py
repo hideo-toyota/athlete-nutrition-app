@@ -51,6 +51,22 @@ def _edinet_company_raw_dir(root: Path, asof: str) -> Path:
     return root / "data" / "raw" / "edinet-db" / "companies" / asof
 
 
+def _existing_company_map_asof(root: Path, derived_root: Path | None, asof: str) -> str | None:
+    """Return a usable existing company-map asof, if any.
+
+    Company master data is slower-moving than financials. A daily run should not
+    look broken just because today's companies raw was not re-synced, as long as
+    an older derived map at-or-before asof is available.
+    """
+    from .research.common import EDINET_COMPANY_MAP_FEATURE_SET, latest_asof_at_or_before
+
+    base = (derived_root or (root / "data" / "derived")) / "features" / EDINET_COMPANY_MAP_FEATURE_SET
+    selected = latest_asof_at_or_before(base, asof)
+    if selected and (base / selected / "companies.jsonl").exists():
+        return selected
+    return None
+
+
 def _jquants_bulk_dir(root: Path) -> Path:
     return root / "data" / "raw" / "jquants" / "bulk"
 
@@ -103,7 +119,14 @@ def run_daily_update(
     if not build_edinet:
         steps.append(StepResult("build-company-map(edinet)", "skipped", "--no-edinet"))
     elif not company_dir.exists():
-        steps.append(StepResult("build-company-map(edinet)", "skipped", f"companies raw無し: {company_dir}"))
+        existing = _existing_company_map_asof(root, derived_root, asof)
+        if existing:
+            steps.append(StepResult(
+                "build-company-map(edinet)", "done",
+                f"既存map使用(asof={existing})。当日companies raw無し: {company_dir}",
+            ))
+        else:
+            steps.append(StepResult("build-company-map(edinet)", "skipped", f"companies raw無し: {company_dir}"))
     elif dry_run:
         steps.append(StepResult("build-company-map(edinet)", "planned", f"raw_dir={company_dir}"))
     else:

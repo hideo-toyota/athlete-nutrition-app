@@ -27,7 +27,9 @@ ai-business-radar/
 
 ## フェーズ(各スライスは独立して価値を出し、原則準拠+検証ゲートを通す)
 
-> 実装状況(2026-06): **Phase 0–3 実装済み**(`mirror` / `check` / `log` / `score` / `review`)。`analyze` / `backtest` と J-Quants `data` 接続は後段。
+> 実装状況(2026-06): **Phase 0–4 実装済み**(`mirror` / `check` / `log` / `score` / `review`)。
+> 追加で `target-check`、EDINET/J-Quants derived data layer、`research-queue` / `evidence` /
+> `llm-brief` / `daily-update` まで実装済み。`analyze` / `backtest` / LLM API自動送信は後段。
 
 ### Phase 0 — 足場とデータ契約
 - `radar/config.py`:`config.json` 読込+検証(必須キー・型・合計100%等)。
@@ -62,10 +64,10 @@ ai-business-radar/
 ### データ層 Phase B/C(有料データ・個人利用)
 - Phase B: EDINET DB `companies` / `financials` の minimal sync は実装済み。raw は `data/raw`、provenance は `data/metadata`、本文・キーは表示しない。
 - Phase C: `FEATURE_PHASE_C_SPEC.md` / `FEATURE_PHASE_C_PLAN.md` に従い、EDINET DB financials raw から `data/derived` を作る minimal feature生成は実装済み。
-- Phase C-JQ: ユーザー許可済み J-Quants Premium Bulk raw をローカル取得済みの場合、`build-jquants-features` で `data/derived/features/jquants_equity_v1` を生成する。これは API sync ではなく、ネット/APIキーを読まないローカル変換。
-- Phase D0: derived feature のみを読む local `research_queue` / `evidence` は実装済み。**provider raw本文の第三者LLM投入には進めない**。
-- Phase D1 prep: `llm-brief` で derived/evidence をLLM投入用packetに整形(API呼び出しなし)。自動API送信は後段。
-- J-Quants API sync、LLM API送信、`analyze`、`backtest` は後段。**安全と正直の土台ができてから**。
+- Phase C-JQ: ユーザー許可済み J-Quants Premium Bulk raw をローカル取得済みの場合、`build-jquants-features` で `data/derived/features/jquants_equity_v1` を生成する。これは API sync ではなく、ネット/APIキーを読まないローカル変換。指定銘柄のREST on-demand取得(`fetch-jquants`)も実装済み。
+- Phase D0: derived feature のみを読む local `research_queue` / `evidence` / `jquants-evidence` は実装済み。**provider raw本文の第三者LLM投入には進めない**。
+- Phase D1 prep: `llm-brief` と `daily-update` で derived/evidence をLLM投入用packetとDiscord用固定プロンプトに整形(API呼び出しなし)。本人判断(2026-06-20)により、個人利用・非公開・非再配布の範囲で Claude に読ませる運用は GO。
+- 広域 J-Quants API sync、LLM API自動送信、`analyze`、`backtest` は後段。**安全と正直の土台ができてから**。
 
 ## 原則充足チェック(planner自己監査)
 | 原則 | 本プランでの担保 |

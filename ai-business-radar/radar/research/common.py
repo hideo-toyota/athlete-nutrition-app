@@ -82,7 +82,14 @@ def latest_asof_at_or_before(root: Path, asof: str | None = None) -> str | None:
 
 def load_feature_docs(*, asof: str | None = None, derived_root: Path | None = None) -> tuple[str, list[dict]]:
     root = feature_root(derived_root)
-    asof = valid_asof(asof) or latest_asof(root)
+    if asof is not None:
+        valid_asof(asof)
+        selected = latest_asof_at_or_before(root, asof)
+        if selected is None:
+            raise SystemExit(f"derived feature asof directory が見つかりません(asof<={asof}): {root}")
+        asof = selected
+    else:
+        asof = latest_asof(root)
     d = root / asof
     if not d.exists():
         raise SystemExit(f"derived feature asof directory が見つかりません: {d}")
@@ -106,7 +113,14 @@ def load_feature_docs(*, asof: str | None = None, derived_root: Path | None = No
 def load_feature_doc(entity: str, *, asof: str | None = None, derived_root: Path | None = None) -> tuple[str, dict]:
     code = valid_edinet_code(entity)
     root = feature_root(derived_root)
-    asof = valid_asof(asof) or latest_asof(root)
+    if asof is not None:
+        valid_asof(asof)
+        selected = latest_asof_at_or_before(root, asof)
+        if selected is None:
+            raise SystemExit(f"derived feature asof directory が見つかりません(asof<={asof}): {root}")
+        asof = selected
+    else:
+        asof = latest_asof(root)
     p = root / asof / f"{code}.json"
     if not p.exists():
         raise SystemExit(f"derived feature が見つかりません: {p}")

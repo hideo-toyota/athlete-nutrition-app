@@ -21,22 +21,22 @@ _asof: 2026-06-20 / これは整合性の点検であり、売買順・推奨・
 - period_mismatch は EDINET と J-Quants の対象FYが違うため、mismatch率の分母から除外。
 - 校正信号は自動判定ではなく、次に見るべきデータ品質タスクのラベル。
 
-### mismatch 明細(絶対差が大きい順・各指標最大5件)
-| metric | edinet_code | sec_code | EDINET | J-Quants | delta |
-|---|---|---|---:|---:|---:|
-| equity_ratio↔equity_ratio | E00919 | 45020 | 24.2% | 47.9% | 23.67pt |
-| equity_ratio↔equity_ratio | E01480 | 61010 | 52.0% | 69.1% | 17.12pt |
-| equity_ratio↔equity_ratio | E00932 | 45190 | 73.7% | 82.1% | 8.39pt |
-| equity_ratio↔equity_ratio | E01122 | 52010 | 50.3% | 58.7% | 8.36pt |
-| equity_ratio↔equity_ratio | E01593 | 72590 | 48.8% | 55.3% | 6.55pt |
-| operating_margin↔operating_margin | E01602 | 64730 | 3.9% | 1.3% | -2.64pt |
-| revenue_growth_yoy↔sales_growth_yoy | E01678 | 64810 | 7.9% | -31.8% | -39.79pt |
-| revenue_growth_yoy↔sales_growth_yoy | E02100 | 66620 | 21.6% | 0.0% | -21.60pt |
-| revenue_growth_yoy↔sales_growth_yoy | E01726 | 62680 | 9.8% | -4.8% | -14.57pt |
-| revenue_growth_yoy↔sales_growth_yoy | E01902 | 69990 | 12.7% | 0.0% | -12.74pt |
-| revenue_growth_yoy↔sales_growth_yoy | E01975 | 65940 | 11.1% | 0.0% | -11.08pt |
-| roe_proxy↔roe_proxy | E01480 | 61010 | 23.4% | 17.6% | -5.85pt |
-| roe_proxy↔roe_proxy | E02100 | 66620 | -28.0% | -32.5% | -4.51pt |
+### mismatch 原因分解(絶対差が大きい順・各指標最大5件)
+| metric | edinet_code | sec_code | EDINET | J-Quants | delta | 推定原因/次点検 |
+|---|---|---|---:|---:|---:|---|
+| equity_ratio↔equity_ratio | E00919 | 45020 | 24.2% | 47.9% | 23.67pt | 自己資本/純資産定義・非支配株主持分・連結範囲を重点点検 |
+| equity_ratio↔equity_ratio | E01480 | 61010 | 52.0% | 69.1% | 17.12pt | 自己資本/純資産定義・非支配株主持分・連結範囲を重点点検 |
+| equity_ratio↔equity_ratio | E00932 | 45190 | 73.7% | 82.1% | 8.39pt | 自己資本/純資産定義・連結範囲を点検 |
+| equity_ratio↔equity_ratio | E01122 | 52010 | 50.3% | 58.7% | 8.36pt | 自己資本/純資産定義・連結範囲を点検 |
+| equity_ratio↔equity_ratio | E01593 | 72590 | 48.8% | 55.3% | 6.55pt | 自己資本/純資産定義・連結範囲を点検 |
+| operating_margin↔operating_margin | E01602 | 64730 | 3.9% | 1.3% | -2.64pt | 営業利益定義・連結/単体・販管費/一過性項目を点検 |
+| revenue_growth_yoy↔sales_growth_yoy | E01678 | 64810 | 7.9% | -31.8% | -39.79pt | 売上定義・決算期間・前年比分母の差を点検 |
+| revenue_growth_yoy↔sales_growth_yoy | E02100 | 66620 | 21.6% | 0.0% | -21.60pt | J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検 |
+| revenue_growth_yoy↔sales_growth_yoy | E01726 | 62680 | 9.8% | -4.8% | -14.57pt | 売上定義・決算期間・前年比分母の差を点検 |
+| revenue_growth_yoy↔sales_growth_yoy | E01902 | 69990 | 12.7% | 0.0% | -12.74pt | J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検 |
+| revenue_growth_yoy↔sales_growth_yoy | E01975 | 65940 | 11.1% | 0.0% | -11.08pt | 売上定義・決算期間・前年比分母の差を点検 |
+| roe_proxy↔roe_proxy | E01480 | 61010 | 23.4% | 17.6% | -5.85pt | 平均自己資本 vs 期末自己資本・利益定義を点検 |
+| roe_proxy↔roe_proxy | E02100 | 66620 | -28.0% | -32.5% | -4.51pt | 平均自己資本 vs 期末自己資本・利益定義を点検 |
 
 ## B. J-Quants valuation coverage [CALCULATION/UNKNOWN]
 - feature_set/asof: `jquants_equity_v1` / `2026-06-20`
