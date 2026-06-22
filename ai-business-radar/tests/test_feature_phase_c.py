@@ -277,6 +277,42 @@ class BuildFeatureTests(unittest.TestCase):
         manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
         self.assertEqual(manifest["skipped_missing_provenance"][0]["reason"], "missing_provenance")
 
+    def test_batch_upgrades_minimal_meta_to_provenance(self):
+        raw_dir = self.base / "data" / "raw" / "edinet-db" / "financials" / "2026-06-18"
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = raw_dir / "E00002_period-annual_years-2.json"
+        raw_path.write_bytes(_raw_bytes({"data": _rows()}))
+        raw_path.with_suffix(raw_path.suffix + ".meta.json").write_text(json.dumps({
+            "provider": "edinet-db",
+            "dataset": "financials",
+            "path": "/companies/E00002/financials",
+            "params": {"code": "E00002", "years": 2, "period": "annual"},
+            "retrieved_at": "2026-06-18T00:00:00+00:00",
+            "row_count": 2,
+        }, ensure_ascii=False), encoding="utf-8")
+        res = build_financial_features_batch(
+            raw_dir=raw_dir,
+            asof="2026-06-18",
+            raw_root=self.base / "data" / "raw",
+            derived_root=self.base / "data" / "derived",
+            clock=_clock,
+        )
+        self.assertEqual(res["candidate_count"], 1)
+        self.assertEqual(res["built_count"], 1)
+        self.assertEqual(res["skipped_missing_provenance_count"], 0)
+        self.assertEqual(res["upgraded_legacy_meta_count"], 1)
+        sidecar = raw_path.with_suffix(raw_path.suffix + ".provenance.json")
+        self.assertTrue(sidecar.exists())
+        meta = json.loads(sidecar.read_text(encoding="utf-8"))
+        self.assertEqual(meta["edinet_code"], "E00002")
+        self.assertEqual(meta["raw_hash_compressed"], common.hash_bytes(raw_path.read_bytes()))
+        self.assertEqual(meta["available_at"], "2026-06-18T00:00:00+00:00")
+        doc = json.loads((self.base / "data" / "derived" / "features" / "edinet_financials_v1"
+                          / "2026-06-18" / "E00002.json").read_text(encoding="utf-8"))
+        self.assertNotIn(BODY_SENTINEL, json.dumps(doc, ensure_ascii=False))
+        manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
+        self.assertEqual(manifest["upgraded_legacy_meta_count"], 1)
+
     def test_batch_raw_dir_traversal_rejected(self):
         outside = self.base / "outside"
         outside.mkdir()

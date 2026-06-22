@@ -39,14 +39,17 @@ def _is_asof_dir(path: Path) -> bool:
     return True
 
 
-def _latest_dir(base: Path, *, root: Path, pattern: str = "*") -> LatestDir:
+def _latest_dir(base: Path, *, root: Path, pattern: str = "*", exclude_suffixes: tuple[str, ...] = ()) -> LatestDir:
     if not base.exists():
         return LatestDir(None, None, None)
     dirs = sorted(p for p in base.iterdir() if p.is_dir() and _is_asof_dir(p))
     if not dirs:
         return LatestDir(None, None, None)
     latest = dirs[-1]
-    files = [p for p in latest.glob(pattern) if p.is_file()]
+    files = [
+        p for p in latest.glob(pattern)
+        if p.is_file() and not any(p.name.endswith(suffix) for suffix in exclude_suffixes)
+    ]
     return LatestDir(latest.name, _rel(latest, root), len(files))
 
 
@@ -173,7 +176,12 @@ def _feature_latest(root: Path, feature_set: str, pattern: str) -> LatestDir:
 
 
 def _raw_latest(root: Path, provider: str, dataset: str) -> LatestDir:
-    return _latest_dir(root / "data" / "raw" / provider / dataset, root=root, pattern="*.json")
+    return _latest_dir(
+        root / "data" / "raw" / provider / dataset,
+        root=root,
+        pattern="*.json",
+        exclude_suffixes=(".meta.json", ".provenance.json"),
+    )
 
 
 def _jquants_status(root: Path) -> dict:

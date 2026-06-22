@@ -39,6 +39,8 @@ class DoctorReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             _write_json(root / "data/raw/edinet-db/financials/2026-06-22/E00001.json", {"ok": True})
+            _write_json(root / "data/raw/edinet-db/financials/2026-06-22/E00001.json.meta.json", {"ok": True})
+            _write_json(root / "data/raw/edinet-db/financials/2026-06-22/E00001.json.provenance.json", {"ok": True})
             _write_json(root / "data/derived/features/edinet_financials_v1/2026-06-20/E00001.json", {"ok": True})
             _write_json(root / "data/raw/edinet-db/companies/2026-06-22/companies_page-1.json", {"ok": True})
             (root / "data/derived/features/edinet_company_map_v1/2026-06-19").mkdir(parents=True)
@@ -50,6 +52,7 @@ class DoctorReportTests(unittest.TestCase):
         self.assertIn("edinet_features_stale", "\n".join(report["warnings"]))
         self.assertIn("company_map_stale", "\n".join(report["warnings"]))
         self.assertIn("raw edinet financials: asof=2026-06-22", text)
+        self.assertIn("raw edinet financials: asof=2026-06-22 files=1", text)
         self.assertIn("derived edinet financials: asof=2026-06-20", text)
 
     def test_journal_empty_is_visible(self):

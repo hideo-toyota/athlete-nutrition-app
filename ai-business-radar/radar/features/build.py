@@ -6,7 +6,7 @@ import re
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
-from radar.sources import common
+from radar.sources import common, edinet_db, provenance
 
 from .compute import compute_financial_features
 from .registry import (
@@ -68,6 +68,10 @@ def _load_json_dict(path: Path, what: str) -> dict:
     return obj
 
 
+def _legacy_meta_path(raw_path: Path) -> Path:
+    return raw_path.with_suffix(raw_path.suffix + ".meta.json")
+
+
 def _edinet_code(value) -> str:
     if not isinstance(value, str):
         raise SystemExit("provenance.edinet_code がありません")
@@ -75,6 +79,68 @@ def _edinet_code(value) -> str:
     if not _EDINET_RE.match(code):
         raise SystemExit("provenance.edinet_code は E02367 形式である必要があります")
     return code
+
+
+def _edinet_code_from_filename(raw_path: Path) -> str | None:
+    m = re.match(r"^(E\d{5})_", raw_path.name)
+    return m.group(1) if m else None
+
+
+def _source_url(endpoint: str | None) -> str | None:
+    if not endpoint:
+        return None
+    if endpoint.startswith("http://") or endpoint.startswith("https://"):
+        return endpoint
+    return "https://edinetdb.jp/v1/" + endpoint.lstrip("/")
+
+
+def _ensure_provenance_sidecar(raw_path: Path) -> tuple[Path | None, bool]:
+    """Return a strict provenance sidecar, upgrading downloader `.meta.json` if possible.
+
+    Some local bulk download helpers store raw with a minimal `.meta.json`.
+    We do not treat that as final provenance; we re-hash the raw body, derive
+    available_at using the same EDINET financials rule as sync, and write a
+    proper `.provenance.json` sidecar before feature generation.
+    """
+    sidecar = raw_path.with_suffix(raw_path.suffix + ".provenance.json")
+    if sidecar.exists():
+        return sidecar, False
+
+    legacy = _legacy_meta_path(raw_path)
+    if not legacy.exists():
+        return None, False
+
+    meta = _load_json_dict(legacy, "legacy meta")
+    if meta.get("provider") != PROVIDER or meta.get("dataset") != DATASET:
+        raise SystemExit("legacy meta provider/dataset が edinet-db/financials ではありません")
+    params = meta.get("params") if isinstance(meta.get("params"), dict) else {}
+    code = _edinet_code(params.get("code") or _edinet_code_from_filename(raw_path))
+    endpoint = meta.get("path") or f"/companies/{code}/financials"
+    raw = raw_path.read_bytes()
+    raw_obj = _load_json_dict(raw_path, "raw")
+    retrieved_at = meta.get("retrieved_at")
+    _parse_tz_dt(retrieved_at, "retrieved_at")
+    available_at = edinet_db._financials_available_at(raw_obj, retrieved_at)  # same PIT rule as sync
+    strict = provenance.make_provenance(
+        provider=PROVIDER,
+        dataset=DATASET,
+        endpoint=endpoint,
+        params={"code": code, "years": params.get("years"), "period": params.get("period", "annual")},
+        retrieved_at=retrieved_at,
+        raw_hash_compressed=common.hash_bytes(raw),
+        raw_hash_normalized=common.hash_bytes(common.normalize_json_bytes(raw)),
+        raw_size=len(raw),
+        content_type="application/json",
+        vendor_last_modified=None,
+        available_at=available_at,
+        edinet_code=code,
+        source_url=_source_url(endpoint),
+        license_scope="personal/local-temporary-cache/no-redistribution/no-raw-llm",
+        plan_or_limit=meta.get("plan_or_limit") or "local-bulk-meta-upgrade",
+    )
+    provenance.validate_provenance(strict)
+    sidecar.write_text(json.dumps(strict, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return sidecar, True
 
 
 def _code_commit() -> str:
@@ -127,9 +193,10 @@ def build_financial_features(
     if not raw_p.exists():
         raise SystemExit(f"raw-path が見つかりません: {raw_p}")
 
-    sidecar = raw_p.with_suffix(raw_p.suffix + ".provenance.json")
-    if not sidecar.exists():
-        raise SystemExit(f"provenance sidecar が見つかりません: {sidecar}")
+    sidecar, _upgraded = _ensure_provenance_sidecar(raw_p)
+    if sidecar is None:
+        expected = raw_p.with_suffix(raw_p.suffix + ".provenance.json")
+        raise SystemExit(f"provenance sidecar が見つかりません: {expected}")
     meta = _load_json_dict(sidecar, "provenance")
     if meta.get("provider") != PROVIDER or meta.get("dataset") != DATASET:
         raise SystemExit("provenance provider/dataset が edinet-db/financials ではありません")
@@ -245,11 +312,19 @@ def build_financial_features_batch(
     derived_root = derived_root or (ROOT / "data" / "derived")
     built = []
     skipped_missing_provenance = []
+    upgraded_legacy_meta = []
     failures = []
     for raw_p in candidates:
-        if not raw_p.with_suffix(raw_p.suffix + ".provenance.json").exists():
+        try:
+            sidecar, upgraded = _ensure_provenance_sidecar(raw_p)
+        except SystemExit as e:
+            failures.append({"raw_path": str(raw_p), "error": common.redact(str(e))})
+            continue
+        if sidecar is None:
             skipped_missing_provenance.append({"raw_path": str(raw_p), "reason": "missing_provenance"})
             continue
+        if upgraded:
+            upgraded_legacy_meta.append({"raw_path": str(raw_p), "provenance_path": str(sidecar)})
         try:
             res = build_financial_features(
                 raw_path=raw_p,
@@ -276,9 +351,11 @@ def build_financial_features_batch(
         "candidate_count": len(candidates),
         "built_count": len(built),
         "skipped_missing_provenance_count": len(skipped_missing_provenance),
+        "upgraded_legacy_meta_count": len(upgraded_legacy_meta),
         "failure_count": len(failures),
         "built": built,
         "skipped_missing_provenance": skipped_missing_provenance,
+        "upgraded_legacy_meta": upgraded_legacy_meta,
         "failures": failures,
         "note": "raw本文・APIキー値は含まない。推奨/予測/ランキングは生成しない。",
     }
@@ -294,6 +371,7 @@ def build_financial_features_batch(
         "candidate_count": len(candidates),
         "built_count": len(built),
         "skipped_missing_provenance_count": len(skipped_missing_provenance),
+        "upgraded_legacy_meta_count": len(upgraded_legacy_meta),
         "failure_count": len(failures),
         "manifest_path": manifest_path,
     }

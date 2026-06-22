@@ -1,16 +1,34 @@
 {
-  "asof": "2026-06-20",
+  "asof": "2026-06-22",
   "cross_check": {
-    "cross_checked_items": 780,
-    "item_count": 800,
+    "cross_checked_items": 871,
+    "item_count": 900,
     "metrics": {
       "equity_ratio↔equity_ratio": {
-        "calibration_signal": "ok",
-        "checked": 321,
-        "max_abs_delta": 0.2367096399279348,
+        "calibration_signal": "outlier_review",
+        "checked": 367,
+        "max_abs_delta": 0.32984034188359046,
         "median_abs_delta": 0.0,
-        "mismatch": 12,
+        "mismatch": 17,
         "mismatch_examples": [
+          {
+            "abs_delta": 0.32984034188359046,
+            "delta": 0.32984034188359046,
+            "diagnosis": "自己資本/純資産定義・非支配株主持分・連結範囲を重点点検",
+            "edinet_code": "E00492",
+            "edinet_value": 0.1589673177151382,
+            "jquants_value": 0.4888076595987286,
+            "securities_code": "29140"
+          },
+          {
+            "abs_delta": 0.28271422785715306,
+            "delta": 0.28271422785715306,
+            "diagnosis": "自己資本/純資産定義・非支配株主持分・連結範囲を重点点検",
+            "edinet_code": "E00436",
+            "edinet_value": 0.1831322495814817,
+            "jquants_value": 0.4658464774386348,
+            "securities_code": "28020"
+          },
           {
             "abs_delta": 0.2367096399279348,
             "delta": 0.2367096399279348,
@@ -30,55 +48,37 @@
             "securities_code": "61010"
           },
           {
-            "abs_delta": 0.08390521734022793,
-            "delta": 0.08390521734022793,
+            "abs_delta": 0.08819496497324164,
+            "delta": 0.08819496497324164,
             "diagnosis": "自己資本/純資産定義・連結範囲を点検",
-            "edinet_code": "E00932",
-            "edinet_value": 0.7366959748358884,
-            "jquants_value": 0.8206011921761164,
-            "securities_code": "45190"
-          },
-          {
-            "abs_delta": 0.08358968257438704,
-            "delta": 0.08358968257438704,
-            "diagnosis": "自己資本/純資産定義・連結範囲を点検",
-            "edinet_code": "E01122",
-            "edinet_value": 0.5034194022732288,
-            "jquants_value": 0.5870090848476158,
-            "securities_code": "52010"
-          },
-          {
-            "abs_delta": 0.06549358483106305,
-            "delta": 0.06549358483106305,
-            "diagnosis": "自己資本/純資産定義・連結範囲を点検",
-            "edinet_code": "E01593",
-            "edinet_value": 0.4876860314776984,
-            "jquants_value": 0.5531796163087614,
-            "securities_code": "72590"
+            "edinet_code": "E00395",
+            "edinet_value": 0.3683386266282355,
+            "jquants_value": 0.45653359160147716,
+            "securities_code": "25030"
           }
         ],
-        "mismatch_rate": 0.037383177570093455,
-        "p75_abs_delta": 2.9225524189158136e-05,
-        "p90_abs_delta": 0.009336310127866843,
-        "period_mismatch": 459,
+        "mismatch_rate": 0.04632152588555858,
+        "p75_abs_delta": 1.8326338013296972e-05,
+        "p90_abs_delta": 0.005499821091482629,
+        "period_mismatch": 504,
         "tolerance": 0.03
       },
       "net_margin↔net_margin": {
         "calibration_signal": "ok",
-        "checked": 321,
+        "checked": 367,
         "max_abs_delta": 0.002240102700445723,
         "median_abs_delta": 0.0,
         "mismatch": 0,
         "mismatch_examples": [],
         "mismatch_rate": 0.0,
-        "p75_abs_delta": 1.2632076464041964e-05,
-        "p90_abs_delta": 5.8549557069839664e-05,
-        "period_mismatch": 459,
+        "p75_abs_delta": 5.379490952779967e-06,
+        "p90_abs_delta": 4.298850201347878e-05,
+        "period_mismatch": 504,
         "tolerance": 0.02
       },
       "operating_margin↔operating_margin": {
         "calibration_signal": "ok",
-        "checked": 315,
+        "checked": 361,
         "max_abs_delta": 0.026406919660250917,
         "median_abs_delta": 0.0,
         "mismatch": 1,
@@ -93,18 +93,18 @@
             "securities_code": "64730"
           }
         ],
-        "mismatch_rate": 0.0031746031746031746,
-        "p75_abs_delta": 1.0781860694371315e-05,
-        "p90_abs_delta": 7.133292222931132e-05,
-        "period_mismatch": 455,
+        "mismatch_rate": 0.002770083102493075,
+        "p75_abs_delta": 7.794092181920287e-06,
+        "p90_abs_delta": 3.956573813735688e-05,
+        "period_mismatch": 501,
         "tolerance": 0.02
       },
       "revenue_growth_yoy↔sales_growth_yoy": {
         "calibration_signal": "outlier_review",
-        "checked": 321,
+        "checked": 366,
         "max_abs_delta": 0.39788752013073236,
         "median_abs_delta": 0.0,
-        "mismatch": 11,
+        "mismatch": 12,
         "mismatch_examples": [
           {
             "abs_delta": 0.39788752013073236,
@@ -116,55 +116,82 @@
             "securities_code": "64810"
           },
           {
-            "abs_delta": 0.21601166832663443,
-            "delta": -0.21601166832663443,
+            "abs_delta": 0.11073177505692233,
+            "delta": -0.11073177505692233,
             "diagnosis": "J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検",
-            "edinet_code": "E02100",
-            "edinet_value": 0.21601166832663443,
+            "edinet_code": "E00149",
+            "edinet_value": 0.11073177505692233,
             "jquants_value": 0.0,
-            "securities_code": "66620"
+            "securities_code": "19690"
           },
           {
-            "abs_delta": 0.14573392930457563,
-            "delta": -0.14573392930457563,
-            "diagnosis": "売上定義・決算期間・前年比分母の差を点検",
-            "edinet_code": "E01726",
-            "edinet_value": 0.09788988012465327,
-            "jquants_value": -0.047844049179922354,
-            "securities_code": "62680"
-          },
-          {
-            "abs_delta": 0.12737055520898322,
-            "delta": -0.12737055520898322,
+            "abs_delta": 0.08276150017303063,
+            "delta": 0.08276150017303063,
             "diagnosis": "J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検",
-            "edinet_code": "E01902",
-            "edinet_value": 0.12737055520898322,
+            "edinet_code": "E00605",
+            "edinet_value": -0.08276150017303063,
             "jquants_value": 0.0,
-            "securities_code": "69990"
+            "securities_code": "81430"
           },
           {
-            "abs_delta": 0.11077506314285879,
-            "delta": -0.11077506314285879,
-            "diagnosis": "売上定義・決算期間・前年比分母の差を点検",
-            "edinet_code": "E01975",
-            "edinet_value": 0.11105084913293051,
-            "jquants_value": 0.00027578599007171967,
-            "securities_code": "65940"
+            "abs_delta": 0.07525870178739413,
+            "delta": 0.07525870178739413,
+            "diagnosis": "J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検",
+            "edinet_code": "E01141",
+            "edinet_value": -0.07525870178739413,
+            "jquants_value": 0.0,
+            "securities_code": "53370"
+          },
+          {
+            "abs_delta": 0.06998640364867792,
+            "delta": -0.06998640364867792,
+            "diagnosis": "J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検",
+            "edinet_code": "E00263",
+            "edinet_value": 0.06998640364867792,
+            "jquants_value": 0.0,
+            "securities_code": "17830"
           }
         ],
-        "mismatch_rate": 0.03426791277258567,
-        "p75_abs_delta": 1.3592568195441856e-05,
-        "p90_abs_delta": 7.818409045490249e-05,
-        "period_mismatch": 459,
+        "mismatch_rate": 0.03278688524590164,
+        "p75_abs_delta": 9.008096920226638e-06,
+        "p90_abs_delta": 7.191847019166753e-05,
+        "period_mismatch": 504,
         "tolerance": 0.02
       },
       "roe_proxy↔roe_proxy": {
         "calibration_signal": "ok",
-        "checked": 321,
-        "max_abs_delta": 0.05848085511286358,
-        "median_abs_delta": 1.3066296230684893e-06,
-        "mismatch": 2,
+        "checked": 366,
+        "max_abs_delta": 0.2888305642659624,
+        "median_abs_delta": 0.0,
+        "mismatch": 4,
         "mismatch_examples": [
+          {
+            "abs_delta": 0.2888305642659624,
+            "delta": -0.2888305642659624,
+            "diagnosis": "平均自己資本 vs 期末自己資本・利益定義を点検",
+            "edinet_code": "E00748",
+            "edinet_value": -0.3801884900741929,
+            "jquants_value": -0.6690190543401553,
+            "securities_code": "78310"
+          },
+          {
+            "abs_delta": 0.2715049610455523,
+            "delta": -0.2715049610455523,
+            "diagnosis": "平均自己資本 vs 期末自己資本・利益定義を点検",
+            "edinet_code": "E00492",
+            "edinet_value": 0.3996233862417699,
+            "jquants_value": 0.12811842519621763,
+            "securities_code": "29140"
+          },
+          {
+            "abs_delta": 0.2264517570609186,
+            "delta": -0.2264517570609186,
+            "diagnosis": "平均自己資本 vs 期末自己資本・利益定義を点検",
+            "edinet_code": "E00436",
+            "edinet_value": 0.3889508219447108,
+            "jquants_value": 0.1624990648837922,
+            "securities_code": "28020"
+          },
           {
             "abs_delta": 0.05848085511286358,
             "delta": -0.05848085511286358,
@@ -173,30 +200,21 @@
             "edinet_value": 0.23419744194015343,
             "jquants_value": 0.17571658682728986,
             "securities_code": "61010"
-          },
-          {
-            "abs_delta": 0.04508595356313966,
-            "delta": -0.04508595356313966,
-            "diagnosis": "平均自己資本 vs 期末自己資本・利益定義を点検",
-            "edinet_code": "E02100",
-            "edinet_value": -0.28032658769098573,
-            "jquants_value": -0.3254125412541254,
-            "securities_code": "66620"
           }
         ],
-        "mismatch_rate": 0.006230529595015576,
-        "p75_abs_delta": 9.688725260403874e-05,
-        "p90_abs_delta": 0.0017912110662516578,
-        "period_mismatch": 459,
+        "mismatch_rate": 0.01092896174863388,
+        "p75_abs_delta": 6.883115552780948e-05,
+        "p90_abs_delta": 0.0015015123937312871,
+        "period_mismatch": 504,
         "tolerance": 0.03
       }
     }
   },
   "valuation": {
-    "asof": "2026-06-20",
+    "asof": "2026-06-22",
     "feature_set": "jquants_equity_v1",
     "listed_codes": 4443,
-    "manifest_path": "data/derived/features/jquants_equity_v1/2026-06-20/manifest.json",
+    "manifest_path": "data/derived/features/jquants_equity_v1/2026-06-22/manifest.json",
     "needs_rebuild_for_uncovered_reasons": false,
     "pbr_coverage_ratio": 0.8401980643709206,
     "pbr_covered": 3733,
