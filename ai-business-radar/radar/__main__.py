@@ -28,7 +28,7 @@ from .research import (build_audit_report, build_evidence, build_investor_brief,
                        write_jquants_evidence, write_llm_handoff, write_research_queue)
 from .daily_update import render_daily_summary, run_daily_update
 from .doctor import build_doctor_report, render_doctor_report, write_doctor_report
-from .sources import edinet_db
+from .sources import edinet_db, jquants_bulk
 from .report import (render_check, render_mirror, render_review, render_target_check,
                      render_value_audit, render_value_review)
 
@@ -709,6 +709,32 @@ def cmd_fetch_jquants(args) -> None:
     print("  ※ APIキー値・raw本文は表示していません。ランキング/推奨/予測は生成していません。")
 
 
+def cmd_fetch_jquants_bulk(args) -> None:
+    """Fetch/list J-Quants Premium Bulk files. Raw gzip only; no feature/research/LLM."""
+    date_filter = _valid_asof(args.date) if args.date else None
+    from_date = _valid_asof(args.from_date) if args.from_date else None
+    to_date = _valid_asof(args.to_date) if args.to_date else None
+    if args.date and args.endpoint:
+        raise SystemExit("--date は全endpointの日付指定です。--endpoint と併用せず、endpoint単位では --from/--to を使ってください")
+    endpoints = args.endpoint
+    res = jquants_bulk.fetch_bulk(
+        load_config(),
+        endpoints=endpoints,
+        date_filter=date_filter,
+        from_date=from_date,
+        to_date=to_date,
+        download=args.download,
+        max_files=args.max_files,
+        sleep_sec=args.sleep,
+    )
+    print(f"fetch-jquants-bulk: manifest を生成しました: {_rel(res['manifest_path'])}")
+    print(f"  mode: {res['mode']} / endpoints: {len(res['endpoints'])} / files: {res['total_files']}")
+    print(f"  downloaded: {res['downloaded_count']} / skipped_existing: {res['skipped_existing_count']} / errors: {len(res['errors'])}")
+    print("  ※ APIキー値・download URL・provider raw本文は表示していません。feature/research/LLM投入はしていません。")
+    if res["errors"]:
+        raise SystemExit("fetch-jquants-bulk: 一部エラーがあります(manifest を確認してください)")
+
+
 def cmd_daily_update(args) -> None:
     """One-shot: derived features -> research-queue -> analysis brief for Claude.
 
@@ -861,6 +887,20 @@ def main() -> None:
                          help="J-Quants REST から指定銘柄を取得し derived を生成(.env認証・ネットあり)")
     pfj.add_argument("--codes", required=True, help="証券コード(カンマ区切り 例 7203,6758)")
     pfj.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 今日)。asof以前のみ採用")
+    pjqf = sub.add_parser(
+        "fetch-jquants-bulk",
+        help="J-Quants Premium Bulk をlist/download(raw gzip保存のみ・分析なし)",
+        description="J-Quants Premium Bulk のファイル一覧取得とraw gzip保存を行います。APIキー値・download URL・provider raw本文は表示しません。",
+    )
+    pjqf.add_argument("--endpoint", action="append",
+                      help="Bulk endpoint(例 /equities/bars/daily)。複数指定可。既定は日次分析の最小4本")
+    pjqf.add_argument("--date", help="対象日 YYYY-MM-DD(全endpointを日付指定。--endpoint とは併用不可)")
+    pjqf.add_argument("--from", dest="from_date", help="期間開始 YYYY-MM-DD(endpointごと)")
+    pjqf.add_argument("--to", dest="to_date", help="期間終了 YYYY-MM-DD(endpointごと)")
+    pjqf.add_argument("--download", action="store_true", help="list したファイルを data/raw/jquants/bulk に保存")
+    pjqf.add_argument("--max-files", dest="max_files", type=int, default=None,
+                      help="最大処理ファイル数(安全弁・任意)")
+    pjqf.add_argument("--sleep", type=float, default=0.05, help="API呼び出し間隔秒(既定0.05)")
     pdu = sub.add_parser(
         "daily-update",
         help="(運用) derived→research→分析パケットを一括生成しClaude分析用に出力(LLM API呼び出しなし)")
@@ -922,6 +962,8 @@ def main() -> None:
         cmd_investor_brief(args)
     elif args.command == "fetch-jquants":
         cmd_fetch_jquants(args)
+    elif args.command == "fetch-jquants-bulk":
+        cmd_fetch_jquants_bulk(args)
     elif args.command == "daily-update":
         cmd_daily_update(args)
     elif args.command == "doctor":

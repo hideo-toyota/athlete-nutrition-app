@@ -3,8 +3,9 @@
 #
 # Scope:
 # - Network data refresh only. No research queue, evidence, LLM API, or trading.
-# - EDINET writes raw. Optional J-Quants watchlist REST writes derived because
-#   the current formal CLI is on-demand fetch+derived, not broad raw sync.
+# - EDINET writes raw. J-Quants Premium Bulk writes raw gzip only.
+#   Optional J-Quants watchlist REST writes derived because that CLI is
+#   on-demand fetch+derived, not broad raw sync.
 # - Continue across failures and write logs under outputs/automation/<asof>/.
 # - Never print .env contents or API key values.
 set -uo pipefail
@@ -109,6 +110,20 @@ if [ -n "$codes_file" ] && [ -f "$codes_file" ]; then
   fi
 else
   log "skip: edinet_financials codes file not found"
+fi
+
+if [ "${RADAR_FETCH_JQUANTS_BULK:-1}" != "0" ]; then
+  bulk_endpoints="${RADAR_JQUANTS_BULK_ENDPOINTS:-/equities/master,/equities/bars/daily,/fins/summary,/fins/dividend}"
+  bulk_cmd=(python3 -m radar fetch-jquants-bulk --from "$ASOF" --to "$ASOF" --download)
+  old_ifs="$IFS"
+  IFS=","
+  for endpoint in $bulk_endpoints; do
+    if [ -n "$endpoint" ]; then
+      bulk_cmd+=(--endpoint "$endpoint")
+    fi
+  done
+  IFS="$old_ifs"
+  run_logged "jquants_bulk" "${bulk_cmd[@]}"
 fi
 
 watchlist="${RADAR_JQUANTS_WATCHLIST:-$ROOT/data/metadata/jquants_watchlist.txt}"

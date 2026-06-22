@@ -43,6 +43,7 @@
         "auth": "x-api-key",
         "key_var": "JQUANTS_API_KEY",
         "ping_params": { "endpoint": "/markets/calendar" },
+        "plan_or_limit": "Premium plan; Bulk API available for personal local use per user-confirmed subscription",
         "_note": "A1疎通のみ。Bulk list APIの最小確認としてendpoint=/markets/calendarを使う。取得本文は保存/表示しない"
       },
       "edinet-db": {

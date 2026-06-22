@@ -39,3 +39,15 @@ launchctl unload ~/Library/LaunchAgents/com.radar.retry-doctor.plist
 
 The scripts do not print API keys or provider raw bodies. They rely on existing
 `radar` commands for redaction and scope control.
+
+`daily_fetch.sh` currently fetches:
+
+- EDINET DB companies raw.
+- EDINET DB financials raw in offset/limit batches.
+- J-Quants Premium Bulk raw for `/equities/master`, `/equities/bars/daily`,
+  `/fins/summary`, `/fins/dividend` for the requested asof date.
+- Optional J-Quants watchlist REST when `data/metadata/jquants_watchlist.txt`
+  exists.
+
+It does not build features, research queues, evidence, LLM packets, rankings,
+or trade instructions.

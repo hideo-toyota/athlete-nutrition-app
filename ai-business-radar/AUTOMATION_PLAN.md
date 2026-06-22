@@ -11,8 +11,8 @@
 
 - EDINET DB companies: 当日 companies raw を取得する。
 - EDINET DB financials: `data/metadata/edinetdb_company_codes_*.txt` の最新ファイルを使い、offset/limit で分割取得する。
+- J-Quants Premium Bulk: 日次分析に必要な最小4本(`/equities/master`, `/equities/bars/daily`, `/fins/summary`, `/fins/dividend`)を `from=asof/to=asof` で取得する。公開済みファイルが無ければ files=0 としてログに残す。
 - J-Quants watchlist REST: `data/metadata/jquants_watchlist.txt` がある場合だけ `fetch-jquants` で監視銘柄を更新する。現CLIは取得とderived生成が一体なので、これは例外的に `data/derived` を更新するが、research/evidence/LLM packet は作らない。
-- J-Quants market-wide Bulk: 現時点では既存 raw を利用する。広域 bulk downloader は正式CLI化するまで LaunchAgent には組み込まない。
 
 失敗時:
 
@@ -65,7 +65,7 @@
 - ネット取得と分析生成を同じジョブにしない。
 - fetch失敗時も build-and-brief は既存raw/derivedで走らせる。
 - EDINET financials は offset state を成功時だけ進める。
-- J-Quants market-wide bulk の正式取得が未整備でも、既存bulk derived と watchlist REST で夜の分析を継続する。
+- J-Quants market-wide bulk が未公開/失敗でも、既存bulk derived と watchlist REST で夜の分析を継続する。
 - どのジョブも raw本文・APIキー値・`.env` の中身をログに出さない。
 - 実データのログは `outputs/automation/`、状態は `data/metadata/automation/` に置く。どちらも git 追跡しない。
 
@@ -88,6 +88,5 @@ LaunchAgent はテンプレートだけをコミットする。実登録はMac�
 
 ## 6. 次に正式化する未完
 
-- J-Quants Premium Bulk の正式CLI化。現状の広域bulk取得は一時スクリプト由来なので、LaunchAgentにはまだ組み込まない。
 - EDINET全件取得の offset 完了率を `doctor` に表示する。
 - `outputs/automation/<asof>/summary.json` を生成し、Discordへ「成功/失敗/鮮度」を短く出す。
