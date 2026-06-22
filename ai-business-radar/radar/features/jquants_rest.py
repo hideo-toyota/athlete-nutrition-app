@@ -26,6 +26,7 @@ from .jquants_bulk import (
     _float_or_none,
     _measured,
     _output_dir,
+    _market_cap,
     _per_pbr,
     _financial_period_label,
     _ratio,
@@ -179,6 +180,7 @@ def build_jquants_features_from_payloads(
 
     per_vals, pbr_vals = [], []
     price_covered = summary_covered = valuation_covered = 0
+    shares_covered = market_cap_covered = 0
     latest_price_date = None
     alias_hits = {"eps": Counter(), "bps": Counter(), "shares": Counter(),
                   "per_method": Counter(), "pbr_method": Counter()}
@@ -201,12 +203,16 @@ def build_jquants_features_from_payloads(
                 summary_covered += 1
             close_val = latest[1] if latest else None
             per, pbr, per_method, pbr_method = _per_pbr(close_val, f)
+            market_cap = _market_cap(close_val, f.get("shares"))
             if f.get("eps_source") and f.get("eps") is not None:
                 alias_hits["eps"][f["eps_source"]] += 1
             if f.get("bps_source") and f.get("bps") is not None:
                 alias_hits["bps"][f["bps_source"]] += 1
             if f.get("shares_source") and f.get("shares") is not None:
                 alias_hits["shares"][f["shares_source"]] += 1
+                shares_covered += 1
+            if market_cap is not None:
+                market_cap_covered += 1
             if per is not None:
                 per_vals.append(per)
                 alias_hits["per_method"][per_method or "unknown"] += 1
@@ -242,6 +248,14 @@ def build_jquants_features_from_payloads(
                     "equity_ratio": _measured(f["equity_ratio"], unit="ratio"),
                     "eps_trailing": _measured(f["eps"], unit="JPY", note="last-FY EPS (REST)"),
                     "bps": _measured(f["bps"], unit="JPY", note="BPS (REST)"),
+                    "shares_outstanding": _measured(
+                        f["shares"], unit="shares",
+                        note=f"shares outstanding alias: {f.get('shares_source') or 'UNKNOWN'}",
+                    ),
+                    "market_cap_jpy": _measured(
+                        market_cap, unit="JPY",
+                        note="latest_close * shares_outstanding; trailing point-in-time proxy",
+                    ),
                     "per_trailing": _measured(per, unit="x", note="trailing: latest_close / last-FY EPS (or close*shares/NP)"),
                     "pbr": _measured(pbr, unit="x", note="latest_close / BPS (or close*shares/Eq)"),
                     "dividend_record_present": _measured(None, unit="bool"),
@@ -273,6 +287,10 @@ def build_jquants_features_from_payloads(
             "summary_coverage_ratio": summary_covered / n if n else None,
             "valuation_coverage_ratio": valuation_covered / n if n else None,
             "valuation_uncovered_reasons": dict(uncovered),
+            "shares_covered": shares_covered,
+            "shares_coverage_ratio": shares_covered / n if n else None,
+            "market_cap_covered": market_cap_covered,
+            "market_cap_coverage_ratio": market_cap_covered / n if n else None,
         },
         "valuation_alias_hits": {k: dict(v) for k, v in alias_hits.items()},
     }

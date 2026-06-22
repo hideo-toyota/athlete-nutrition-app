@@ -263,6 +263,8 @@ _JQUANTS_CONTEXT_FEATURES = (
     "pbr",
     "eps_trailing",
     "bps",
+    "shares_outstanding",
+    "market_cap_jpy",
     "sales_growth_yoy",
     "operating_margin",
     "net_margin",
@@ -429,7 +431,7 @@ def jquants_summary(manifest: dict | None, *, manifest_path: Path | None = None)
         "distribution": {
             key: (manifest.get("distribution") or {}).get(key) or {}
             for key in ("return_20d", "return_60d", "return_252d", "operating_margin",
-                        "roe_proxy", "per_trailing", "pbr")
+                        "roe_proxy", "per_trailing", "pbr", "market_cap_jpy")
         },
         "valuation_alias_hits": manifest.get("valuation_alias_hits") or {},
         "derived_path": rel(manifest_path) if manifest_path else None,

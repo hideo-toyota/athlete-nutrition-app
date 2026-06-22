@@ -46,14 +46,14 @@ def _fixture(root: Path):
         price_rows.append({"Date": day, "Code": "72030", "C": 100 + i, "AC": 100 + i, "Vo": 1000 + i, "AVo": 1000 + i})
     price_rows.append({"Date": "2026-06-18", "Code": "99990", "C": 50, "AC": 50, "Vo": 10, "AVo": 10})
     _write_gz(raw / "equities/bars/daily/premium/live/equities_bars_daily_20260618.csv.gz", price_header, price_rows)
-    summary_header = ["DiscDate", "DiscTime", "Code", "DiscNo", "DocType", "CurPerType", "CurPerEn", "Sales", "OP", "NP", "Eq", "TA", "EPS", "BPS"]
+    summary_header = ["DiscDate", "DiscTime", "Code", "DiscNo", "DocType", "CurPerType", "CurPerEn", "Sales", "OP", "NP", "Eq", "TA", "EPS", "BPS", "ShOutFY"]
     _write_gz(
         raw / "fins/summary/historical/2026/fins_summary_202606.csv.gz",
         summary_header,
         [
-            {"DiscDate": "2025-06-01", "DiscTime": "15:00", "Code": "72030", "DiscNo": "1", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2025-03-31", "Sales": "1000", "OP": "80", "NP": "50", "Eq": "400", "TA": "2000", "EPS": "16", "BPS": "200"},
-            {"DiscDate": "2026-06-01", "DiscTime": "15:00", "Code": "72030", "DiscNo": "2", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2026-03-31", "Sales": "1200", "OP": "120", "NP": "60", "Eq": "500", "TA": "2200", "EPS": "20", "BPS": "250"},
-            {"DiscDate": "2026-06-01", "DiscTime": "15:00", "Code": "99990", "DiscNo": "3", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2026-03-31", "Sales": "0", "OP": "0", "NP": "0", "Eq": "0", "TA": "0", "EPS": "0", "BPS": "0"},
+            {"DiscDate": "2025-06-01", "DiscTime": "15:00", "Code": "72030", "DiscNo": "1", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2025-03-31", "Sales": "1000", "OP": "80", "NP": "50", "Eq": "400", "TA": "2000", "EPS": "16", "BPS": "200", "ShOutFY": "1000000"},
+            {"DiscDate": "2026-06-01", "DiscTime": "15:00", "Code": "72030", "DiscNo": "2", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2026-03-31", "Sales": "1200", "OP": "120", "NP": "60", "Eq": "500", "TA": "2200", "EPS": "20", "BPS": "250", "ShOutFY": "1000000"},
+            {"DiscDate": "2026-06-01", "DiscTime": "15:00", "Code": "99990", "DiscNo": "3", "DocType": "FYFinancialStatements_Consolidated_JP", "CurPerType": "FY", "CurPerEn": "2026-03-31", "Sales": "0", "OP": "0", "NP": "0", "Eq": "0", "TA": "0", "EPS": "0", "BPS": "0", "ShOutFY": "100"},
         ],
     )
     _write_gz(
@@ -98,6 +98,8 @@ class JQuantsBulkFeatureTests(unittest.TestCase):
         self.assertEqual(first["features"]["per_trailing"]["unit"], "x")
         self.assertAlmostEqual(first["features"]["per_trailing"]["value"], round(close / 20, 2))
         self.assertAlmostEqual(first["features"]["pbr"]["value"], round(close / 250, 2))
+        self.assertEqual(first["features"]["shares_outstanding"]["value"], 1_000_000.0)
+        self.assertEqual(first["features"]["market_cap_jpy"]["value"], close * 1_000_000.0)
         self.assertEqual(first["source_snapshot"]["financial_current_period"]["period_end"], "2026-03-31")
         self.assertEqual(first["source_snapshot"]["financial_previous_period"]["period_end"], "2025-03-31")
         self.assertEqual(first["source_snapshot"]["used_fields"]["current"]["sales"]["field"], "Sales")
@@ -112,10 +114,14 @@ class JQuantsBulkFeatureTests(unittest.TestCase):
         self.assertAlmostEqual(manifest["coverage"]["valuation_coverage_ratio"], 1 / 3)
         self.assertEqual(manifest["coverage"]["per_covered"], 1)
         self.assertEqual(manifest["coverage"]["pbr_covered"], 1)
+        self.assertEqual(manifest["coverage"]["shares_covered"], 2)
+        self.assertEqual(manifest["coverage"]["market_cap_covered"], 2)
+        self.assertAlmostEqual(manifest["coverage"]["market_cap_coverage_ratio"], 2 / 3)
         self.assertAlmostEqual(manifest["coverage"]["per_coverage_ratio"], 1 / 3)
         self.assertAlmostEqual(manifest["coverage"]["pbr_coverage_ratio"], 1 / 3)
         self.assertEqual(manifest["valuation_alias_hits"]["eps"]["EPS"], 2)
         self.assertEqual(manifest["valuation_alias_hits"]["bps"]["BPS"], 2)
+        self.assertEqual(manifest["valuation_alias_hits"]["shares"]["ShOutFY"], 2)
         self.assertEqual(manifest["valuation_alias_hits"]["per_method"]["eps:EPS"], 1)
         self.assertEqual(manifest["valuation_alias_hits"]["pbr_method"]["bps:BPS"], 1)
         reasons = manifest["coverage"]["valuation_uncovered_reasons"]
@@ -128,6 +134,7 @@ class JQuantsBulkFeatureTests(unittest.TestCase):
         self.assertIn("valuation_coverage", summary)
         self.assertIn("per_coverage", summary)
         self.assertIn("pbr_coverage", summary)
+        self.assertIn("market_cap_coverage", summary)
         self.assertIn("valuation_alias_hits", summary)
         self.assertIn("no recommendation", summary)
         self.assertNotIn("ranking", summary.lower().replace("no ranking", ""))

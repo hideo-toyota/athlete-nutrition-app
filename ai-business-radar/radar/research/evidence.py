@@ -88,6 +88,8 @@ def render_evidence(evidence: dict) -> str:
             f"- latest_price_date: `{mc.get('latest_price_date')}`",
             f"- latest_close: `{metric_value(mf.get('latest_close') or {})}`",
             f"- latest_volume: `{metric_value(mf.get('latest_volume') or {})}`",
+            f"- shares_outstanding: `{metric_value(mf.get('shares_outstanding') or {})}`",
+            f"- market_cap_jpy: `{metric_value(mf.get('market_cap_jpy') or {})}`  (latest_close×shares_outstanding; PIT proxy)",
             f"- per_trailing: `{metric_value(mf.get('per_trailing') or {})}`  (trailing・予想PERではない)",
             f"- pbr: `{metric_value(mf.get('pbr') or {})}`",
             f"- eps_trailing: `{metric_value(mf.get('eps_trailing') or {})}`",

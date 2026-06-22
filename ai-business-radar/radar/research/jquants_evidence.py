@@ -17,8 +17,10 @@ JQUANTS_FEATURE_SET = "jquants_equity_v1"
 _SEC_RE = re.compile(r"^[0-9A-Z]{4,5}$")
 
 VALUATION_ORDER = (
+    "market_cap_jpy",
     "per_trailing",
     "pbr",
+    "shares_outstanding",
     "eps_trailing",
     "bps",
 )
@@ -126,6 +128,7 @@ def render_jquants_evidence(evidence: dict) -> str:
         "",
         "## 注意",
         "- latest_close は調整後終値(adjusted close when available)。「当時の株価」= asof以前の最終取引日。",
+        "- market_cap_jpy は latest_close×shares_outstanding のPIT proxy。時価総額順・売買順ではない。",
         "- per_trailing/pbr は trailing(直近本決算ベース)。予想PERではない。EPS/BPS が無い銘柄は UNKNOWN。",
         "- per/pbr の EPS/BPS は bulk の列エイリアス由来。coverage は summary の valuation_coverage_ratio で要確認。",
         "- roe_proxy は監査済ROEではない(proxy)。赤字/債務超過は per/pbr を UNKNOWN にしている。",

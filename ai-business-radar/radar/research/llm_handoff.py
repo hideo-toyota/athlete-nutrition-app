@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .common import DISCLAIMER, assert_no_forbidden_output
+from .common import DISCLAIMER, assert_no_forbidden_output, metric_value
 from .evidence import build_evidence, render_evidence
 from .jquants_evidence import build_jquants_evidence, render_jquants_evidence
 from .queue import build_research_queue, render_research_queue
@@ -65,13 +65,16 @@ def _render_jquants_summary(summary: dict | None) -> list[str]:
     dist = summary.get("distribution") or {}
     per = (dist.get("per_trailing") or {}).get("median")
     pbr = (dist.get("pbr") or {}).get("median")
+    market_cap = (dist.get("market_cap_jpy") or {}).get("median")
     out.extend([
         f"- feature_set/asof: `{summary.get('feature_set')}` / `{summary.get('asof')}`",
         f"- latest_price_date: `{coverage.get('latest_price_date')}`",
         f"- price_coverage: `{_pct(coverage.get('price_coverage_ratio'))}` / summary_coverage: `{_pct(coverage.get('summary_coverage_ratio'))}`",
         f"- valuation_coverage: `{_pct(coverage.get('valuation_coverage_ratio'))}`",
+        f"- market_cap_coverage: `{_pct(coverage.get('market_cap_coverage_ratio'))}`",
         f"- PER trailing median: `{'UNKNOWN' if not isinstance(per, (int, float)) else f'{per:.2f}x'}`"
         f" / PBR median: `{'UNKNOWN' if not isinstance(pbr, (int, float)) else f'{pbr:.2f}x'}`",
+        f"- market_cap median: `{metric_value({'status': 'CALCULATION', 'value': market_cap, 'unit': 'JPY'})}`",
         f"- return_20d median: `{_pct((dist.get('return_20d') or {}).get('median'))}` / positive_rate: `{_pct((dist.get('return_20d') or {}).get('positive_rate'))}`",
         f"- return_60d median: `{_pct((dist.get('return_60d') or {}).get('median'))}` / positive_rate: `{_pct((dist.get('return_60d') or {}).get('positive_rate'))}`",
         f"- return_252d median: `{_pct((dist.get('return_252d') or {}).get('median'))}` / positive_rate: `{_pct((dist.get('return_252d') or {}).get('positive_rate'))}`",

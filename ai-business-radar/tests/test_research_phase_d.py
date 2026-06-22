@@ -130,6 +130,8 @@ def _write_jquants(base: Path, asof="2026-06-18"):
         "features": {
             "latest_close": _measured(2530, unit="JPY"),
             "latest_volume": _measured(1234000, unit="shares"),
+            "shares_outstanding": _measured(1000000, unit="shares"),
+            "market_cap_jpy": _measured(2530000000, unit="JPY"),
             "return_20d": _measured(0.05),
             "return_60d": _measured(-0.02),
             "return_252d": _measured(0.12),
@@ -164,11 +166,13 @@ def _write_jquants(base: Path, asof="2026-06-18"):
             "summary_covered": 1,
             "dividend_covered": 1,
             "valuation_covered": 1,
+            "market_cap_covered": 1,
             "latest_price_date": "2026-06-18",
             "price_coverage_ratio": 1.0,
             "summary_coverage_ratio": 1.0,
             "dividend_coverage_ratio": 1.0,
             "valuation_coverage_ratio": 1.0,
+            "market_cap_coverage_ratio": 1.0,
         },
         "distribution": {
             "return_20d": {"count": 1, "median": 0.05, "positive_rate": 1.0, "p10": None, "p90": None},
@@ -176,6 +180,7 @@ def _write_jquants(base: Path, asof="2026-06-18"):
             "return_252d": {"count": 1, "median": 0.12, "positive_rate": 1.0, "p10": None, "p90": None},
             "per_trailing": {"count": 1, "median": 12.65, "positive_rate": 1.0, "p10": None, "p90": None},
             "pbr": {"count": 1, "median": 1.01, "positive_rate": 1.0, "p10": None, "p90": None},
+            "market_cap_jpy": {"count": 1, "median": 2530000000, "positive_rate": 1.0, "p10": None, "p90": None},
         },
         "valuation_alias_hits": {
             "eps": {"EPS": 1},
@@ -213,6 +218,7 @@ class ResearchPhaseDTests(unittest.TestCase):
             self.assertIn("J-Quants local context", text)
             self.assertIn("2,530 JPY", text)
             self.assertIn("12.65 x", text)
+            self.assertIn("2,530,000,000 JPY", text)
             self.assertIn("2026-06-18", text)
             self.assertNotIn(SENTINEL, text)
             for token in FORBIDDEN_OUTPUT_TOKENS:

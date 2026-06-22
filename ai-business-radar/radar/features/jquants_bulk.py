@@ -303,7 +303,7 @@ def _return(points: list[tuple[date, float, float | None]], periods: int):
 # against raw on the Mac; coverage in the summary tells whether an alias matched.
 _EPS_KEYS = ("EPS", "EPSCons", "EarningsPerShare")
 _BPS_KEYS = ("BPS", "BPSCons", "BookValuePerShare")
-_SHARES_KEYS = ("Shares", "ShEoF", "ShsEoF", "IssuedShares", "NumShares")
+_SHARES_KEYS = ("ShOutFY", "Shares", "ShEoF", "ShsEoF", "IssuedShares", "NumShares")
 
 
 def _first_float(row: dict, keys: tuple[str, ...]):
@@ -429,6 +429,12 @@ def _per_pbr(close, fin: dict):
     return per, pbr, per_method, pbr_method
 
 
+def _market_cap(close, shares):
+    if close is None or close <= 0 or shares is None or shares <= 0:
+        return None
+    return close * shares
+
+
 def _per_uncovered_reason(close, fin: dict) -> str:
     if close is None or close <= 0:
         return "no_price"
@@ -466,6 +472,8 @@ def _format_distribution_value(key: str, value):
         return "UNKNOWN"
     if key in {"per_trailing", "pbr"}:
         return f"{value:.2f}x"
+    if key == "market_cap_jpy":
+        return f"{value:,.0f} JPY"
     return _format_ratio(value)
 
 
@@ -509,7 +517,10 @@ def build_jquants_bulk_features(
     roe = []
     per_vals = []
     pbr_vals = []
+    market_caps = []
     valuation_covered = 0
+    shares_covered = 0
+    market_cap_covered = 0
     valuation_uncovered_reasons = Counter()
     per_covered = 0
     pbr_covered = 0
@@ -557,6 +568,7 @@ def build_jquants_bulk_features(
                 roe.append(f["roe_proxy"])
             close_val = latest[1] if latest else None
             per, pbr, per_method, pbr_method = _per_pbr(close_val, f)
+            market_cap = _market_cap(close_val, f.get("shares"))
             per_reason = _per_uncovered_reason(close_val, f) if per is None else None
             pbr_reason = _pbr_uncovered_reason(close_val, f) if pbr is None else None
             if f.get("eps_source") and f.get("eps") is not None:
@@ -565,6 +577,10 @@ def build_jquants_bulk_features(
                 valuation_alias_hits["bps"][f["bps_source"]] += 1
             if f.get("shares_source") and f.get("shares") is not None:
                 valuation_alias_hits["shares"][f["shares_source"]] += 1
+                shares_covered += 1
+            if market_cap is not None:
+                market_caps.append(market_cap)
+                market_cap_covered += 1
             if per is not None:
                 per_vals.append(per)
                 per_covered += 1
@@ -616,6 +632,14 @@ def build_jquants_bulk_features(
                     "equity_ratio": _measured(f["equity_ratio"], unit="ratio"),
                     "eps_trailing": _measured(f["eps"], unit="JPY", note="last-FY EPS (bulk alias; verify coverage)"),
                     "bps": _measured(f["bps"], unit="JPY", note="BPS (bulk alias; verify coverage)"),
+                    "shares_outstanding": _measured(
+                        f["shares"], unit="shares",
+                        note=f"shares outstanding alias: {f.get('shares_source') or 'UNKNOWN'}",
+                    ),
+                    "market_cap_jpy": _measured(
+                        market_cap, unit="JPY",
+                        note="latest_close * shares_outstanding; trailing point-in-time proxy",
+                    ),
                     "per_trailing": _measured(per, unit="x", note="trailing: latest_close / last-FY EPS (or close*shares/NP)"),
                     "pbr": _measured(pbr, unit="x", note="latest_close / BPS (or close*shares/Eq)"),
                     "dividend_record_present": _measured(bool(div), unit="bool", status="CALCULATION"),
@@ -671,6 +695,10 @@ def build_jquants_bulk_features(
             "valuation_covered": valuation_covered,
             "valuation_coverage_ratio": valuation_covered / len(master) if master else None,
             "valuation_uncovered_reasons": dict(valuation_uncovered_reasons),
+            "shares_covered": shares_covered,
+            "shares_coverage_ratio": shares_covered / len(master) if master else None,
+            "market_cap_covered": market_cap_covered,
+            "market_cap_coverage_ratio": market_cap_covered / len(master) if master else None,
             "per_covered": per_covered,
             "per_coverage_ratio": per_covered / len(master) if master else None,
             "per_uncovered_reasons": dict(per_uncovered_reasons),
@@ -687,6 +715,7 @@ def build_jquants_bulk_features(
             "roe_proxy": dist(roe),
             "per_trailing": dist(per_vals),
             "pbr": dist(pbr_vals),
+            "market_cap_jpy": dist(market_caps),
         },
         "valuation_alias_hits": {k: dict(v) for k, v in valuation_alias_hits.items()},
         "market_counts": market_counts.most_common(),
@@ -715,6 +744,7 @@ def build_jquants_bulk_features(
         f"- price_coverage: {_format_ratio(summary['coverage']['price_coverage_ratio'])}",
         f"- summary_coverage: {_format_ratio(summary['coverage']['summary_coverage_ratio'])}",
         f"- valuation_coverage: {_format_ratio(summary['coverage']['valuation_coverage_ratio'])}",
+        f"- market_cap_coverage: {_format_ratio(summary['coverage']['market_cap_coverage_ratio'])}",
         f"- per_coverage: {_format_ratio(summary['coverage']['per_coverage_ratio'])}",
         f"- pbr_coverage: {_format_ratio(summary['coverage']['pbr_coverage_ratio'])}",
         f"- dividend_coverage: {_format_ratio(summary['coverage']['dividend_coverage_ratio'])}",

@@ -42,13 +42,14 @@ _asof: 2026-06-22 / これは整合性の点検であり、売買順・推奨・
 
 ## B. J-Quants valuation coverage [CALCULATION/UNKNOWN]
 - feature_set/asof: `jquants_equity_v1` / `2026-06-22`
-- listed_codes: 4443 / valuation_covered: 3741
-- valuation_coverage: 84.2% / price_coverage: 97.7%
-- per_coverage: 75.0% / pbr_coverage: 84.0%
-- alias_hits: `{"bps": {"BPS": 3751}, "eps": {"EPS": 3755}, "pbr_method": {"bps:BPS": 3733}, "per_method": {"eps:EPS": 3334}, "shares": {}}`
-- uncovered_reasons: `{"no_per_pbr_inputs": 584, "no_price": 104, "nonpositive_or_unusable_inputs": 14}`
-- per_uncovered_reasons: `{"no_per_inputs": 584, "no_price": 104, "nonpositive_or_unusable_inputs": 421}`
-- pbr_uncovered_reasons: `{"no_pbr_inputs": 588, "no_price": 104, "nonpositive_or_unusable_inputs": 18}`
+- listed_codes: 4443 / valuation_covered: 3748
+- valuation_coverage: 84.4% / price_coverage: 97.7%
+- market_cap_coverage: 84.5% / market_cap_covered: 3753
+- per_coverage: 75.1% / pbr_coverage: 84.3%
+- alias_hits: `{"bps": {"BPS": 3751}, "eps": {"EPS": 3755}, "pbr_method": {"bps:BPS": 3733, "shares_equity:ShOutFY": 13}, "per_method": {"eps:EPS": 3334, "shares_net_profit:ShOutFY": 1}, "shares": {"ShOutFY": 3753}}`
+- uncovered_reasons: `{"no_per_pbr_inputs": 584, "no_price": 104, "nonpositive_or_unusable_inputs": 7}`
+- per_uncovered_reasons: `{"no_per_inputs": 584, "no_price": 104, "nonpositive_or_unusable_inputs": 420}`
+- pbr_uncovered_reasons: `{"no_pbr_inputs": 586, "no_price": 104, "nonpositive_or_unusable_inputs": 7}`
 
 - uncovered の `no_per_pbr_inputs` が多い場合、EPS/BPS 列エイリアスが実 raw と不一致の可能性(要列名確認)。
 - PER/PBR 個別の未カバーは `per_uncovered_reasons` / `pbr_uncovered_reasons` を優先して確認。
@@ -57,4 +58,5 @@ _asof: 2026-06-22 / これは整合性の点検であり、売買順・推奨・
 
 ## 注意
 - per/pbr は trailing(予想PERではない)。本レポートは魅力度・売買順ではありません。
+- market_cap_jpy は latest_close×shares_outstanding のPIT proxy。投資判断の優先度ではありません。
 - 第三者LLM入力は LICENSE_MATRIX E5/J5 本人確認 2026-06-20 済(個人の私的分析利用)。

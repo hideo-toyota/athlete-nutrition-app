@@ -29,11 +29,13 @@ def _statements(code):
         {"Code": code, "DisclosedDate": "2025-05-10", "TypeOfCurrentPeriod": "FY",
          "CurrentPeriodEndDate": "2025-03-31", "NetSales": "1000", "OperatingProfit": "80",
          "Profit": "50", "Equity": "400", "TotalAssets": "2000",
-         "EarningsPerShare": "16", "BookValuePerShare": "200"},
+         "EarningsPerShare": "16", "BookValuePerShare": "200",
+         "NumberOfIssuedAndOutstandingSharesAtTheEndOfFiscalYearIncludingTreasuryStock": "1000000"},
         {"Code": code, "DisclosedDate": "2026-05-10", "TypeOfCurrentPeriod": "FY",
          "CurrentPeriodEndDate": "2026-03-31", "NetSales": "1200", "OperatingProfit": "120",
          "Profit": "60", "Equity": "500", "TotalAssets": "2200",
-         "EarningsPerShare": "20", "BookValuePerShare": "250"},
+         "EarningsPerShare": "20", "BookValuePerShare": "250",
+         "NumberOfIssuedAndOutstandingSharesAtTheEndOfFiscalYearIncludingTreasuryStock": "1000000"},
     ]}
 
 
@@ -60,6 +62,8 @@ class JquantsRestBuildTests(unittest.TestCase):
         self.assertEqual(feats["eps_trailing"]["value"], 20.0)     # latest FY EPS
         self.assertAlmostEqual(feats["per_trailing"]["value"], round(close / 20, 2))
         self.assertAlmostEqual(feats["pbr"]["value"], round(close / 250, 2))
+        self.assertEqual(feats["shares_outstanding"]["value"], 1_000_000.0)
+        self.assertEqual(feats["market_cap_jpy"]["value"], close * 1_000_000.0)
         self.assertAlmostEqual(feats["operating_margin"]["value"], 0.1)
         self.assertEqual(doc["entity"]["company_name"], "トヨタ自動車")
         self.assertEqual(doc["source_snapshot"]["financial_current_period"]["period_end"], "2026-03-31")

@@ -172,6 +172,8 @@ def valuation_coverage_view(jquants: dict) -> dict:
         "listed_codes": listed,
         "valuation_covered": covered,
         "valuation_coverage_ratio": coverage.get("valuation_coverage_ratio"),
+        "market_cap_covered": coverage.get("market_cap_covered"),
+        "market_cap_coverage_ratio": coverage.get("market_cap_coverage_ratio"),
         "price_coverage_ratio": coverage.get("price_coverage_ratio"),
         "per_covered": coverage.get("per_covered"),
         "per_coverage_ratio": coverage.get("per_coverage_ratio"),
@@ -275,6 +277,8 @@ def render_audit_report(report: dict) -> str:
         f"- listed_codes: {val.get('listed_codes')} / valuation_covered: {val.get('valuation_covered')}",
         f"- valuation_coverage: {_pct(val.get('valuation_coverage_ratio'))} / "
         f"price_coverage: {_pct(val.get('price_coverage_ratio'))}",
+        f"- market_cap_coverage: {_pct(val.get('market_cap_coverage_ratio'))} / "
+        f"market_cap_covered: {val.get('market_cap_covered')}",
         f"- per_coverage: {_pct(val.get('per_coverage_ratio'))} / pbr_coverage: {_pct(val.get('pbr_coverage_ratio'))}",
         f"- alias_hits: `{json.dumps(val.get('valuation_alias_hits') or {}, ensure_ascii=False, sort_keys=True)}`",
         f"- uncovered_reasons: `{json.dumps(val.get('valuation_uncovered_reasons') or {}, ensure_ascii=False, sort_keys=True)}`",
@@ -295,6 +299,7 @@ def render_audit_report(report: dict) -> str:
         "",
         "## 注意",
         "- per/pbr は trailing(予想PERではない)。本レポートは魅力度・売買順ではありません。",
+        "- market_cap_jpy は latest_close×shares_outstanding のPIT proxy。投資判断の優先度ではありません。",
         "- 第三者LLM入力は LICENSE_MATRIX E5/J5 本人確認 2026-06-20 済(個人の私的分析利用)。",
         "",
     ]
