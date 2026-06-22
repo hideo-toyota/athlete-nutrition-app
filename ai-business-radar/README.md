@@ -45,6 +45,7 @@ python3 -m radar doctor                              # 作業ツリー/データ
 ```
 
 判断ログ `decision_log.jsonl` は**追記専用**(decision も outcome も別行・過去は改変しない=後知恵対策)。個人データなので `.gitignore` 済み(テンプレは `journal/*.example.json`)。
+見送りは `journal/decision_input.pass.example.json` を使う。採点は action-aware で、`buy/add` は対象がDCAを上回れば hit、`pass/trim/exit` は対象がDCAを下回れば「避けた判断」として hit。
 
 - 設定は宣言的: [`config.json`](config.json)(コア/サテライト・上限 2.5%/5%/10%・規律しきい値・DCAベンチ)。
 - データはファイル: [`portfolio.json`](portfolio.json)、[`indices/`](indices)(指数構成=手入力概算)。

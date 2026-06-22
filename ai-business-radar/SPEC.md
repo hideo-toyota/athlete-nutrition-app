@@ -125,9 +125,14 @@
 {
   "type": "outcome", "id": "対応するdecisionのid", "scored_at": "YYYY-MM-DD",
   "horizon": "YYYY-MM-DD", "asset_return": 0.0, "benchmark_return": 0.0,
-  "excess_vs_dca": 0.0, "hit": true
+  "excess_vs_dca": 0.0,                              // 対象資産 - DCAベンチの raw 差分
+  "decision_excess_vs_dca": 0.0,                     // 判断方向を反映した差分
+  "score_direction": "long|avoid",                   // buy/add=long, trim/exit/pass=avoid
+  "hit": true
 }
 ```
+`hit` は action-aware。`buy_new|add` は対象が DCA を上回れば hit。
+`trim|exit|pass` は、その後に対象が DCA を下回れば「避けた判断」として hit。
 
 ### 1.6 レポート契約(全レポート共通 / 原則3・4・1)
 - **freshness header(必須)**: `as_of` / データ遅延 / 欠損 / 前提。古ければ**大きく警告**。
@@ -149,7 +154,7 @@
 
 - `Exposure`: `{ by_name, by_sector, by_region, by_currency, individual_stock_pct, satellite_cap_status }`(direct + 指数look-through合算)。
 - `Verdict`: `{ ok: bool, breaches: [rule], notes }`(例: `over_cap`, `chase`, `sector_concentration`, `averaging_down_blocked`)。
-- `Calibration`: `{ n_decisions, n_scored, hit_rate, avg_excess_vs_dca, by_discipline(in_discipline/override) }`(過程>結果)。
+- `Calibration`: `{ n_decisions, n_scored, hit_rate, avg_excess_vs_dca, by_discipline(in_discipline/override) }`(過程>結果)。`avg_excess_vs_dca` は判断方向調整後。
 
 ---
 
@@ -180,7 +185,7 @@
 - **D2 測定通貨**: **JPY**(支出通貨)。✅
 - **D3 1銘柄上限**: 総資産比 **2.5%**。✅
 - **D4 セクター上限(サテライト内)**: **5%**(look-throughの合算は mirror で“表示”)。✅
-- **D5 採点の“当たり”**: 期日で **DCAインデックス超過**を hit。✅
+- **D5 採点の“当たり”**: action-aware。`buy/add` は **DCAインデックス超過**、`trim/exit/pass` は **DCAインデックス劣後の回避**を hit。✅
 - **D6 decision_log**: **JSONLを真実**(Obsidian保管庫への取り込みは手動/今後)。✅
 - **D7 MVP順序**: **mirror → check → log/score → review**(analyze/backtest は後)。✅
 - **D8 既存コード**: **spike(`spike/` へ退避・参照のみ)、SPECから作り直し**。✅

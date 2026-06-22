@@ -41,12 +41,15 @@ python3 -m radar check add NVDA 100000                 # 例: 既に上限 → �
 ## 5. 閉ループ(判断→採点→較正)
 ```bash
 cp journal/decision_input.example.json journal/decision_input.json   # 判断ごとに編集
+# 見送りを記録する場合:
+cp journal/decision_input.pass.example.json journal/decision_input.json
 python3 -m radar log         # 反証可能な予測(claim+horizon)必須・override理由必須
 # 期日が来たら、journal/prices.json に horizon の終値を入れて:
 python3 -m radar score       # DCAインデックス比で機械採点(未来不参照)
 python3 -m radar review      # outputs/journal_review.md(裁量 vs 規律)
 ```
 - `decision_log.jsonl` は**追記専用・個人データ**(.gitignore済)。手で書き換えない。
+- 採点は action-aware。`buy/add` は対象がDCAを上回れば hit、`pass/trim/exit` は対象がDCAを下回れば「避けた判断」として hit。
 
 ## 6. Discord で操作する(① 1セッション + サブエージェント)
 1. [ ] [Discord Developer Portal](https://discord.com/developers/applications) で Bot 作成 → **トークン**取得、**Message Content Intent** ON

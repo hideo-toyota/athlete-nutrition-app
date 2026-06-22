@@ -96,11 +96,12 @@ def render_review(rev: dict) -> str:
         o.append("")
     ov = rev["overall"]
     o.append("## 全体")
-    o.append(f"- DCAインデックスに勝った割合(hit): {_rate(ov['hit_rate'])}")
-    o.append(f"- 平均の対DCA超過: {_pct(ov['avg_excess_vs_dca'])}")
+    o.append(f"- 判断方向でDCAに勝った割合(hit): {_rate(ov['hit_rate'])}")
+    o.append(f"- 平均の判断方向調整後 対DCA: {_pct(ov['avg_excess_vs_dca'])}")
+    o.append("- buy/add は対象がDCAを上回れば hit。trim/exit/pass は対象がDCAを下回れば hit。")
     o.append("")
     o.append("## 裁量 vs 規律(=この道具の検証対象)")
-    o.append("| 区分 | 採点数 | hit率 | 平均対DCA超過 |")
+    o.append("| 区分 | 採点数 | hit率 | 平均判断方向調整後 対DCA |")
     o.append("|---|---|---|---|")
     for label, jp in (("in_discipline", "規律内"), ("override", "規律を破った(override)")):
         a = rev["by_discipline"][label]

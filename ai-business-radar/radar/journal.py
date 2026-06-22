@@ -2,7 +2,7 @@
 
 decision_log.jsonl は**追記専用・イベントソース**。1行=1イベント:
   - type=decision : 反証可能な予測つきの判断(override は理由必須、見送りも記録)
-  - type=outcome  : 期日後にツールが機械採点した結果(DCAインデックス超過が hit)
+  - type=outcome  : 期日後にツールが機械採点した結果(買い/売り/見送りの判断方向で hit)
 履歴は決して書き換えない。outcome も「別行」で追記する(後知恵の防止)。
 score は horizon <= asof(厳密 YYYY-MM-DD)かつ記録済み価格のみを使う(未来データ不参照)。
 ログ品質=閉ループ品質。入力検証・破損検知・型検証を厳格に行う。
@@ -24,6 +24,8 @@ DECISION_FIELDS = ("ticker", "account", "action", "rationale", "prediction",
                    "benchmark_ref", "emotion_note", "sources", "retrieved_at")
 VALID_ACTIONS = {"buy_new", "add", "trim", "exit", "pass", "hold_review"}
 SCOREABLE_ACTIONS = {"buy_new", "add", "trim", "exit", "pass"}  # hold_review は採点しない
+LONG_DECISIONS = {"buy_new", "add"}
+AVOID_DECISIONS = {"trim", "exit", "pass"}
 VALID_DISCIPLINE = {"in_discipline", "override"}
 _DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -63,6 +65,10 @@ def _read_log() -> list[dict]:
                     raise SystemExit(f"decision_log.jsonl の {i} 行目(outcome)に {k} がありません")
             if not _finite(rec["excess_vs_dca"]):
                 raise SystemExit(f"decision_log.jsonl の {i} 行目(outcome): excess_vs_dca が数値でない")
+            if "decision_excess_vs_dca" in rec and not _finite(rec["decision_excess_vs_dca"]):
+                raise SystemExit(f"decision_log.jsonl の {i} 行目(outcome): decision_excess_vs_dca が数値でない")
+            if "score_direction" in rec and rec["score_direction"] not in {"long", "avoid"}:
+                raise SystemExit(f"decision_log.jsonl の {i} 行目(outcome): score_direction が不正")
             if not isinstance(rec["hit"], bool):
                 raise SystemExit(f"decision_log.jsonl の {i} 行目(outcome): hit が真偽値でない")
         elif rec["type"] == "decision" and "id" not in rec:
@@ -74,6 +80,19 @@ def _read_log() -> list[dict]:
 def _append(obj: dict) -> None:
     with LOG.open("a", encoding="utf-8") as f:
         f.write(json.dumps(obj, ensure_ascii=False) + "\n")
+
+
+def _decision_score(action: str, excess: float) -> tuple[str, float, bool]:
+    """判断方向に合わせたDCA比の成否。
+
+    buy/add は対象がDCAを上回れば成功。trim/exit/pass は、その後に対象がDCAを
+    下回れば「避けた判断」として成功。rawな excess_vs_dca は監査用に別途残す。
+    """
+    if action in LONG_DECISIONS:
+        return "long", excess, bool(excess > 0)
+    if action in AVOID_DECISIONS:
+        return "avoid", -excess, bool(excess < 0)
+    raise SystemExit(f"採点対象外の action です: {action}")
 
 
 def append_decision(entry: dict) -> str:
@@ -128,7 +147,10 @@ def append_decision(entry: dict) -> str:
 
 
 def score_due(prices: dict, asof: str | None = None) -> dict:
-    """期日到来分を機械採点(DCA超過がhit)。未来・価格欠損・型不正・hold_reviewはスキップ。"""
+    """期日到来分を機械採点。未来・価格欠損・型不正・hold_reviewはスキップ。
+
+    buy/add は対象がDCAを上回れば hit。trim/exit/pass は対象がDCAを下回れば hit。
+    """
     if not isinstance(prices, dict):
         raise SystemExit("価格データは object である必要があります")
     if asof is None:
@@ -163,9 +185,13 @@ def score_due(prices: dict, asof: str | None = None) -> dict:
             continue
         ar, br = hp / ref - 1, bhp / bref - 1
         excess = ar - br
+        direction, decision_excess, hit = _decision_score(d.get("action"), excess)
         _append({"type": "outcome", "id": did, "scored_at": asof_d.isoformat(),
                  "horizon": horizon, "asset_return": ar, "benchmark_return": br,
-                 "excess_vs_dca": excess, "hit": bool(excess > 0)})
+                 "excess_vs_dca": excess,
+                 "decision_excess_vs_dca": decision_excess,
+                 "score_direction": direction,
+                 "hit": hit})
         scored.append(did)
     return {"scored": scored, "pending_future": pending_future,
             "awaiting_price": awaiting_price}
@@ -183,11 +209,13 @@ def review() -> dict:
     scored = [(d, outcomes[d["id"]]) for d in decisions if d["id"] in outcomes]
 
     def agg(pairs):
-        ex = [o["excess_vs_dca"] for _, o in pairs]
+        ex = [o.get("decision_excess_vs_dca", o["excess_vs_dca"]) for _, o in pairs]
+        raw_ex = [o["excess_vs_dca"] for _, o in pairs]
         hits = [bool(o["hit"]) for _, o in pairs]
         return {"n": len(pairs),
                 "hit_rate": (sum(hits) / len(hits)) if hits else None,
-                "avg_excess_vs_dca": _mean(ex)}
+                "avg_excess_vs_dca": _mean(ex),
+                "avg_raw_excess_vs_dca": _mean(raw_ex)}
 
     by_disc = {}
     for label in ("in_discipline", "override"):
