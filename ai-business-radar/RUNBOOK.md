@@ -106,7 +106,22 @@ python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
 - raw本文/APIキー/.env は貼らない。売買指示・価格目標・順位付け・利益保証・将来断定もさせない。
 - 分析品質の校正は `python3 -m radar audit-report --asof YYYY-MM-DD` を見て、mismatch率・p90|Δ|・校正信号から外れ値/期間差/定義差を点検する。
 - データ取得の標準時刻は **21:30 JST**。その日のJ-Quants日次・EDINET更新を拾いやすく、Discordで夜の分析に回しやすい。
+  ただし、取得と分析生成は別ジョブに分ける。標準は **20:45 data-fetch → 21:30 build-and-brief → 06:30 retry-doctor**。
+  詳細は [AUTOMATION_PLAN.md](AUTOMATION_PLAN.md) と `scripts/automation/`。
   06:30 JST は前夜失敗時の再試行、重い全件棚卸しは週末に回す。
+
+### 自動化(LaunchAgent)
+```bash
+# まず手動で1回だけ動作確認
+scripts/automation/daily_fetch.sh YYYY-MM-DD
+scripts/automation/build_and_brief.sh YYYY-MM-DD
+scripts/automation/retry_doctor.sh YYYY-MM-DD
+```
+- `daily_fetch.sh` はネット取得系のみ。EDINETはraw保存、J-Quants watchlist RESTは現CLIの制約でderivedも更新するが、research / evidence / LLM packet は作らない。
+- `build_and_brief.sh` はネット無し。既存 raw / derived から日次パケットを作る。
+- `retry_doctor.sh` は朝の診断と再生成。既定ではネット取得しない。
+- LaunchAgent テンプレートは `scripts/automation/*.plist.template`。実登録前に `__REPO_ROOT__` をローカル絶対パスへ置換する。
+- J-Quants 広域 Bulk の自動取得は、正式CLI化するまで日次LaunchAgentに入れない。既存 bulk raw があれば `daily-update` が derived を再生成する。
 
 ## コスト・上限
 - 追加費用なし(サブスク内)。**お金でなく使用“上限”**に注意(Proで足りなければMax)。

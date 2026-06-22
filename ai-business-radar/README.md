@@ -45,6 +45,9 @@ python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
 python3 -m radar doctor                              # 作業ツリー/データ鮮度/判断ログの診断
 ```
 
+自動化は [AUTOMATION_PLAN.md](AUTOMATION_PLAN.md) と `scripts/automation/`。
+ネット取得(`daily_fetch.sh`)とローカル生成(`build_and_brief.sh`)を分け、取得失敗時も既存データで日次packetを作れるようにする。
+
 判断ログ `decision_log.jsonl` は**追記専用**(decision も outcome も別行・過去は改変しない=後知恵対策)。個人データなので `.gitignore` 済み(テンプレは `journal/*.example.json`)。
 見送りは `journal/decision_input.pass.example.json` を使う。採点は action-aware で、`buy/add` は対象がDCAを上回れば hit、`pass/trim/exit` は対象がDCAを下回れば「避けた判断」として hit。
 

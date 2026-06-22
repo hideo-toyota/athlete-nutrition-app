@@ -15,6 +15,10 @@ outputs/research_queue.csv
 outputs/evidence/
 outputs/llm_handoff/
 outputs/doctor.md
+outputs/automation/
+outputs/investor_brief/*.md
+outputs/investor_brief/*.json
+outputs/discord/llm_prompt_*.md
 
 # Python
 __pycache__/

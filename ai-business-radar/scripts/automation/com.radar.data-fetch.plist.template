@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Replace __REPO_ROOT__ with the absolute repository root before installing. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.radar.data-fetch</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__REPO_ROOT__/ai-business-radar/scripts/automation/daily_fetch.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>20</integer>
+    <key>Minute</key>
+    <integer>45</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/tmp/radar_data_fetch.out</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/radar_data_fetch.err</string>
+</dict>
+</plist>
