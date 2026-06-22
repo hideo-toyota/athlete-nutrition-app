@@ -51,6 +51,9 @@ def aggregate_cross_checks(queue: dict, *, max_examples_per_metric: int = 5) -> 
                 agg["mismatch_examples"].append({
                     "edinet_code": item.get("edinet_code"),
                     "securities_code": item.get("ticker"),
+                    "edinet_period_year": row.get("edinet_period_year"),
+                    "jquants_period_year": row.get("jquants_period_year"),
+                    "period_status": row.get("period_status"),
                     "edinet_value": row.get("edinet_value"),
                     "jquants_value": row.get("jquants_value"),
                     "delta": row.get("delta"),
@@ -261,12 +264,13 @@ def render_audit_report(report: dict) -> str:
             out.extend([
                 "",
                 "### mismatch 原因分解(絶対差が大きい順・各指標最大5件)",
-                "| metric | edinet_code | sec_code | EDINET | J-Quants | delta | 推定原因/次点検 |",
-                "|---|---|---|---:|---:|---:|---|",
+                "| metric | edinet_code | sec_code | EDINET FY | JQ FY | EDINET | J-Quants | delta | 推定原因/次点検 |",
+                "|---|---|---|---:|---:|---:|---:|---:|---|",
             ])
             for key, ex in examples:
                 out.append(
                     f"| {key} | {ex.get('edinet_code')} | {ex.get('securities_code')} | "
+                    f"{ex.get('edinet_period_year') or 'UNKNOWN'} | {ex.get('jquants_period_year') or 'UNKNOWN'} | "
                     f"{_pct(ex.get('edinet_value'))} | {_pct(ex.get('jquants_value'))} | {_pt(ex.get('delta'))} | "
                     f"{ex.get('diagnosis') or 'UNKNOWN'} |"
                 )

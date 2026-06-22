@@ -103,6 +103,8 @@ class AuditReportTests(unittest.TestCase):
         self.assertEqual(om["checked"], 1)
         self.assertEqual(om["mismatch"], 1)             # 0.08 vs 0.20 exceeds 2pt
         self.assertEqual(om["mismatch_examples"][0]["edinet_code"], "E02367")
+        self.assertEqual(om["mismatch_examples"][0]["edinet_period_year"], 2026)
+        self.assertEqual(om["mismatch_examples"][0]["jquants_period_year"], 2026)
         self.assertAlmostEqual(om["mismatch_examples"][0]["delta"], 0.12)
         self.assertIn("営業利益定義", om["mismatch_examples"][0]["diagnosis"])
         self.assertAlmostEqual(om["p90_abs_delta"], 0.12)
@@ -128,6 +130,8 @@ class AuditReportTests(unittest.TestCase):
         self.assertIn("valuation coverage", text)
         self.assertIn("uncovered_reasons", text)
         self.assertIn("mismatch 原因分解", text)
+        self.assertIn("EDINET FY", text)
+        self.assertIn("JQ FY", text)
         self.assertIn("推定原因/次点検", text)
         self.assertIn("営業利益定義", text)
         self.assertIn("校正信号", text)

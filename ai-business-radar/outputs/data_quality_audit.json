@@ -16,8 +16,11 @@
             "delta": 0.32984034188359046,
             "diagnosis": "自己資本/純資産定義・非支配株主持分・連結範囲を重点点検",
             "edinet_code": "E00492",
+            "edinet_period_year": 2025,
             "edinet_value": 0.1589673177151382,
+            "jquants_period_year": 2025,
             "jquants_value": 0.4888076595987286,
+            "period_status": "matched",
             "securities_code": "29140"
           },
           {
@@ -25,8 +28,11 @@
             "delta": 0.28271422785715306,
             "diagnosis": "自己資本/純資産定義・非支配株主持分・連結範囲を重点点検",
             "edinet_code": "E00436",
+            "edinet_period_year": 2026,
             "edinet_value": 0.1831322495814817,
+            "jquants_period_year": 2026,
             "jquants_value": 0.4658464774386348,
+            "period_status": "matched",
             "securities_code": "28020"
           },
           {
@@ -34,8 +40,11 @@
             "delta": 0.2367096399279348,
             "diagnosis": "自己資本/純資産定義・非支配株主持分・連結範囲を重点点検",
             "edinet_code": "E00919",
+            "edinet_period_year": 2026,
             "edinet_value": 0.24233146671896333,
+            "jquants_period_year": 2026,
             "jquants_value": 0.47904110664689814,
+            "period_status": "matched",
             "securities_code": "45020"
           },
           {
@@ -43,8 +52,11 @@
             "delta": 0.1712050890915583,
             "diagnosis": "自己資本/純資産定義・非支配株主持分・連結範囲を重点点検",
             "edinet_code": "E01480",
+            "edinet_period_year": 2026,
             "edinet_value": 0.5199571581578007,
+            "jquants_period_year": 2026,
             "jquants_value": 0.691162247249359,
+            "period_status": "matched",
             "securities_code": "61010"
           },
           {
@@ -52,8 +64,11 @@
             "delta": 0.08819496497324164,
             "diagnosis": "自己資本/純資産定義・連結範囲を点検",
             "edinet_code": "E00395",
+            "edinet_period_year": 2025,
             "edinet_value": 0.3683386266282355,
+            "jquants_period_year": 2025,
             "jquants_value": 0.45653359160147716,
+            "period_status": "matched",
             "securities_code": "25030"
           }
         ],
@@ -88,8 +103,11 @@
             "delta": -0.026406919660250917,
             "diagnosis": "営業利益定義・連結/単体・販管費/一過性項目を点検",
             "edinet_code": "E01602",
+            "edinet_period_year": 2026,
             "edinet_value": 0.03931478739707525,
+            "jquants_period_year": 2026,
             "jquants_value": 0.012907867736824332,
+            "period_status": "matched",
             "securities_code": "64730"
           }
         ],
@@ -111,8 +129,11 @@
             "delta": -0.39788752013073236,
             "diagnosis": "売上定義・決算期間・前年比分母の差を点検",
             "edinet_code": "E01678",
+            "edinet_period_year": 2025,
             "edinet_value": 0.07949734440169354,
+            "jquants_period_year": 2025,
             "jquants_value": -0.3183901757290388,
+            "period_status": "matched",
             "securities_code": "64810"
           },
           {
@@ -120,8 +141,11 @@
             "delta": -0.11073177505692233,
             "diagnosis": "J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検",
             "edinet_code": "E00149",
+            "edinet_period_year": 2026,
             "edinet_value": 0.11073177505692233,
+            "jquants_period_year": 2026,
             "jquants_value": 0.0,
+            "period_status": "matched",
             "securities_code": "19690"
           },
           {
@@ -129,8 +153,11 @@
             "delta": 0.08276150017303063,
             "diagnosis": "J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検",
             "edinet_code": "E00605",
+            "edinet_period_year": 2026,
             "edinet_value": -0.08276150017303063,
+            "jquants_period_year": 2026,
             "jquants_value": 0.0,
+            "period_status": "matched",
             "securities_code": "81430"
           },
           {
@@ -138,8 +165,11 @@
             "delta": 0.07525870178739413,
             "diagnosis": "J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検",
             "edinet_code": "E01141",
+            "edinet_period_year": 2025,
             "edinet_value": -0.07525870178739413,
+            "jquants_period_year": 2025,
             "jquants_value": 0.0,
+            "period_status": "matched",
             "securities_code": "53370"
           },
           {
@@ -147,8 +177,11 @@
             "delta": -0.06998640364867792,
             "diagnosis": "J-Quants成長率0.0: 欠損補完/前年比分母/売上定義を点検",
             "edinet_code": "E00263",
+            "edinet_period_year": 2025,
             "edinet_value": 0.06998640364867792,
+            "jquants_period_year": 2025,
             "jquants_value": 0.0,
+            "period_status": "matched",
             "securities_code": "17830"
           }
         ],
@@ -170,8 +203,11 @@
             "delta": -0.2888305642659624,
             "diagnosis": "平均自己資本 vs 期末自己資本・利益定義を点検",
             "edinet_code": "E00748",
+            "edinet_period_year": 2025,
             "edinet_value": -0.3801884900741929,
+            "jquants_period_year": 2025,
             "jquants_value": -0.6690190543401553,
+            "period_status": "matched",
             "securities_code": "78310"
           },
           {
@@ -179,8 +215,11 @@
             "delta": -0.2715049610455523,
             "diagnosis": "平均自己資本 vs 期末自己資本・利益定義を点検",
             "edinet_code": "E00492",
+            "edinet_period_year": 2025,
             "edinet_value": 0.3996233862417699,
+            "jquants_period_year": 2025,
             "jquants_value": 0.12811842519621763,
+            "period_status": "matched",
             "securities_code": "29140"
           },
           {
@@ -188,8 +227,11 @@
             "delta": -0.2264517570609186,
             "diagnosis": "平均自己資本 vs 期末自己資本・利益定義を点検",
             "edinet_code": "E00436",
+            "edinet_period_year": 2026,
             "edinet_value": 0.3889508219447108,
+            "jquants_period_year": 2026,
             "jquants_value": 0.1624990648837922,
+            "period_status": "matched",
             "securities_code": "28020"
           },
           {
@@ -197,8 +239,11 @@
             "delta": -0.05848085511286358,
             "diagnosis": "平均自己資本 vs 期末自己資本・利益定義を点検",
             "edinet_code": "E01480",
+            "edinet_period_year": 2026,
             "edinet_value": 0.23419744194015343,
+            "jquants_period_year": 2026,
             "jquants_value": 0.17571658682728986,
+            "period_status": "matched",
             "securities_code": "61010"
           }
         ],
