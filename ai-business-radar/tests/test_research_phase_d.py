@@ -8,8 +8,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from radar.research import (build_evidence, build_llm_handoff, build_research_queue,
-                            write_evidence, write_llm_handoff, write_research_queue)
+from radar.research import (build_evidence, build_investor_brief, build_llm_handoff,
+                            build_research_queue, write_evidence, write_investor_brief,
+                            write_llm_handoff, write_research_queue)
 from radar.research.common import FORBIDDEN_OUTPUT_TOKENS
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -132,11 +133,11 @@ def _write_jquants(base: Path, asof="2026-06-18"):
             "latest_volume": _measured(1234000, unit="shares"),
             "shares_outstanding": _measured(1000000, unit="shares"),
             "market_cap_jpy": _measured(2530000000, unit="JPY"),
-            "return_20d": _measured(0.05),
+            "return_20d": _measured(0.12),
             "return_60d": _measured(-0.02),
             "return_252d": _measured(0.12),
             "per_trailing": _measured(12.65, unit="x"),
-            "pbr": _measured(1.01, unit="x"),
+            "pbr": _measured(0.95, unit="x"),
             "eps_trailing": _measured(200.0, unit="JPY"),
             "bps": _measured(2505.0, unit="JPY"),
             "sales_growth_yoy": _measured(0.12),
@@ -250,7 +251,7 @@ class ResearchPhaseDTests(unittest.TestCase):
         self.assertIn("EDINET vs J-Quants cross-check", text)
         self.assertIn("within_tolerance", text)
         self.assertIn("return_60d", text)
-        self.assertIn("1.01 x", text)
+        self.assertIn("0.95 x", text)
         self.assertIn("check buy <TICKER> <AMOUNT_JPY> <SECTOR>", text)
         self.assertNotIn(SENTINEL, text)
         for token in FORBIDDEN_OUTPUT_TOKENS:
@@ -289,8 +290,40 @@ class ResearchPhaseDTests(unittest.TestCase):
         for token in FORBIDDEN_OUTPUT_TOKENS:
             self.assertNotIn(token, text)
 
+    def test_investor_brief_market_watch_and_human_review(self):
+        # Add a prior J-Quants derived snapshot so derived-day changes are deterministic.
+        _write_jquants(self.base, asof="2026-06-17")
+        p = self.base / "data" / "derived" / "features" / "jquants_equity_v1" / "2026-06-17" / "features.jsonl"
+        prev = json.loads(p.read_text(encoding="utf-8"))
+        prev["features"]["latest_close"]["value"] = 2300
+        p.write_text(json.dumps(prev, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+
+        brief = build_investor_brief(
+            asof="2026-06-18",
+            derived_root=self.base / "data" / "derived",
+            max_review_items=5,
+        )
+        self.assertEqual(brief["asof"], "2026-06-18")
+        self.assertEqual(brief["market_snapshot"]["latest_price_date"], "2026-06-18")
+        self.assertTrue(brief["watch_changes"]["derived_day_changes"])
+        self.assertTrue(brief["human_review_list"])
+        with tempfile.TemporaryDirectory() as od:
+            res = write_investor_brief(brief, outputs_root=Path(od))
+            text = Path(res["md_path"]).read_text(encoding="utf-8")
+            manifest = json.loads(Path(res["manifest_path"]).read_text(encoding="utf-8"))
+        self.assertIn("Daily Investor Brief", text)
+        self.assertIn("Market Snapshot", text)
+        self.assertIn("Watch Changes", text)
+        self.assertIn("Human Review List", text)
+        self.assertIn("price_move_review", text)
+        self.assertFalse(manifest["raw_body_included"])
+        self.assertFalse(manifest["llm_api_called"])
+        self.assertNotIn(SENTINEL, text)
+        for token in FORBIDDEN_OUTPUT_TOKENS:
+            self.assertNotIn(token, text)
+
     def test_cli_help_ok(self):
-        for cmd in ("research-queue", "evidence", "llm-brief"):
+        for cmd in ("research-queue", "evidence", "llm-brief", "investor-brief"):
             p = subprocess.run([sys.executable, "-m", "radar", cmd, "--help"],
                                cwd=str(ROOT), capture_output=True, text=True)
             self.assertEqual(p.returncode, 0, p.stderr)

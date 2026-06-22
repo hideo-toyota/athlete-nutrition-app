@@ -83,7 +83,7 @@ def run_daily_update(
     derived_root: Path | None = None,
     outputs_root: Path | None = None,
 ) -> dict:
-    """Orchestrate features -> research-queue -> llm-brief. Best-effort per step.
+    """Orchestrate features -> research-queue -> investor-brief -> llm-brief.
 
     Each step is isolated: a missing input is `skipped`, an error is `failed`,
     and the run continues so the operator gets a full status in one shot.
@@ -174,11 +174,13 @@ def run_daily_update(
         "jquants_price_coverage_ratio": None,
         "jquants_valuation_coverage_ratio": None,
         "jquants_blocks": 0,
+        "human_review_items": 0,
     }
 
     # 4. research-queue (deterministic; no LLM)
     if dry_run:
         steps.append(StepResult("research-queue", "planned"))
+        steps.append(StepResult("investor-brief", "planned"))
         steps.append(StepResult("llm-brief", "planned"))
         return {"asof": asof, "dry_run": dry_run, "steps": steps, "outputs": outputs, "summary": summary}
 
@@ -203,7 +205,23 @@ def run_daily_update(
     except Exception as e:  # noqa: BLE001
         steps.append(StepResult("research-queue", "failed", type(e).__name__))
 
-    # 5. llm-brief (analysis-ready packet for Claude; gate confirmed)
+    # 5. investor-brief (human daily operating packet; no LLM/API)
+    if outputs.get("research_queue_md"):
+        try:
+            from .research import build_investor_brief, write_investor_brief
+            ib = build_investor_brief(asof=asof, max_review_items=max_items or 10, derived_root=derived_root)
+            ib_res = write_investor_brief(ib, outputs_root=outputs_root)
+            outputs["investor_brief_md"] = str(ib_res["md_path"])
+            summary["human_review_items"] = ib_res["review_count"]
+            steps.append(StepResult("investor-brief", "done", f"human_review_items={ib_res['review_count']}"))
+        except SystemExit as e:
+            steps.append(StepResult("investor-brief", "skipped", str(e)))
+        except Exception as e:  # noqa: BLE001
+            steps.append(StepResult("investor-brief", "failed", type(e).__name__))
+    else:
+        steps.append(StepResult("investor-brief", "skipped", "research_queue無しのため未生成"))
+
+    # 6. llm-brief (analysis-ready packet for Claude; gate confirmed)
     #    J-Quants 株価コード指定があれば、EDINET財務が無くても brief を成立させる。
     if outputs.get("research_queue_md") or jquants_codes:
         try:
@@ -215,6 +233,10 @@ def run_daily_update(
             prompt = write_discord_prompt(result_like={
                 "asof": asof,
                 "brief_md": _display_path(lb["md_path"]),
+                "investor_brief_md": (
+                    _display_path(outputs["investor_brief_md"])
+                    if outputs.get("investor_brief_md") else None
+                ),
                 "evidence_count": lb["count"],
                 "jquants_count": lb["jquants_count"],
             }, outputs_root=outputs_root)
@@ -234,7 +256,8 @@ def run_daily_update(
     return {"asof": asof, "dry_run": dry_run, "steps": steps, "outputs": outputs, "summary": summary}
 
 
-def render_discord_prompt(*, asof: str, brief_md: str, evidence_count: int, jquants_count: int) -> str:
+def render_discord_prompt(*, asof: str, brief_md: str, evidence_count: int, jquants_count: int,
+                          investor_brief_md: str | None = None) -> str:
     """Short prompt to paste into Discord/Claude Code.
 
     It references the local handoff file instead of pasting the whole packet.
@@ -247,12 +270,14 @@ def render_discord_prompt(*, asof: str, brief_md: str, evidence_count: int, jqua
         "",
         "以下のローカル分析packetを読み、投資助言ではなく調査メモとして要約してください。",
         "",
+        f"- investor_brief: `{investor_brief_md}`" if investor_brief_md else "- investor_brief: `UNKNOWN`",
         f"- packet: `{brief_md}`",
         f"- evidence_blocks: {evidence_count}",
         f"- jquants_blocks: {jquants_count}",
         "",
         "必須ルール:",
         "- まず UNKNOWN / 不足データを列挙する。",
+        "- investor_brief の Market Snapshot / Watch Changes / Human Review List を優先して読む。",
         "- FACT / CALCULATION / INFERENCE / ASSUMPTION / UNKNOWN を分ける。",
         "- 検証対象の仮説、反証条件、次に読む資料を短く出す。",
         "- discipline check 未通過であり、最終判断は人間と明記する。",
@@ -281,6 +306,7 @@ def write_discord_prompt(*, result_like: dict, outputs_root: Path | None = None)
     path.write_text(render_discord_prompt(
         asof=result_like["asof"],
         brief_md=result_like["brief_md"],
+        investor_brief_md=result_like.get("investor_brief_md"),
         evidence_count=result_like["evidence_count"],
         jquants_count=result_like["jquants_count"],
     ), encoding="utf-8")
@@ -328,6 +354,14 @@ def render_daily_summary(result: dict) -> str:
         "",
         "## Claudeに渡す分析パケット",
     ]
+    investor = result["outputs"].get("investor_brief_md")
+    if investor:
+        lines += [
+            f"- 今日読む参謀パケット: `{_display_path(investor)}`",
+            f"- human review list: {s.get('human_review_items', 0)} 件"
+            "（見る理由/FACT/UNKNOWN/反証/次に読む資料。売買指示ではない）",
+            "",
+        ]
     brief = result["outputs"].get("brief_md")
     if brief:
         lines += [

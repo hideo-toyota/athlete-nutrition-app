@@ -1,0 +1,39 @@
+{
+  "asof": "2026-06-22",
+  "human_review_count": 10,
+  "llm_api_called": false,
+  "market_snapshot": {
+    "asof": "2026-06-22",
+    "feature_set": "jquants_equity_v1",
+    "latest_price_date": "2026-06-19",
+    "listed_codes": 4443,
+    "market_cap_coverage_ratio": 0.8446995273463875,
+    "market_cap_median": 21873895000.0,
+    "pbr_median": 1.21,
+    "per_trailing_median": 14.04,
+    "price_coverage_ratio": 0.9765923925275715,
+    "return_20d_median": -0.008499107010127571,
+    "return_20d_positive_rate": 0.42416391898257183,
+    "return_252d_median": 0.06666666666666665,
+    "return_252d_positive_rate": 0.5995018679950187,
+    "return_60d_median": -0.017391304347826098,
+    "return_60d_positive_rate": 0.4436268692143366,
+    "status": "CALCULATION",
+    "valuation_coverage_ratio": 0.8435741616025209
+  },
+  "raw_body_included": false,
+  "source": "derived_features_only",
+  "source_refs": {
+    "edinet_company_map_asof": "2026-06-22",
+    "jquants_features": "data/derived/features/jquants_equity_v1/2026-06-22/features.jsonl",
+    "jquants_manifest": "data/derived/features/jquants_equity_v1/2026-06-22/manifest.json",
+    "previous_jquants_asof": "2026-06-21"
+  },
+  "watch_counts": {
+    "derived_day_changes": 8,
+    "large_advances_20d": 8,
+    "large_declines_20d": 8,
+    "previous_derived_available": true,
+    "small_cap_value_shape": 10
+  }
+}

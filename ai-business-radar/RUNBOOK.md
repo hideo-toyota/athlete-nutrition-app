@@ -98,8 +98,11 @@ python3 -m radar doctor
 ```bash
 python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
 ```
+- まず `outputs/investor_brief/<asof>.md` を読む。これは market snapshot / watch changes /
+  human review list の参謀パケットで、今日見る論点・UNKNOWN・反証条件・次に読む資料をまとめる。
 - 出力された `outputs/discord/llm_prompt_<asof>.md` の本文を Discord / Claude Code に貼る。
-- Claude 側は `outputs/llm_handoff/<asof>.md` を読み、UNKNOWN・反証条件・claim分類・discipline gate を固定形式で返す。
+- Claude 側は `outputs/investor_brief/<asof>.md` と `outputs/llm_handoff/<asof>.md` を読み、
+  UNKNOWN・反証条件・claim分類・discipline gate を固定形式で返す。
 - raw本文/APIキー/.env は貼らない。売買指示・価格目標・順位付け・利益保証・将来断定もさせない。
 - 分析品質の校正は `python3 -m radar audit-report --asof YYYY-MM-DD` を見て、mismatch率・p90|Δ|・校正信号から外れ値/期間差/定義差を点検する。
 - データ取得の標準時刻は **21:30 JST**。その日のJ-Quants日次・EDINET更新を拾いやすく、Discordで夜の分析に回しやすい。

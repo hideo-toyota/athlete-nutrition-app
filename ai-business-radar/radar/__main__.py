@@ -22,10 +22,10 @@ from .features import (
     build_financial_features_batch,
     build_jquants_bulk_features,
 )
-from .research import (build_audit_report, build_evidence, build_jquants_evidence,
-                       build_llm_handoff, build_research_queue, write_audit_report,
-                       write_evidence, write_jquants_evidence, write_llm_handoff,
-                       write_research_queue)
+from .research import (build_audit_report, build_evidence, build_investor_brief,
+                       build_jquants_evidence, build_llm_handoff, build_research_queue,
+                       write_audit_report, write_evidence, write_investor_brief,
+                       write_jquants_evidence, write_llm_handoff, write_research_queue)
 from .daily_update import render_daily_summary, run_daily_update
 from .doctor import build_doctor_report, render_doctor_report, write_doctor_report
 from .sources import edinet_db
@@ -678,6 +678,18 @@ def cmd_audit_report(args) -> None:
     print("  ※ 整合性の点検です。売買順・推奨・予測ではありません。")
 
 
+def cmd_investor_brief(args) -> None:
+    """Daily investor brief: market snapshot -> watch changes -> human review list."""
+    asof = _valid_asof(args.asof)
+    if args.max_review_items <= 0:
+        raise SystemExit("--max-review-items は正の整数で指定してください")
+    brief = build_investor_brief(asof=asof, max_review_items=args.max_review_items)
+    res = write_investor_brief(brief)
+    print(f"investor brief を生成しました: {_rel(res['md_path'])} / {_rel(res['manifest_path'])}")
+    print(f"  human_review_items: {res['review_count']} / asof: {brief['asof']}")
+    print("  ※ 参謀パケットです。売買指示・価格目標・利益保証・将来断定は生成していません。")
+
+
 def cmd_fetch_jquants(args) -> None:
     """Fetch a few codes from J-Quants REST and build derived features.
 
@@ -837,6 +849,14 @@ def main() -> None:
     par = sub.add_parser("audit-report",
                          help="EDINET×J-Quants 整合と valuation coverage を集計(整合点検・売買順なし)")
     par.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
+    pib = sub.add_parser(
+        "investor-brief",
+        help="市場地合い・変化・今日見る論点を生成(参謀パケット・売買指示なし)",
+        description="derived feature から market snapshot / watch changes / human review list を生成します。売買指示・価格目標・利益保証・将来断定は出しません。",
+    )
+    pib.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
+    pib.add_argument("--max-review-items", dest="max_review_items", type=int, default=10,
+                     help="human review list の最大件数(既定10・正の整数)")
     pfj = sub.add_parser("fetch-jquants",
                          help="J-Quants REST から指定銘柄を取得し derived を生成(.env認証・ネットあり)")
     pfj.add_argument("--codes", required=True, help="証券コード(カンマ区切り 例 7203,6758)")
@@ -898,6 +918,8 @@ def main() -> None:
         cmd_jquants_evidence(args)
     elif args.command == "audit-report":
         cmd_audit_report(args)
+    elif args.command == "investor-brief":
+        cmd_investor_brief(args)
     elif args.command == "fetch-jquants":
         cmd_fetch_jquants(args)
     elif args.command == "daily-update":

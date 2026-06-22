@@ -39,6 +39,7 @@ python3 -m radar build-company-map --raw-dir data/raw/edinet-db/companies/<asof>
 python3 -m radar build-jquants-features --asof YYYY-MM-DD
 python3 -m radar research-queue --asof YYYY-MM-DD
 python3 -m radar evidence E02144 --asof YYYY-MM-DD
+python3 -m radar investor-brief --asof YYYY-MM-DD --max-review-items 10
 python3 -m radar llm-brief --asof YYYY-MM-DD
 python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
 python3 -m radar doctor                              # 作業ツリー/データ鮮度/判断ログの診断
@@ -56,15 +57,19 @@ python3 -m radar doctor                              # 作業ツリー/データ
   Claude等LLMへの取得本文投入は `LICENSE_MATRIX.md` の確認対象。
   Phase C minimal feature生成(EDINET DB financials raw → data/derived)、EDINET companies derived map、
   J-Quants Bulk local feature生成、
-  derivedだけを読む D0 research_queue/evidence、
+  derivedだけを読む D0 research_queue/evidence/investor-brief、
   LLM投入用packet生成(`llm-brief`, API呼び出しなし)は実装済み。
   `research-queue` / `evidence` / `llm-brief` は EDINET financials を主入力にし、
   `edinet_company_map_v1` があれば J-Quants `jquants_equity_v1` の株価/出来高/20・60・252営業日リターンを
   補助コンテキストとして含める(売買順・推奨・予測ではない)。J-Quants 側で trailing PER/PBR が取得できる場合は
   `valuation_coverage` と alias hit(EPS/BPS列名)を manifest に残し、EDINET evidence には PER/PBR と
   EDINET財務 × J-Quants summary の cross-check を表示する。
+  `investor-brief` は market snapshot / watch changes / human review list を生成し、
+  日本株全体の地合い、変化の大きい銘柄、小型・低倍率の検証入口、反証条件、次に読む資料を
+  参謀パケットとして整理する(売買指示・価格目標・利益保証・将来断定なし)。
   `daily-update` は EDINET companies raw が同じ asof にあれば `edinet_company_map_v1` も自動生成し、
   EDINET evidence/brief に J-Quants の当時株価コンテキストを結合する。
+  さらに `outputs/investor_brief/<asof>.md` に日々読む参謀パケットを生成する。
   さらに `outputs/discord/llm_prompt_<asof>.md` に Discord/Claude Code へ貼る短い固定プロンプトを生成する
   (送信先は人間が選ぶ・raw本文/APIキー無し・売買指示禁止を固定)。
   `radar doctor` は、どの作業ツリーを見ているか、raw/derived の鮮度差、J-Quants coverage、

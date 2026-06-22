@@ -2,12 +2,14 @@
 
 以下のローカル分析packetを読み、投資助言ではなく調査メモとして要約してください。
 
+- investor_brief: `outputs/investor_brief/2026-06-22.md`
 - packet: `outputs/llm_handoff/2026-06-22.md`
-- evidence_blocks: 50
+- evidence_blocks: 10
 - jquants_blocks: 0
 
 必須ルール:
 - まず UNKNOWN / 不足データを列挙する。
+- investor_brief の Market Snapshot / Watch Changes / Human Review List を優先して読む。
 - FACT / CALCULATION / INFERENCE / ASSUMPTION / UNKNOWN を分ける。
 - 検証対象の仮説、反証条件、次に読む資料を短く出す。
 - discipline check 未通過であり、最終判断は人間と明記する。
