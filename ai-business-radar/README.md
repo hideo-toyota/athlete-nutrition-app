@@ -41,6 +41,7 @@ python3 -m radar research-queue --asof YYYY-MM-DD
 python3 -m radar evidence E02144 --asof YYYY-MM-DD
 python3 -m radar llm-brief --asof YYYY-MM-DD
 python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
+python3 -m radar doctor                              # 作業ツリー/データ鮮度/判断ログの診断
 ```
 
 判断ログ `decision_log.jsonl` は**追記専用**(decision も outcome も別行・過去は改変しない=後知恵対策)。個人データなので `.gitignore` 済み(テンプレは `journal/*.example.json`)。
@@ -65,6 +66,8 @@ python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
   EDINET evidence/brief に J-Quants の当時株価コンテキストを結合する。
   さらに `outputs/discord/llm_prompt_<asof>.md` に Discord/Claude Code へ貼る短い固定プロンプトを生成する
   (送信先は人間が選ぶ・raw本文/APIキー無し・売買指示禁止を固定)。
+  `radar doctor` は、どの作業ツリーを見ているか、raw/derived の鮮度差、J-Quants coverage、
+  `decision_log.jsonl` が空かどうかを秘密値なしで診断する。
   provider raw本文の Claude等LLM投入と自動API送信は未実装・`LICENSE_MATRIX.md` の確認対象。
   `audit-report` は EDINET×J-Quants の mismatch率だけでなく p90|Δ| と校正信号を出し、tolerance調整より
   外れ値/期間差/定義差を先に疑うための品質監査に使う。

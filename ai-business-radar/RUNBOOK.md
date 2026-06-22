@@ -82,6 +82,15 @@ python3 -m radar review      # outputs/journal_review.md(裁量 vs 規律)
   → 自分で決める → log(予測つき) → 期日に score/review
 ```
 
+### 状態確認(迷ったら最初に)
+```bash
+python3 -m radar doctor
+```
+- どの作業ツリーを見ているか、`/private/tmp` か、raw と derived の鮮度差、J-Quants coverage、
+  `decision_log.jsonl` が空かどうかを確認する。APIキー値・`.env`値・provider raw本文は表示しない。
+- 「データは取ったのに分析に出ない」と感じたら、まず `edinet_features_stale` / `company_map_stale` /
+  `jquants_features_missing` の警告を見る。
+
 ### ローカルデータ更新後の Discord / LLM 分析ループ
 ```bash
 python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
@@ -90,6 +99,8 @@ python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
 - Claude 側は `outputs/llm_handoff/<asof>.md` を読み、UNKNOWN・反証条件・claim分類・discipline gate を固定形式で返す。
 - raw本文/APIキー/.env は貼らない。売買指示・価格目標・順位付け・利益保証・将来断定もさせない。
 - 分析品質の校正は `python3 -m radar audit-report --asof YYYY-MM-DD` を見て、mismatch率・p90|Δ|・校正信号から外れ値/期間差/定義差を点検する。
+- データ取得の標準時刻は **21:30 JST**。その日のJ-Quants日次・EDINET更新を拾いやすく、Discordで夜の分析に回しやすい。
+  06:30 JST は前夜失敗時の再試行、重い全件棚卸しは週末に回す。
 
 ## コスト・上限
 - 追加費用なし(サブスク内)。**お金でなく使用“上限”**に注意(Proで足りなければMax)。

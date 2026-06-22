@@ -27,6 +27,7 @@ from .research import (build_audit_report, build_evidence, build_jquants_evidenc
                        write_evidence, write_jquants_evidence, write_llm_handoff,
                        write_research_queue)
 from .daily_update import render_daily_summary, run_daily_update
+from .doctor import build_doctor_report, render_doctor_report, write_doctor_report
 from .sources import edinet_db
 from .report import (render_check, render_mirror, render_review, render_target_check,
                      render_value_audit, render_value_review)
@@ -717,6 +718,15 @@ def cmd_daily_update(args) -> None:
         raise SystemExit("daily-update: 失敗ステップがあります(上記サマリ参照)")
 
 
+def cmd_doctor(args) -> None:
+    """Local operational diagnostics. No network, no raw body, no secret values."""
+    report = build_doctor_report(ROOT)
+    out = write_doctor_report(report, root=ROOT)
+    text = render_doctor_report(report)
+    print(text, end="")
+    print(f"doctor report を生成しました: {_rel(out)}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="radar",
                                  description="Personal Equity Research Radar")
@@ -845,6 +855,11 @@ def main() -> None:
                      help="J-Quants bulk の feature 生成をスキップ")
     pdu.add_argument("--dry-run", dest="dry_run", action="store_true",
                      help="計画だけ表示(書込・生成しない)")
+    sub.add_parser(
+        "doctor",
+        help="ローカル診断: 作業ツリー/秘密設定有無/データ鮮度/判断ログを確認(ネットなし・値なし)",
+        description="ローカル診断: 作業ツリー/秘密設定有無/データ鮮度/判断ログを確認します。ネットワーク接続はせず、APIキー値やraw本文は表示しません。",
+    )
     args = ap.parse_args()
 
     if args.command == "mirror":
@@ -887,6 +902,8 @@ def main() -> None:
         cmd_fetch_jquants(args)
     elif args.command == "daily-update":
         cmd_daily_update(args)
+    elif args.command == "doctor":
+        cmd_doctor(args)
     else:
         ap.print_help()
 
