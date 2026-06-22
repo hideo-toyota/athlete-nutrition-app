@@ -205,21 +205,20 @@ def run_daily_update(
     except Exception as e:  # noqa: BLE001
         steps.append(StepResult("research-queue", "failed", type(e).__name__))
 
-    # 5. investor-brief (human daily operating packet; no LLM/API)
-    if outputs.get("research_queue_md"):
-        try:
-            from .research import build_investor_brief, write_investor_brief
-            ib = build_investor_brief(asof=asof, max_review_items=max_items or 10, derived_root=derived_root)
-            ib_res = write_investor_brief(ib, outputs_root=outputs_root)
-            outputs["investor_brief_md"] = str(ib_res["md_path"])
-            summary["human_review_items"] = ib_res["review_count"]
-            steps.append(StepResult("investor-brief", "done", f"human_review_items={ib_res['review_count']}"))
-        except SystemExit as e:
-            steps.append(StepResult("investor-brief", "skipped", str(e)))
-        except Exception as e:  # noqa: BLE001
-            steps.append(StepResult("investor-brief", "failed", type(e).__name__))
-    else:
-        steps.append(StepResult("investor-brief", "skipped", "research_queue無しのため未生成"))
+    # 5. investor-brief (human daily operating packet; no LLM/API).
+    #    Works on J-Quants alone (Market Snapshot/Watch Changes); the builder
+    #    skips cleanly only when neither EDINET nor J-Quants derived exists.
+    try:
+        from .research import build_investor_brief, write_investor_brief
+        ib = build_investor_brief(asof=asof, max_review_items=max_items or 10, derived_root=derived_root)
+        ib_res = write_investor_brief(ib, outputs_root=outputs_root)
+        outputs["investor_brief_md"] = str(ib_res["md_path"])
+        summary["human_review_items"] = ib_res["review_count"]
+        steps.append(StepResult("investor-brief", "done", f"human_review_items={ib_res['review_count']}"))
+    except SystemExit as e:
+        steps.append(StepResult("investor-brief", "skipped", str(e)))
+    except Exception as e:  # noqa: BLE001
+        steps.append(StepResult("investor-brief", "failed", type(e).__name__))
 
     # 6. llm-brief (analysis-ready packet for Claude; gate confirmed)
     #    J-Quants 株価コード指定があれば、EDINET財務が無くても brief を成立させる。

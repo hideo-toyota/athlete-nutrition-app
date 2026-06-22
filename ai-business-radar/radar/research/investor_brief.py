@@ -46,6 +46,23 @@ def _pct(value) -> str:
     return "UNKNOWN" if not isinstance(value, (int, float)) else f"{value * 100:.1f}%"
 
 
+def _mult(value) -> str:
+    """Format a valuation multiple as e.g. '12.34x', or UNKNOWN."""
+    return "UNKNOWN" if not isinstance(value, (int, float)) else f"{value:.2f}x"
+
+
+_MISSING_EDINET_MARKERS = (
+    "derived feature directory が見つかりません",
+    "derived feature asof directory がありません",
+    "derived feature asof directory が見つかりません",
+    "derived feature JSON がありません",
+)
+
+
+def _is_missing_edinet(message: str) -> bool:
+    return any(marker in message for marker in _MISSING_EDINET_MARKERS)
+
+
 def _small_jpy(value) -> str:
     if not isinstance(value, (int, float)):
         return "UNKNOWN"
@@ -354,8 +371,22 @@ def build_investor_brief(*, asof: str | None = None, max_review_items: int = 10,
 
     from .queue import build_research_queue
 
-    queue = build_research_queue(asof=asof, derived_root=derived_root)
+    # Market Snapshot / Watch Changes need only J-Quants. If EDINET financials
+    # derived is absent (e.g. a J-Quants-only setup), keep the snapshot working
+    # and degrade the Human Review List to empty rather than failing the brief.
+    try:
+        queue = build_research_queue(asof=asof, derived_root=derived_root)
+    except SystemExit as e:
+        if not _is_missing_edinet(str(e)):
+            raise
+        queue = {"asof": None, "items": [], "auxiliary": {}}
+
     selected_asof = queue["asof"]
+    if selected_asof is None:
+        probe = load_jquants_context(asof=asof, derived_root=derived_root)
+        selected_asof = probe.get("asof")
+        if selected_asof is None:
+            raise SystemExit("investor-brief: EDINET/J-Quants どちらの derived も見つかりません")
     jq_ctx, jq_docs = _load_jquants_docs(asof=selected_asof, derived_root=derived_root)
     jq_summary = jquants_summary(jq_ctx.get("manifest"), manifest_path=jq_ctx.get("manifest_path"))
     root = _feature_root(JQUANTS_FEATURE_SET, derived_root)
@@ -407,8 +438,8 @@ def _render_watch_table(rows: list[dict], *, metric_key: str) -> list[str]:
             f"| {r['securities_code']} | {r['market']} | {r['sector33']} | "
             f"{r.get('latest_price_date') or 'UNKNOWN'} | {_small_jpy(r.get('latest_close'))} | "
             f"{_small_jpy(r.get('market_cap_jpy'))} | "
-            f"{'UNKNOWN' if not isinstance(r.get('per_trailing'), float) else f'{r['per_trailing']:.2f}x'} | "
-            f"{'UNKNOWN' if not isinstance(r.get('pbr'), float) else f'{r['pbr']:.2f}x'} | "
+            f"{_mult(r.get('per_trailing'))} | "
+            f"{_mult(r.get('pbr'))} | "
             f"{_pct(r.get('return_20d'))} | {_pct(r.get('return_60d'))} | {metric_note} |"
         )
     return out
@@ -433,7 +464,7 @@ def render_investor_brief(brief: dict) -> str:
         f"- latest_price_date: `{snap.get('latest_price_date') or 'UNKNOWN'}`",
         f"- listed_codes: `{snap.get('listed_codes') or 'UNKNOWN'}`",
         f"- price_coverage: `{_pct(snap.get('price_coverage_ratio'))}` / valuation_coverage: `{_pct(snap.get('valuation_coverage_ratio'))}` / market_cap_coverage: `{_pct(snap.get('market_cap_coverage_ratio'))}`",
-        f"- PER trailing median: `{'UNKNOWN' if not isinstance(snap.get('per_trailing_median'), (int, float)) else f'{snap['per_trailing_median']:.2f}x'}` / PBR median: `{'UNKNOWN' if not isinstance(snap.get('pbr_median'), (int, float)) else f'{snap['pbr_median']:.2f}x'}`",
+        f"- PER trailing median: `{_mult(snap.get('per_trailing_median'))}` / PBR median: `{_mult(snap.get('pbr_median'))}`",
         f"- market_cap median: `{_small_jpy(snap.get('market_cap_median'))}`",
         f"- return_20d median: `{_pct(snap.get('return_20d_median'))}` / positive_rate: `{_pct(snap.get('return_20d_positive_rate'))}`",
         f"- return_60d median: `{_pct(snap.get('return_60d_median'))}` / positive_rate: `{_pct(snap.get('return_60d_positive_rate'))}`",
