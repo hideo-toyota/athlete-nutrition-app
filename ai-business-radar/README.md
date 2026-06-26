@@ -46,6 +46,10 @@ python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
 python3 -m radar doctor                              # 作業ツリー/データ鮮度/判断ログの診断
 ```
 
+> 運用メモ: `config.json` の `runtime.canonical_root` が正本checkoutです。データ取得・feature生成・
+> `investor-brief` などの分析系コマンドは、正本以外では停止します。迷ったら先に
+> `python3 -m radar doctor` で `root` / `canonical_match` / `latest_price_date` を確認してください。
+
 自動化は [AUTOMATION_PLAN.md](AUTOMATION_PLAN.md) と `scripts/automation/`。
 ネット取得(`daily_fetch.sh`)とローカル生成(`build_and_brief.sh`)を分け、取得失敗時も既存データで日次packetを作れるようにする。
 

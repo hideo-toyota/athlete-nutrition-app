@@ -41,6 +41,8 @@ def load_config(path: Path | None = None) -> dict:
         _check_value_audit(cfg["value_audit"])
     if "data_layer" in cfg:
         _check_data_layer(cfg["data_layer"])
+    if "runtime" in cfg:
+        _check_runtime(cfg["runtime"])
     return cfg
 
 
@@ -102,3 +104,15 @@ def _check_data_layer(dl: dict) -> None:
                         raise SystemExit(f"config: data_layer.providers.{name}.datasets.{ds} は object")
                     if "path" in dc and (not isinstance(dc["path"], str) or not dc["path"]):
                         raise SystemExit(f"config: data_layer.providers.{name}.datasets.{ds}.path は非空文字列")
+
+
+def _check_runtime(rt: dict) -> None:
+    """Local operational guardrails. Exists only to prevent stale-checkout mistakes."""
+    if not isinstance(rt, dict):
+        raise SystemExit("config: runtime は object である必要があります")
+    if "canonical_root" in rt and (not isinstance(rt["canonical_root"], str) or not rt["canonical_root"]):
+        raise SystemExit("config: runtime.canonical_root は非空文字列")
+    cmds = rt.get("canonical_enforced_commands")
+    if cmds is not None:
+        if not isinstance(cmds, list) or not all(isinstance(x, str) and x for x in cmds):
+            raise SystemExit("config: runtime.canonical_enforced_commands は非空文字列の配列")

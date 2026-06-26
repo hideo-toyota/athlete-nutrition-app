@@ -63,6 +63,16 @@ class DoctorReportTests(unittest.TestCase):
         self.assertIn("decision_log_empty", "\n".join(report["warnings"]))
         self.assertIn("decisions: 0 / outcomes: 0", text)
 
+    def test_canonical_mismatch_is_visible_without_blocking_doctor(self):
+        with tempfile.TemporaryDirectory() as td, tempfile.TemporaryDirectory() as canonical:
+            root = Path(td)
+            _write_json(root / "config.json", {"runtime": {"canonical_root": canonical}})
+            report = build_doctor_report(root)
+            text = render_doctor_report(report)
+        self.assertIn("canonical_root_mismatch", "\n".join(report["warnings"]))
+        self.assertIn("canonical_match: False", text)
+        self.assertIn(str(Path(canonical).resolve()), text)
+
     def test_jquants_coverage_and_audit_summary(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

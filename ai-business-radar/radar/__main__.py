@@ -31,6 +31,7 @@ from .doctor import build_doctor_report, render_doctor_report, write_doctor_repo
 from .sources import edinet_db, jquants_bulk
 from .report import (render_check, render_mirror, render_review, render_target_check,
                      render_value_audit, render_value_review)
+from .runtime_guard import enforce_canonical_root
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUTS = ROOT / "outputs"
@@ -961,6 +962,14 @@ def main() -> None:
         description="ローカル診断: 作業ツリー/秘密設定有無/データ鮮度/判断ログを確認します。ネットワーク接続はせず、APIキー値やraw本文は表示しません。",
     )
     args = ap.parse_args()
+    if args.command:
+        guard_cfg = load_config()
+        enforce_canonical_root(
+            ROOT,
+            guard_cfg,
+            args.command,
+            dry_run=bool(getattr(args, "dry_run", False)),
+        )
 
     if args.command == "mirror":
         cmd_mirror(args.asof)

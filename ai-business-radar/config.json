@@ -21,6 +21,24 @@
   },
   "benchmark": { "type": "dca_index", "index_ref": "indices/acwi.json", "note": "同一CFのDCA" },
   "data_source": { "index_composition_dir": "indices" },
+  "runtime": {
+    "canonical_root": "/Users/toyodahideo/equity-radar-live",
+    "canonical_enforced_commands": [
+      "sync",
+      "build-features",
+      "build-jquants-features",
+      "build-company-map",
+      "research-queue",
+      "evidence",
+      "jquants-evidence",
+      "llm-brief",
+      "audit-report",
+      "investor-brief",
+      "fetch-jquants",
+      "fetch-jquants-bulk",
+      "daily-update"
+    ]
+  },
   "value_audit": {
     "annual_hurdle_pct": 10,
     "hurdle_basis": "pre_tax",

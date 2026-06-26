@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .runtime_guard import canonical_status
+
 
 KNOWN_SECRET_KEYS = (
     "JQUANTS_API_KEY",
@@ -70,6 +72,12 @@ def _safe_json(path: Path) -> dict | None:
     except (OSError, json.JSONDecodeError):
         return None
     return obj if isinstance(obj, dict) else None
+
+
+def _runtime_status(root: Path) -> dict:
+    cfg = _safe_json(root / "config.json") or {}
+    status = canonical_status(root, cfg)
+    return status
 
 
 def _latest_matching_file(base: Path, pattern: str) -> Path | None:
@@ -232,6 +240,7 @@ def build_doctor_report(root: Path) -> dict:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "root": str(root),
         "root_under_private_tmp": str(root).startswith("/private/tmp/"),
+        "runtime": _runtime_status(root),
         "git": _git_info(root),
         "env": _env_status(root),
         "journal": _journal_status(root),
@@ -256,6 +265,12 @@ def _warnings(report: dict) -> list[str]:
     warnings: list[str] = []
     if report.get("root_under_private_tmp"):
         warnings.append("repo_under_private_tmp: 正本パスとしては消失/混乱リスクがあります")
+    runtime = report.get("runtime") or {}
+    if runtime.get("configured") and runtime.get("is_canonical") is False:
+        warnings.append(
+            "canonical_root_mismatch: このcheckoutは正本ではありません"
+            f" current={runtime.get('current_root')} expected={runtime.get('canonical_root')}"
+        )
     if report["git"].get("dirty"):
         warnings.append(f"git_dirty: 未コミット/未追跡の差分 {report['git'].get('status_count')} 件")
     journal = report["journal"]
@@ -302,6 +317,8 @@ def render_doctor_report(report: dict) -> str:
         "",
         "## Workspace",
         f"- root: {report['root']}",
+        f"- canonical_root: {report['runtime'].get('canonical_root') or 'UNCONFIGURED'}",
+        f"- canonical_match: {report['runtime'].get('is_canonical') if report['runtime'].get('configured') else 'UNKNOWN'}",
         f"- git: branch={report['git']['branch']} commit={report['git']['commit']} dirty={report['git']['dirty']}",
         f"- private_tmp: {report['root_under_private_tmp']}",
         "",
