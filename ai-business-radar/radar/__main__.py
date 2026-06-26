@@ -22,9 +22,9 @@ from .features import (
     build_financial_features_batch,
     build_jquants_bulk_features,
 )
-from .research import (build_audit_report, build_evidence, build_investor_brief,
+from .research import (build_ai_response_audit, build_audit_report, build_evidence, build_investor_brief,
                        build_jquants_evidence, build_llm_handoff, build_research_queue,
-                       write_audit_report, write_evidence, write_investor_brief,
+                       write_ai_response_audit, write_audit_report, write_evidence, write_investor_brief,
                        write_jquants_evidence, write_llm_handoff, write_research_queue)
 from .daily_update import render_daily_summary, run_daily_update
 from .doctor import build_doctor_report, render_doctor_report, write_doctor_report
@@ -690,6 +690,27 @@ def cmd_investor_brief(args) -> None:
     print("  ※ 参謀パケットです。売買指示・価格目標・利益保証・将来断定は生成していません。")
 
 
+def cmd_ai_audit(args) -> None:
+    """Audit an AI-generated answer locally. No LLM/API call."""
+    p = _resolve_path(args.from_file)
+    if not p.exists() or not p.is_file():
+        raise SystemExit("--from-file が見つかりません")
+    text = p.read_text(encoding="utf-8")
+    audit = build_ai_response_audit(
+        response_text=text,
+        source_name=str(p.relative_to(ROOT) if p.is_relative_to(ROOT) else p),
+        purpose=args.purpose,
+        audience=args.audience,
+        constraints=args.constraints,
+        avoid=args.avoid,
+        max_claims=args.max_claims,
+    )
+    res = write_ai_response_audit(audit, output_name=args.output_name)
+    print(f"AI response audit を生成しました: {_rel(res['md_path'])} / {_rel(res['manifest_path'])}")
+    print(f"  adoption: {res['adoption_level']} / weak_claims: {res['weak_claim_count']} / logic_leaps: {res['logic_leap_count']}")
+    print("  ※ LLM APIは呼んでいません。入力全文は出力に含めず、売買指示・価格目標・利益保証は生成していません。")
+
+
 def cmd_fetch_jquants(args) -> None:
     """Fetch a few codes from J-Quants REST and build derived features.
 
@@ -883,6 +904,25 @@ def main() -> None:
     pib.add_argument("--asof", help="基準日 YYYY-MM-DD(既定: 最新の derived asof)")
     pib.add_argument("--max-review-items", dest="max_review_items", type=int, default=10,
                      help="human review list の最大件数(既定10・正の整数)")
+    paa = sub.add_parser(
+        "ai-audit",
+        help="AI回答をローカル監査し、根拠/前提/論理飛躍/反論/採用判定を保存(LLM APIなし)",
+        description="既存のAI回答テキストをローカルで監査します。外部LLM APIは呼ばず、入力全文も出力しません。",
+    )
+    paa.add_argument("--from-file", dest="from_file", required=True,
+                     help="監査対象のAI回答テキスト/Markdown")
+    paa.add_argument("--output-name", dest="output_name",
+                     help="outputs/ai_audit/<name>.md/json の name(任意)")
+    paa.add_argument("--max-claims", dest="max_claims", type=int, default=20,
+                     help="抽出する主張の最大数(既定20)")
+    paa.add_argument("--purpose", default="投資判断前のAI回答品質監査",
+                     help="文脈評価:目的")
+    paa.add_argument("--audience", default="個人投資家本人",
+                     help="文脈評価:相手")
+    paa.add_argument("--constraints", default="売買指示なし・PIT・claim分類・discipline gate維持",
+                     help="文脈評価:制約")
+    paa.add_argument("--avoid", default="AI回答の過信、根拠不明の断定、買い煽り化",
+                     help="文脈評価:避けたいこと")
     pfj = sub.add_parser("fetch-jquants",
                          help="J-Quants REST から指定銘柄を取得し derived を生成(.env認証・ネットあり)")
     pfj.add_argument("--codes", required=True, help="証券コード(カンマ区切り 例 7203,6758)")
@@ -960,6 +1000,8 @@ def main() -> None:
         cmd_audit_report(args)
     elif args.command == "investor-brief":
         cmd_investor_brief(args)
+    elif args.command == "ai-audit":
+        cmd_ai_audit(args)
     elif args.command == "fetch-jquants":
         cmd_fetch_jquants(args)
     elif args.command == "fetch-jquants-bulk":

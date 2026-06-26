@@ -41,6 +41,7 @@ python3 -m radar research-queue --asof YYYY-MM-DD
 python3 -m radar evidence E02144 --asof YYYY-MM-DD
 python3 -m radar investor-brief --asof YYYY-MM-DD --max-review-items 10
 python3 -m radar llm-brief --asof YYYY-MM-DD
+python3 -m radar ai-audit --from-file outputs/discord/ai_answer.md
 python3 -m radar daily-update --asof YYYY-MM-DD --max-items 50
 python3 -m radar doctor                              # 作業ツリー/データ鮮度/判断ログの診断
 ```
@@ -75,6 +76,8 @@ python3 -m radar doctor                              # 作業ツリー/データ
   さらに `outputs/investor_brief/<asof>.md` に日々読む参謀パケットを生成する。
   さらに `outputs/discord/llm_prompt_<asof>.md` に Discord/Claude Code へ貼る短い固定プロンプトを生成する
   (送信先は人間が選ぶ・raw本文/APIキー無し・売買指示禁止を固定)。
+  `ai-audit` は、その後に得たAI回答をローカルで監査し、根拠分類・暗黙前提・論理飛躍・反論・採用判定を
+  `outputs/ai_audit/` に保存する(外部LLM API呼び出しなし・入力全文は出力しない)。
   `radar doctor` は、どの作業ツリーを見ているか、raw/derived の鮮度差、J-Quants coverage、
   `decision_log.jsonl` が空かどうかを秘密値なしで診断する。
   provider raw本文の Claude等LLM投入と自動API送信は未実装・`LICENSE_MATRIX.md` の確認対象。

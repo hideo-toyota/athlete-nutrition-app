@@ -14,6 +14,7 @@ outputs/research_queue.md
 outputs/research_queue.csv
 outputs/evidence/
 outputs/llm_handoff/
+outputs/ai_audit/
 outputs/doctor.md
 outputs/automation/
 outputs/investor_brief/*.md
