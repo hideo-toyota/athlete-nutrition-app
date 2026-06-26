@@ -52,7 +52,7 @@ def _write_company_map(base: Path, asof="2026-06-18"):
 def _write_jquants(base: Path, asof="2026-06-18"):
     d = base / "data" / "derived" / "features" / "jquants_equity_v1" / asof
     d.mkdir(parents=True, exist_ok=True)
-    (d / "features.jsonl").write_text(json.dumps({
+    docs = [{
         "feature_set": "jquants_equity_v1", "asof": asof, "securities_code": "72030",
         "entity": {"market": "プライム", "sector33": "輸送用機器"}, "input": {},
         "source_snapshot": {
@@ -67,7 +67,31 @@ def _write_jquants(base: Path, asof="2026-06-18"):
             "net_margin": _m(0.04),
         },
         "source_dates": {"latest_price_date": asof},
-    }, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    }]
+    for code, per, pbr, r20 in (
+        ("11110", 13.0, 1.1, 0.02),
+        ("22220", 14.0, 1.2, 0.03),
+        ("33330", 3.0, 0.3, 0.50),
+        ("44440", 50.0, 5.0, -0.20),
+    ):
+        docs.append({
+            "feature_set": "jquants_equity_v1", "asof": asof, "securities_code": code,
+            "entity": {"market": "プライム", "sector33": "輸送用機器"}, "input": {},
+            "source_snapshot": {},
+            "features": {
+                "latest_close": _m(1000, unit="JPY"),
+                "market_cap_jpy": _m(1_000_000_000, unit="JPY"),
+                "per_trailing": _m(per, unit="x"),
+                "pbr": _m(pbr, unit="x"),
+                "return_20d": _m(r20),
+                "return_60d": _m(0.04),
+            },
+            "source_dates": {"latest_price_date": asof},
+        })
+    (d / "features.jsonl").write_text(
+        "".join(json.dumps(doc, ensure_ascii=False, sort_keys=True) + "\n" for doc in docs),
+        encoding="utf-8",
+    )
     (d / "manifest.json").write_text(json.dumps({
         "feature_set": "jquants_equity_v1", "asof": asof,
         "coverage": {
@@ -123,11 +147,25 @@ class AuditReportTests(unittest.TestCase):
         self.assertEqual(val["pbr_uncovered_reasons"]["no_pbr_inputs"], 13)
         self.assertIn("eps", val["valuation_alias_hits"])
 
+    def test_relative_price_consistency_is_grouped_not_security_list(self):
+        report = build_audit_report(asof="2026-06-18", derived_root=self.derived)
+        rpc = report["relative_price_consistency"]
+        self.assertEqual(rpc["status"], "CALCULATION")
+        self.assertEqual(rpc["scope"], "group_distribution_only")
+        groups = {(g["group_type"], g["group"]): g for g in rpc["groups"]}
+        all_group = groups[("all_common_equity", "ALL")]
+        sector_group = groups[("sector33", "輸送用機器")]
+        self.assertEqual(all_group["sample_count"], 5)
+        self.assertEqual(sector_group["sample_count"], 5)
+        self.assertEqual(sector_group["joint_deviation_count"], 2)
+        self.assertNotIn("securities_code", sector_group)
+
     def test_render_is_clean(self):
         report = build_audit_report(asof="2026-06-18", derived_root=self.derived)
         text = render_audit_report(report)
         self.assertIn("cross-check", text)
         self.assertIn("valuation coverage", text)
+        self.assertIn("relative price consistency", text)
         self.assertIn("uncovered_reasons", text)
         self.assertIn("mismatch 原因分解", text)
         self.assertIn("EDINET FY", text)
@@ -138,6 +176,7 @@ class AuditReportTests(unittest.TestCase):
         self.assertIn("p90|Δ|", text)
         self.assertIn("per_uncovered_reasons", text)
         self.assertIn("pbr_uncovered_reasons", text)
+        self.assertIn("joint_deviation_count", text)
         for token in FORBIDDEN_OUTPUT_TOKENS:
             self.assertNotIn(token, text)
 

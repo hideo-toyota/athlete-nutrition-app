@@ -3,12 +3,14 @@
 This is a discipline/honesty instrument: it reports how well the data lines up,
 NOT what to buy. No ranking, no recommendation, no prediction.
 
-Two views (both meant to be run on real local derived data on the Mac):
+Three views (all meant to be run on real local derived data on the Mac):
   A. EDINET vs J-Quants cross-check aggregate (from the research queue): per
      overlapping metric — checked / mismatch counts, mismatch rate, and the
      |delta| distribution, so tolerance values can be judged on real data.
   B. J-Quants valuation coverage (from the jquants manifest): coverage ratio,
      which column aliases matched, and why stocks are still uncovered.
+  C. J-Quants relative price consistency: grouped distributions only, used to
+     inspect whether returns and valuation multiples are internally coherent.
 """
 from __future__ import annotations
 
@@ -191,6 +193,135 @@ def valuation_coverage_view(jquants: dict) -> dict:
     }
 
 
+def _calc_feature(doc: dict, key: str) -> float | None:
+    feature = (doc.get("features") or {}).get(key) or {}
+    if not isinstance(feature, dict) or feature.get("status") != "CALCULATION":
+        return None
+    return finite_number(feature.get("value"))
+
+
+def _jquants_rows(jquants: dict) -> list[dict]:
+    docs_by_code: dict[str, dict] = {}
+    for doc in (jquants.get("by_code") or {}).values():
+        code = doc.get("securities_code")
+        if isinstance(code, str):
+            docs_by_code[code] = doc
+    rows = []
+    for code in sorted(docs_by_code):
+        doc = docs_by_code[code]
+        entity = doc.get("entity") or {}
+        market = entity.get("market") or "UNKNOWN"
+        sector = entity.get("sector33") or "UNKNOWN"
+        if market == "その他" or sector == "その他":
+            continue
+        rows.append({
+            "securities_code": code,
+            "market": market,
+            "sector33": sector,
+            "per_trailing": _calc_feature(doc, "per_trailing"),
+            "pbr": _calc_feature(doc, "pbr"),
+            "return_20d": _calc_feature(doc, "return_20d"),
+            "return_60d": _calc_feature(doc, "return_60d"),
+            "market_cap_jpy": _calc_feature(doc, "market_cap_jpy"),
+        })
+    return rows
+
+
+def _clean(values) -> list[float]:
+    return [v for v in (finite_number(x) for x in values) if v is not None]
+
+
+def _distribution(values) -> dict:
+    clean = _clean(values)
+    return {
+        "count": len(clean),
+        "median": statistics.median(clean) if clean else None,
+        "p10": _percentile(clean, 0.10),
+        "p90": _percentile(clean, 0.90),
+    }
+
+
+def _outside_band(value, dist: dict) -> bool:
+    v = finite_number(value)
+    p10 = finite_number(dist.get("p10"))
+    p90 = finite_number(dist.get("p90"))
+    if v is None or p10 is None or p90 is None:
+        return False
+    return v < p10 or v > p90
+
+
+def _group_relative_stats(group_type: str, group_name: str, rows: list[dict]) -> dict:
+    per = _distribution(r.get("per_trailing") for r in rows)
+    pbr = _distribution(r.get("pbr") for r in rows)
+    r20 = _distribution(r.get("return_20d") for r in rows)
+    r60 = _distribution(r.get("return_60d") for r in rows)
+    market_cap = _distribution(r.get("market_cap_jpy") for r in rows)
+    n = len(rows)
+    joint_deviation_count = 0
+    if n >= 5:
+        for row in rows:
+            return_deviation = _outside_band(row.get("return_20d"), r20)
+            valuation_deviation = (
+                _outside_band(row.get("per_trailing"), per)
+                or _outside_band(row.get("pbr"), pbr)
+            )
+            if return_deviation and valuation_deviation:
+                joint_deviation_count += 1
+    return {
+        "group_type": group_type,
+        "group": group_name,
+        "status": "CALCULATION" if n >= 3 else "UNKNOWN",
+        "sample_count": n,
+        "per_coverage_ratio": per["count"] / n if n else None,
+        "pbr_coverage_ratio": pbr["count"] / n if n else None,
+        "return_20d_coverage_ratio": r20["count"] / n if n else None,
+        "per_median": per["median"],
+        "pbr_median": pbr["median"],
+        "return_20d_median": r20["median"],
+        "return_20d_p10": r20["p10"],
+        "return_20d_p90": r20["p90"],
+        "return_60d_median": r60["median"],
+        "market_cap_median": market_cap["median"],
+        "joint_deviation_count": joint_deviation_count if n >= 5 else None,
+        "note": "sample_too_small" if n < 3 else "group_distribution_only",
+    }
+
+
+def relative_price_consistency_view(jquants: dict) -> dict:
+    """Group-level relative price audit, not a securities list.
+
+    The Jane-Street-style lesson we can safely reuse is internal consistency:
+    compare related prices and multiples. For a personal-investor tool this must
+    stay at grouped distribution level, because individual outlier lists can
+    easily become trade suggestions.
+    """
+    rows = _jquants_rows(jquants)
+    if not rows:
+        return {
+            "status": "UNKNOWN",
+            "asof": jquants.get("asof"),
+            "reason": "J-Quants derived rows が不足",
+            "common_equity_rows": 0,
+            "groups": [],
+        }
+    groups: list[dict] = []
+    groups.append(_group_relative_stats("all_common_equity", "ALL", rows))
+    for group_type, key in (("market", "market"), ("sector33", "sector33")):
+        names = sorted({r.get(key) or "UNKNOWN" for r in rows})
+        for name in names:
+            subset = [r for r in rows if (r.get(key) or "UNKNOWN") == name]
+            groups.append(_group_relative_stats(group_type, name, subset))
+    calculable = [g for g in groups if g["status"] == "CALCULATION"]
+    return {
+        "status": "CALCULATION" if calculable else "UNKNOWN",
+        "asof": jquants.get("asof"),
+        "common_equity_rows": len(rows),
+        "groups": groups,
+        "calculation_group_count": len(calculable),
+        "scope": "group_distribution_only",
+    }
+
+
 def build_audit_report(*, asof: str | None = None, derived_root: Path | None = None) -> dict:
     try:
         queue = build_research_queue(asof=asof, derived_root=derived_root)
@@ -208,6 +339,7 @@ def build_audit_report(*, asof: str | None = None, derived_root: Path | None = N
         "asof": eff_asof or jquants.get("asof"),
         "cross_check": cross,
         "valuation": valuation_coverage_view(jquants),
+        "relative_price_consistency": relative_price_consistency_view(jquants),
     }
 
 
@@ -220,11 +352,22 @@ def _pt(value) -> str:
     return "UNKNOWN" if v is None else f"{v * 100:.2f}pt"
 
 
+def _multiple(value) -> str:
+    v = finite_number(value)
+    return "UNKNOWN" if v is None else f"{v:.2f}x"
+
+
+def _int_or_unknown(value) -> str:
+    v = finite_number(value)
+    return "UNKNOWN" if v is None else str(int(v))
+
+
 def render_audit_report(report: dict) -> str:
     cc = report.get("cross_check") or {}
     val = report.get("valuation") or {}
+    rpc = report.get("relative_price_consistency") or {}
     out = [
-        "# Data Quality Audit — EDINET×J-Quants 整合 / valuation coverage",
+        "# Data Quality Audit — EDINET×J-Quants 整合 / valuation coverage / relative price consistency",
         "",
         f"_asof: {report.get('asof')} / これは整合性の点検であり、売買順・推奨・予測ではありません_",
         "",
@@ -301,6 +444,35 @@ def render_audit_report(report: dict) -> str:
         "- PER/PBR 個別の未カバーは `per_uncovered_reasons` / `pbr_uncovered_reasons` を優先して確認。",
         "- `nonpositive_or_unusable_inputs` は赤字/債務超過など。算出不能で正しく UNKNOWN。",
         "- `no_price` は価格欠損。価格 bulk の範囲/銘柄を確認。",
+        "",
+        "## C. J-Quants relative price consistency [CALCULATION/UNKNOWN]",
+        "- 方向予測ではなく、同じ市場・業種内で価格リターンとPER/PBRの分布が同時に大きく外れていないかを見る監査です。",
+        "- 個別銘柄リストは出しません。市場区分・業種単位の分布だけを出し、調査順序や売買判断には使いません。",
+        f"- status/asof: `{rpc.get('status', 'UNKNOWN')}` / `{rpc.get('asof') or 'UNKNOWN'}`",
+        f"- common_equity_rows: {rpc.get('common_equity_rows', 0)} / calculation_groups: {rpc.get('calculation_group_count', 0)}",
+        "",
+    ])
+    groups = rpc.get("groups") or []
+    if groups:
+        out.extend([
+            "| group_type | group | status | n | PER cov | PBR cov | 20d cov | PER med | PBR med | 20d med | 20d p10/p90 | joint_deviation_count | note |",
+            "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+        ])
+        for g in groups:
+            out.append(
+                f"| {g.get('group_type')} | {g.get('group')} | {g.get('status')} | {g.get('sample_count')} | "
+                f"{_pct(g.get('per_coverage_ratio'))} | {_pct(g.get('pbr_coverage_ratio'))} | "
+                f"{_pct(g.get('return_20d_coverage_ratio'))} | "
+                f"{_multiple(g.get('per_median'))} | {_multiple(g.get('pbr_median'))} | "
+                f"{_pct(g.get('return_20d_median'))} | {_pct(g.get('return_20d_p10'))}/{_pct(g.get('return_20d_p90'))} | "
+                f"{_int_or_unknown(g.get('joint_deviation_count'))} | `{g.get('note') or 'UNKNOWN'}` |"
+            )
+    else:
+        out.append("- status: UNKNOWN — J-Quants derived rows が不足")
+    out.extend([
+        "",
+        "- joint_deviation_count は、同一グループ内で20日リターンとPER/PBRの双方が10-90%帯の外に出た件数。",
+        "- 件数が多いグループは、ニュース・決算期ズレ・倍率計算の入力列・流動性を点検します。魅力度ではありません。",
         "",
         "## 注意",
         "- per/pbr は trailing(予想PERではない)。本レポートは魅力度・売買順ではありません。",

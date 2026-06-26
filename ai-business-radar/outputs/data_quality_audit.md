@@ -1,4 +1,4 @@
-# Data Quality Audit — EDINET×J-Quants 整合 / valuation coverage
+# Data Quality Audit — EDINET×J-Quants 整合 / valuation coverage / relative price consistency
 
 _asof: 2026-06-22 / これは整合性の点検であり、売買順・推奨・予測ではありません_
 
@@ -55,6 +55,56 @@ _asof: 2026-06-22 / これは整合性の点検であり、売買順・推奨・
 - PER/PBR 個別の未カバーは `per_uncovered_reasons` / `pbr_uncovered_reasons` を優先して確認。
 - `nonpositive_or_unusable_inputs` は赤字/債務超過など。算出不能で正しく UNKNOWN。
 - `no_price` は価格欠損。価格 bulk の範囲/銘柄を確認。
+
+## C. J-Quants relative price consistency [CALCULATION/UNKNOWN]
+- 方向予測ではなく、同じ市場・業種内で価格リターンとPER/PBRの分布が同時に大きく外れていないかを見る監査です。
+- 個別銘柄リストは出しません。市場区分・業種単位の分布だけを出し、調査順序や売買判断には使いません。
+- status/asof: `CALCULATION` / `2026-06-22`
+- common_equity_rows: 3910 / calculation_groups: 38
+
+| group_type | group | status | n | PER cov | PBR cov | 20d cov | PER med | PBR med | 20d med | 20d p10/p90 | joint_deviation_count | note |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| all_common_equity | ALL | CALCULATION | 3910 | 83.8% | 94.3% | 95.3% | 13.96x | 1.22x | -0.8% | -11.5%/9.3% | 278 | `group_distribution_only` |
+| market | TOKYO PRO MARKET | CALCULATION | 181 | 0.0% | 0.0% | 0.0% | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN/UNKNOWN | 0 | `group_distribution_only` |
+| market | グロース | CALCULATION | 594 | 70.4% | 98.1% | 99.8% | 16.89x | 2.30x | -4.6% | -22.3%/8.0% | 50 | `group_distribution_only` |
+| market | スタンダード | CALCULATION | 1572 | 87.1% | 99.1% | 100.0% | 11.92x | 0.90x | -1.1% | -10.5%/7.1% | 112 | `group_distribution_only` |
+| market | プライム | CALCULATION | 1563 | 95.4% | 99.0% | 99.9% | 14.76x | 1.26x | 0.3% | -8.0%/11.3% | 121 | `group_distribution_only` |
+| sector33 | その他製品 | CALCULATION | 105 | 86.7% | 100.0% | 100.0% | 12.95x | 0.82x | -0.6% | -9.3%/7.2% | 7 | `group_distribution_only` |
+| sector33 | その他金融業 | CALCULATION | 42 | 85.7% | 90.5% | 92.9% | 12.26x | 1.06x | -1.5% | -9.4%/3.0% | 4 | `group_distribution_only` |
+| sector33 | ガラス･土石製品 | CALCULATION | 50 | 90.0% | 98.0% | 98.0% | 14.22x | 0.97x | 1.3% | -9.8%/23.9% | 5 | `group_distribution_only` |
+| sector33 | ゴム製品 | CALCULATION | 17 | 94.1% | 100.0% | 100.0% | 12.57x | 0.98x | 1.4% | -4.3%/10.3% | 2 | `group_distribution_only` |
+| sector33 | サービス業 | CALCULATION | 579 | 79.3% | 91.5% | 92.2% | 14.46x | 1.60x | -1.1% | -12.5%/7.6% | 48 | `group_distribution_only` |
+| sector33 | パルプ・紙 | CALCULATION | 25 | 96.0% | 96.0% | 96.0% | 11.54x | 0.54x | -1.5% | -7.8%/5.7% | 4 | `group_distribution_only` |
+| sector33 | 不動産業 | CALCULATION | 158 | 75.9% | 82.3% | 82.9% | 10.07x | 1.17x | -0.6% | -8.5%/5.0% | 12 | `group_distribution_only` |
+| sector33 | 保険業 | CALCULATION | 16 | 81.2% | 87.5% | 87.5% | 16.40x | 1.48x | -1.8% | -9.9%/14.1% | 2 | `group_distribution_only` |
+| sector33 | 倉庫･運輸関連業 | CALCULATION | 31 | 96.8% | 100.0% | 100.0% | 11.29x | 0.70x | -0.3% | -8.6%/4.1% | 3 | `group_distribution_only` |
+| sector33 | 化学 | CALCULATION | 203 | 94.1% | 100.0% | 100.0% | 14.52x | 0.93x | 1.2% | -7.8%/14.0% | 18 | `group_distribution_only` |
+| sector33 | 医薬品 | CALCULATION | 81 | 48.1% | 96.3% | 98.8% | 17.81x | 1.77x | -9.4% | -24.5%/-0.1% | 3 | `group_distribution_only` |
+| sector33 | 卸売業 | CALCULATION | 302 | 89.7% | 94.0% | 94.4% | 12.12x | 0.89x | -0.5% | -8.1%/7.1% | 21 | `group_distribution_only` |
+| sector33 | 小売業 | CALCULATION | 346 | 80.9% | 94.2% | 94.8% | 15.98x | 1.58x | -0.6% | -8.5%/6.8% | 23 | `group_distribution_only` |
+| sector33 | 建設業 | CALCULATION | 154 | 87.0% | 89.0% | 91.6% | 11.84x | 1.12x | 0.1% | -6.5%/8.0% | 12 | `group_distribution_only` |
+| sector33 | 情報･通信業 | CALCULATION | 643 | 77.3% | 92.1% | 94.1% | 14.72x | 1.98x | -4.1% | -18.0%/5.7% | 44 | `group_distribution_only` |
+| sector33 | 機械 | CALCULATION | 212 | 90.6% | 98.1% | 98.6% | 15.75x | 1.01x | 2.7% | -6.7%/18.7% | 21 | `group_distribution_only` |
+| sector33 | 水産・農林業 | CALCULATION | 12 | 100.0% | 100.0% | 100.0% | 13.71x | 1.06x | -0.0% | -5.1%/1.7% | 2 | `group_distribution_only` |
+| sector33 | 海運業 | CALCULATION | 11 | 90.9% | 90.9% | 100.0% | 9.04x | 0.66x | -4.4% | -11.5%/0.8% | 1 | `group_distribution_only` |
+| sector33 | 石油･石炭製品 | CALCULATION | 10 | 80.0% | 90.0% | 90.0% | 10.13x | 0.80x | -2.9% | -9.7%/7.6% | 1 | `group_distribution_only` |
+| sector33 | 空運業 | CALCULATION | 7 | 71.4% | 71.4% | 85.7% | 11.21x | 1.00x | 1.9% | -0.2%/8.2% | 1 | `group_distribution_only` |
+| sector33 | 精密機器 | CALCULATION | 52 | 84.6% | 100.0% | 100.0% | 19.44x | 2.00x | -0.2% | -13.3%/13.2% | 4 | `group_distribution_only` |
+| sector33 | 繊維製品 | CALCULATION | 48 | 85.4% | 100.0% | 100.0% | 13.26x | 0.77x | -0.2% | -14.1%/7.9% | 2 | `group_distribution_only` |
+| sector33 | 証券･商品先物取引業 | CALCULATION | 38 | 86.8% | 97.4% | 97.4% | 11.16x | 1.06x | -0.1% | -8.4%/7.4% | 1 | `group_distribution_only` |
+| sector33 | 輸送用機器 | CALCULATION | 82 | 89.0% | 97.6% | 100.0% | 10.71x | 0.70x | -1.4% | -11.5%/5.5% | 8 | `group_distribution_only` |
+| sector33 | 金属製品 | CALCULATION | 89 | 84.3% | 96.6% | 97.8% | 12.48x | 0.60x | 0.7% | -5.1%/11.4% | 7 | `group_distribution_only` |
+| sector33 | 鉄鋼 | CALCULATION | 38 | 94.7% | 100.0% | 100.0% | 14.28x | 0.69x | 0.5% | -5.2%/8.5% | 2 | `group_distribution_only` |
+| sector33 | 鉱業 | CALCULATION | 5 | 100.0% | 100.0% | 100.0% | 12.39x | 0.99x | -7.7% | -11.2%/2.7% | 2 | `group_distribution_only` |
+| sector33 | 銀行業 | CALCULATION | 80 | 97.5% | 98.8% | 100.0% | 14.70x | 0.87x | -0.1% | -4.1%/8.3% | 8 | `group_distribution_only` |
+| sector33 | 陸運業 | CALCULATION | 60 | 93.3% | 93.3% | 93.3% | 11.74x | 0.94x | -1.5% | -8.5%/3.8% | 8 | `group_distribution_only` |
+| sector33 | 電気機器 | CALCULATION | 228 | 84.2% | 97.8% | 98.2% | 18.29x | 1.36x | -0.7% | -11.5%/23.2% | 22 | `group_distribution_only` |
+| sector33 | 電気･ガス業 | CALCULATION | 28 | 96.4% | 100.0% | 100.0% | 9.48x | 0.64x | -2.8% | -20.6%/2.4% | 5 | `group_distribution_only` |
+| sector33 | 非鉄金属 | CALCULATION | 32 | 93.8% | 100.0% | 100.0% | 13.54x | 1.16x | 0.0% | -13.5%/11.0% | 3 | `group_distribution_only` |
+| sector33 | 食料品 | CALCULATION | 126 | 91.3% | 96.8% | 98.4% | 16.56x | 1.17x | 0.3% | -5.7%/8.7% | 12 | `group_distribution_only` |
+
+- joint_deviation_count は、同一グループ内で20日リターンとPER/PBRの双方が10-90%帯の外に出た件数。
+- 件数が多いグループは、ニュース・決算期ズレ・倍率計算の入力列・流動性を点検します。魅力度ではありません。
 
 ## 注意
 - per/pbr は trailing(予想PERではない)。本レポートは魅力度・売買順ではありません。
