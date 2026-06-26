@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .common import DISCLAIMER, assert_no_forbidden_output, metric_value
+from .common import DISCLAIMER, assert_no_forbidden_output, format_pct, metric_value
 from .evidence import build_evidence, render_evidence
 from .jquants_evidence import build_jquants_evidence, render_jquants_evidence
 from .queue import build_research_queue, render_research_queue
@@ -47,7 +47,7 @@ def build_llm_handoff(*, asof: str | None = None, derived_root: Path | None = No
 
 
 def _pct(value) -> str:
-    return "UNKNOWN" if not isinstance(value, (int, float)) else f"{value * 100:.1f}%"
+    return format_pct(value)
 
 
 def _render_jquants_summary(summary: dict | None) -> list[str]:

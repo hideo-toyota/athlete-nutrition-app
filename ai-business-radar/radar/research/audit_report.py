@@ -16,7 +16,7 @@ import json
 import statistics
 from pathlib import Path
 
-from .common import DISCLAIMER, ROOT, assert_no_forbidden_output, load_jquants_context, rel
+from .common import DISCLAIMER, ROOT, assert_no_forbidden_output, finite_number, format_pct, load_jquants_context, rel
 from .queue import build_research_queue
 
 _MISSING_EDINET_MARKERS = (
@@ -212,11 +212,12 @@ def build_audit_report(*, asof: str | None = None, derived_root: Path | None = N
 
 
 def _pct(value) -> str:
-    return "UNKNOWN" if not isinstance(value, (int, float)) else f"{value * 100:.1f}%"
+    return format_pct(value)
 
 
 def _pt(value) -> str:
-    return "UNKNOWN" if not isinstance(value, (int, float)) else f"{value * 100:.2f}pt"
+    v = finite_number(value)
+    return "UNKNOWN" if v is None else f"{v * 100:.2f}pt"
 
 
 def render_audit_report(report: dict) -> str:

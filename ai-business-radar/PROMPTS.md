@@ -22,7 +22,7 @@
 ④ devils-advocate で最強の反対論と“事業ベースの撤退条件” → ⑤ discipline-auditor で買い案を規律に通す。
 両論 + 不確実性 + 規律判定を出して。買え/売れは言わない。決めるのは私。中小型・低カバレッジ優先。
 ```
-注: 深い財務は web 取得 + 私が貼る決算短信で補う(J-Quants は未接続)。
+注: J-Quants/EDINET のローカル derived がある場合は `investor-brief` / `evidence` / `jquants-evidence` を優先する。raw本文の貼付・再配布はしない。
 
 ## C. 保有を点検(NVDA / TSLA の仮説チェック)
 ```

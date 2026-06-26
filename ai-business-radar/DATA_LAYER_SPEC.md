@@ -125,12 +125,14 @@ data/derived/<feature_set>/<asof>.json # 使用入力フィールド + 各raw_ha
 ## 13. CLI 契約(既存5コマンド不変・追加)
 | cmd | 文法 | 出力 | network |
 |---|---|---|---|
-| `data-check` | `data-check` | 端末(key redact) | A1のみ・軽量疎通 |
-| `sync` | `sync <jquants\|edinet-db> --dataset <name> [--from YYYY-MM-DD --to YYYY-MM-DD] [--ticker X]` | `data/raw`+metadata | あり |
-| `build-features` | `build-features --provider edinet-db --dataset financials --raw-path <path> [--asof YYYY-MM-DD]` | `data/derived` | なし |
+| `data-check` | `data-check --offline` / `data-check --live --provider <jquants\|edinet-db>` | 端末(key redact) | A1のみ・軽量疎通 |
+| `sync` | `sync --provider edinet-db --dataset companies|financials [--asof YYYY-MM-DD] [--page N] [--per-page N] [--code E02367] [--codes-file data/metadata/...]` | `data/raw`+metadata | あり |
+| `fetch-jquants-bulk` | `fetch-jquants-bulk --from YYYY-MM-DD --to YYYY-MM-DD [--endpoint ...]` | `data/raw/jquants/bulk` | あり |
+| `fetch-jquants` | `fetch-jquants --codes 7203,6758 --asof YYYY-MM-DD` | `data/derived/features/jquants_equity_v1` | あり |
+| `build-features` | `build-features --provider edinet-db --dataset financials (--raw-path <path> | --raw-dir <dir>) [--asof YYYY-MM-DD]` | `data/derived` | なし |
 | `build-jquants-features` | `build-jquants-features --asof YYYY-MM-DD` | `data/derived/features/jquants_equity_v1` | なし |
 | `research-queue` | `research-queue [--asof YYYY-MM-DD]` | `outputs/research_queue.md/.csv` | なし |
-| `evidence` | `evidence <ticker> [--asof YYYY-MM-DD]` | `outputs/evidence/<ticker>.md` | なし |
+| `evidence` | `evidence <edinet_code> [--asof YYYY-MM-DD]` | `outputs/evidence/<edinet_code>.md` | なし |
 | `llm-brief` | `llm-brief [--asof YYYY-MM-DD] [--max-items N]` | `outputs/llm_handoff/<asof>.md/.json` | なし(API呼び出しなし) |
 | `claim-audit` | `claim-audit <file>` | 端末 | なし |
 - `--asof` は厳密 `YYYY-MM-DD` 検証(既存 mirror/score と同実装)。各コマンドは 入力/出力先/鮮度/欠損/注意 を表示。

@@ -16,6 +16,9 @@ from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+from radar.config import load_config
+from radar.sources import common
+
 from .jquants_bulk import (
     FEATURE_REGISTRY_VERSION,
     FEATURE_SET,
@@ -32,6 +35,8 @@ from .jquants_bulk import (
     _ratio,
     _return,
     _valid_asof,
+    _code_commit,
+    _config_hash,
 )
 
 # REST statement field aliases (J-Quants /fins/statements long names).
@@ -174,6 +179,11 @@ def build_jquants_features_from_payloads(
     if generated.tzinfo is None:
         generated = generated.replace(tzinfo=timezone.utc)
     generated_at = generated.astimezone(timezone.utc).isoformat(timespec="seconds")
+    build_meta = {
+        "config_hash": _config_hash(),
+        "code_commit": _code_commit(),
+        "normalization_version": NORMALIZATION_VERSION,
+    }
 
     features_path = out_dir / "features.jsonl"
     manifest_path = out_dir / "manifest.json"
@@ -191,6 +201,9 @@ def build_jquants_features_from_payloads(
         for raw_code in sorted(payloads):
             code = _normalize_code(raw_code)
             p = payloads[raw_code] or {}
+            payload_hash = common.hash_bytes(
+                json.dumps(p, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            )
             dq = (p.get("daily_quotes") or {}).get("daily_quotes") if isinstance(p.get("daily_quotes"), dict) else p.get("daily_quotes")
             statements = (p.get("statements") or {}).get("statements") if isinstance(p.get("statements"), dict) else p.get("statements")
             points = _price_points(dq or [], asof_date)
@@ -234,7 +247,12 @@ def build_jquants_features_from_payloads(
                 "feature_registry_version": FEATURE_REGISTRY_VERSION, "generated_at": generated_at,
                 "asof": asof, "provider": PROVIDER, "dataset": "rest:daily_quotes+listed_info+statements",
                 "securities_code": code, "entity": _entity(p.get("listed_info") or {}),
-                "input": {"source": "jquants_rest", "normalization_version": NORMALIZATION_VERSION},
+                "input": {
+                    "source": "jquants_rest",
+                    "normalization_version": NORMALIZATION_VERSION,
+                    "payload_hash_normalized": payload_hash,
+                },
+                "build": build_meta,
                 "features": {
                     "latest_close": _measured(latest[1] if latest else None, unit="JPY", note="adjusted close when available"),
                     "latest_volume": _measured(latest[2] if latest else None, unit="shares"),
@@ -278,6 +296,7 @@ def build_jquants_features_from_payloads(
     manifest = {
         "schema_version": SCHEMA_VERSION, "feature_set": FEATURE_SET,
         "generated_at": generated_at, "asof": asof, "provider": PROVIDER,
+        "build": build_meta,
         "input": {"source": "jquants_rest", "requested_codes": n},
         "coverage": {
             "listed_codes": n, "price_covered": price_covered, "summary_covered": summary_covered,
@@ -304,6 +323,7 @@ def build_jquants_features_from_payloads(
 def fetch_and_build(*, codes: list[str], asof: str, client=None, derived_root: Path | None = None) -> dict:
     """Fetch REST payloads per code via the network client, then build derived."""
     if client is None:
+        common.require_jquants_personal_use_confirmed(load_config(), operation="REST fetch")
         from radar.sources.jquants_rest_client import JQuantsRestClient
         client = JQuantsRestClient()
     asof = _valid_asof(asof)

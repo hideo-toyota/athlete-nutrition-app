@@ -25,9 +25,21 @@ def load_portfolio(path: Path | None = None) -> dict:
 
 
 def load_index(ref: str) -> dict:
+    if not isinstance(ref, str) or not ref.strip():
+        raise SystemExit("指数構成 ref が空です")
+    base = (ROOT / "indices").resolve()
     p = Path(ref)
-    if not p.is_absolute():
-        p = ROOT / p
+    if p.is_absolute():
+        p = p.resolve()
+    else:
+        text = ref.replace("\\", "/")
+        if text.startswith("indices/"):
+            text = text[len("indices/"):]
+        p = (base / text).resolve()
+    try:
+        p.relative_to(base)
+    except ValueError:
+        raise SystemExit(f"指数構成 ref は indices/ 配下のみ許可: {ref!r}")
     if not p.exists():
         raise SystemExit(f"指数構成が見つかりません: {p}")
     return _read_json(p, "指数構成")

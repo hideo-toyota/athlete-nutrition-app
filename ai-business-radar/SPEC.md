@@ -167,14 +167,15 @@
 | `log "<decision>"` | 判断+事前予測 | decision_log.jsonl に追記 | 予測の事前固定(反証可能でなければ拒否) |
 | `score` | decision_log + 価格(asof) | outcome を機械記入 | 後知恵抜きの採点 |
 | `review` | decision_log | `outputs/journal_review.md` | 較正・DCA比・「裁量 vs 規律」 |
-| (後段) `analyze` / `backtest` | — | — | 個別の分析・検証 |
+| データ層/研究層の追加CLI | `DATA_LAYER_SPEC.md` / `README.md` を正とする | raw/derived/research/evidence/brief | 本表の5コマンドを壊さない純加法 |
 
 ---
 
 ## 4. 不変条件(原則6)
 - **未来を見ない**: 時系列計算は `asof` のみ。`score` も判断日時点で入手可能な情報だけで採点。
 - **ファイル=真実 / 再現可能**: 状態は JSON/JSONL/MD/CSV。**二度実行で同一出力**。
-  時刻依存を排し監査再現するため、`mirror --asof` / `score --asof` で**基準日を固定**できる(既定は今日)。
+  時刻依存を排し監査再現するため、`mirror --asof` / `score --asof` で**基準日を固定**する。
+  `score --asof` は必須。`mirror` は未指定時に `portfolio.as_of` を基準にし、実行日の wall-clock を混ぜない。
 - **宣言的**: 規律・方針・配分は `config.json`。挙動変更はコードでなく設定で。
 - **依存最小**: 標準ライブラリ中心・ローカル完結。
 

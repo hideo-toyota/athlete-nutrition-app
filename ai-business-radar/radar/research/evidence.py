@@ -7,6 +7,7 @@ from .common import (
     DISCLAIMER,
     assert_no_forbidden_output,
     edinet_jquants_cross_check,
+    format_pct,
     jquants_market_context,
     load_edinet_company_map,
     load_feature_doc,
@@ -125,8 +126,9 @@ def render_evidence(evidence: dict) -> str:
             )
             out.append(
                 f"| {row['edinet_feature']} ↔ {row['jquants_feature']} | "
-                f"{row['edinet_value'] * 100:.1f}% | {row['jquants_value'] * 100:.1f}% | "
-                f"{row['delta'] * 100:.1f}pt | {row['tolerance'] * 100:.1f}pt | {result} |"
+                f"{format_pct(row.get('edinet_value'))} | {format_pct(row.get('jquants_value'))} | "
+                f"{format_pct(row.get('delta')).replace('%', 'pt')} | "
+                f"{format_pct(row.get('tolerance')).replace('%', 'pt')} | {result} |"
             )
     else:
         out.append(f"- status: `UNKNOWN` / reason: `{cross.get('reason')}`")

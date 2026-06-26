@@ -26,6 +26,7 @@ CFG = {
                 "base_url": "https://api.jquants.example/v2",
                 "key_var": "JQUANTS_API_KEY",
                 "plan_or_limit": "test-plan",
+                "tos_personal_use_confirmed": True,
             },
         },
     },
@@ -151,6 +152,16 @@ class JQuantsBulkSyncTests(unittest.TestCase):
         self.assertEqual(res["total_files"], 0)
         self.assertEqual(len(res["errors"]), 1)
         self.assertNotIn(SECRET, str(res))
+        self.assertFalse(self.raw.exists())
+
+    def test_tos_gate_blocks_when_not_confirmed(self):
+        cfg = json.loads(json.dumps(CFG))
+        cfg["data_layer"]["providers"]["jquants"]["tos_personal_use_confirmed"] = False
+        with self.assertRaises(SystemExit) as cm:
+            jquants_bulk.fetch_bulk(cfg, endpoints=["/equities/bars/daily"], key_getter=_key,
+                                    json_getter=self._json_getter, raw_root=self.raw,
+                                    meta_root=self.meta, sleep_sec=0)
+        self.assertIn("tos_personal_use_confirmed", str(cm.exception))
         self.assertFalse(self.raw.exists())
 
     def test_unsafe_endpoint_and_key_path_are_rejected(self):

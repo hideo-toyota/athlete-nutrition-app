@@ -17,6 +17,7 @@ from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
+from radar.config import load_config
 from radar.sources import common
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -174,6 +175,33 @@ def _hash_files(paths: list[Path]) -> tuple[str, list[dict]]:
         })
     manifest_payload = json.dumps(entries, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(manifest_payload).hexdigest(), entries
+
+
+def _code_commit() -> str:
+    git = ROOT / ".git"
+    head = git / "HEAD"
+    try:
+        text = head.read_text(encoding="utf-8").strip()
+        if text.startswith("ref: "):
+            ref = git / text.split(" ", 1)[1]
+            return ref.read_text(encoding="utf-8").strip()[:12]
+        return text[:12]
+    except OSError:
+        return "UNKNOWN"
+
+
+def _config_hash() -> str:
+    cfg = load_config()
+    provider = ((cfg.get("data_layer") or {}).get("providers") or {}).get("jquants") or {}
+    payload = {
+        "provider": "jquants",
+        "feature_set": FEATURE_SET,
+        "feature_registry_version": FEATURE_REGISTRY_VERSION,
+        "normalization_version": NORMALIZATION_VERSION,
+        "provider_config": provider,
+    }
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
 
 
 def _measured(value, *, unit: str, status: str | None = None, note: str | None = None):
@@ -464,11 +492,11 @@ def _valuation_uncovered_reason(per_reason: str, pbr_reason: str) -> str:
 
 
 def _format_ratio(value):
-    return "UNKNOWN" if value is None else f"{value * 100:.1f}%"
+    return "UNKNOWN" if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value) else f"{value * 100:.1f}%"
 
 
 def _format_distribution_value(key: str, value):
-    if value is None:
+    if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
         return "UNKNOWN"
     if key in {"per_trailing", "pbr"}:
         return f"{value:.2f}x"
@@ -486,6 +514,8 @@ def build_jquants_bulk_features(
 ) -> dict:
     asof = _valid_asof(asof)
     asof_date = date.fromisoformat(asof)
+    if raw_root is None:
+        common.require_jquants_personal_use_confirmed(load_config(), operation="bulk feature build")
     root = _raw_root(raw_root)
     out_dir = _output_dir(derived_root, asof)
 
@@ -500,6 +530,11 @@ def build_jquants_bulk_features(
     if generated.tzinfo is None:
         generated = generated.replace(tzinfo=timezone.utc)
     generated_at = generated.astimezone(timezone.utc).isoformat(timespec="seconds")
+    build_meta = {
+        "config_hash": _config_hash(),
+        "code_commit": _code_commit(),
+        "normalization_version": NORMALIZATION_VERSION,
+    }
 
     features_path = out_dir / "features.jsonl"
     summary_path = out_dir / "summary.md"
@@ -619,6 +654,7 @@ def build_jquants_bulk_features(
                     "input_manifest_digest": input_digest,
                     "normalization_version": NORMALIZATION_VERSION,
                 },
+                "build": build_meta,
                 "features": {
                     "latest_close": _measured(latest[1] if latest else None, unit="JPY", note="adjusted close when available"),
                     "latest_volume": _measured(latest[2] if latest else None, unit="shares"),
@@ -677,6 +713,7 @@ def build_jquants_bulk_features(
         "generated_at": generated_at,
         "asof": asof,
         "provider": PROVIDER,
+        "build": build_meta,
         "input": {
             "raw_root": str(root),
             "input_file_count": len(input_files),

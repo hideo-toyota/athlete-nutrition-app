@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 from datetime import date
 from pathlib import Path
@@ -24,6 +25,21 @@ FORBIDDEN_OUTPUT_TOKENS = (
     "おすすめ",
     "買うべき",
     "上がる可能性が高い",
+)
+
+FORBIDDEN_OUTPUT_PATTERNS = tuple(
+    re.compile(p, re.IGNORECASE)
+    for p in (
+        r"\bbuy\b\s+[0-9A-Z]{4,5}|\bbuy\b\s+now|\bstrong\s+buy\b",
+        r"\bsell\b\s+[0-9A-Z]{4,5}|\bsell\b\s+now|\bstrong\s+sell\b",
+        r"\btarget\s+price\b",
+        r"\brank(?:ing)?\b\s*#?\s*\d+|\btop\s+\d+\b",
+        r"\bexpected\s+return\b",
+        r"目標株価",
+        r"推奨します|購入推奨|買い推奨|売り推奨",
+        r"割安銘柄|割安ランキング|割安なので|割安です",
+        r"強気で買う|強気買い|上がる可能性が高い",
+    )
 )
 
 DISCLAIMER = (
@@ -456,6 +472,8 @@ def metric_value(m: dict) -> str:
         return "true" if v else "false"
     if not isinstance(v, (int, float)):
         return "UNKNOWN"
+    if isinstance(v, bool) or not math.isfinite(v):
+        return "UNKNOWN"
     if unit == "ratio":
         return f"{v * 100:.1f}%"
     if unit == "JPY":
@@ -465,7 +483,25 @@ def metric_value(m: dict) -> str:
     return str(v)
 
 
+def finite_number(value) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value) if math.isfinite(value) else None
+
+
+def format_pct(value) -> str:
+    v = finite_number(value)
+    return "UNKNOWN" if v is None else f"{v * 100:.1f}%"
+
+
+def format_multiple(value) -> str:
+    v = finite_number(value)
+    return "UNKNOWN" if v is None else f"{v:.2f}x"
+
+
 def assert_no_forbidden_output(text: str) -> None:
-    hits = [t for t in FORBIDDEN_OUTPUT_TOKENS if t in text]
+    normalized = re.sub(r"\s+", " ", str(text or "")).strip()
+    hits = [t for t in FORBIDDEN_OUTPUT_TOKENS if t in normalized]
+    hits.extend(p.pattern for p in FORBIDDEN_OUTPUT_PATTERNS if p.search(normalized))
     if hits:
         raise SystemExit(f"出力禁止語が混入しています: {hits}")

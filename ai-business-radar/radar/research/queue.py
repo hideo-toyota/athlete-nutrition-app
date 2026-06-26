@@ -13,6 +13,7 @@ from .common import (
     edinet_jquants_cross_check,
     jquants_market_context,
     jquants_summary,
+    format_pct,
     load_edinet_company_map,
     load_feature_docs,
     load_jquants_context,
@@ -30,7 +31,7 @@ def _status(doc: dict, key: str) -> str:
 
 
 def _pct(value) -> str:
-    return "UNKNOWN" if not isinstance(value, (int, float)) else f"{value * 100:.1f}%"
+    return format_pct(value)
 
 
 def _risks(doc: dict) -> list[str]:

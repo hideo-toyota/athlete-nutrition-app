@@ -18,7 +18,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 _ENV = ROOT / ".env"
-KEY_VARS = ("JQUANTS_API_KEY", "EDINETDB_API_KEY")
+KEY_VARS = (
+    "JQUANTS_API_KEY",
+    "EDINETDB_API_KEY",
+    "JQUANTS_REFRESH_TOKEN",
+    "JQUANTS_MAILADDRESS",
+    "JQUANTS_PASSWORD",
+    "JQUANTS_ID_TOKEN",
+)
 
 
 def _load_dotenv() -> None:
@@ -43,6 +50,7 @@ def load_api_key(name: str) -> str:
 
 
 def _known_secrets() -> list[str]:
+    _load_dotenv()
     vals = [v for k in KEY_VARS if (v := os.environ.get(k))]
     return sorted(set(vals), key=len, reverse=True)
 
@@ -53,19 +61,43 @@ def redact(text) -> str:
         text = str(text)
     for sec in _known_secrets():
         text = text.replace(sec, "***REDACTED***")
-    # JSON フィールド: "api_key":"...", "token":"...", "authorization":"...", "secret"/"password"
-    text = re.sub(r'(?i)("(?:api[_-]?key|access[_-]?token|token|authorization|secret|password)"\s*:\s*")[^"]+',
-                  r"\1***REDACTED***", text)
+    field = (
+        r"(?:x-api-key|api[_-]?key|access[_-]?token|refresh[_-]?token|"
+        r"refreshtoken|id[_-]?token|idtoken|token|secret|password|mailaddress)"
+    )
+    # JSON / dict / header-like fields: "api_key":"...", 'X-API-Key': '...', key=...
+    text = re.sub(
+        rf"(?i)([\"']?{field}[\"']?\s*[:=]\s*[\"']?)[^\"',}}\]\s]+",
+        r"\1***REDACTED***",
+        text,
+    )
+    # Authorization can contain a scheme plus a token; stop at quote/comma/bracket boundary.
+    text = re.sub(
+        r"(?i)([\"']?authorization[\"']?\s*[:=]\s*[\"']?)(?:bearer|basic|token)?\s*[^\"',}\]\s]+",
+        r"\1***REDACTED***",
+        text,
+    )
     # URL クエリ: api_key/token/refreshtoken/key/secret/password 等
     text = re.sub(r"(?i)([?&](?:api[_-]?key|access[_-]?token|refresh[_-]?token|refreshtoken|id[_-]?token|idtoken|token|key|secret|password)=)[^&\s]+",
                   r"\1***REDACTED***", text)
-    # ヘッダ: X-API-Key: ...
-    text = re.sub(r"(?i)(x-api-key\s*:\s*)\S+", r"\1***REDACTED***", text)
-    # ヘッダ: Authorization: <任意scheme> <cred>(Bearer/Basic/Token 等すべて)
-    text = re.sub(r"(?i)(authorization\s*:\s*)[^\n]+", r"\1***REDACTED***", text)
     # 裸の Bearer トークン
     text = re.sub(r"(?i)\bbearer\s+\S+", "bearer ***REDACTED***", text)
     return text
+
+
+def require_jquants_personal_use_confirmed(cfg: dict, *, operation: str) -> None:
+    """J-Quants raw/derived entrypoint gate.
+
+    Missing is treated as False so new environments cannot accidentally sync/build
+    paid-provider data without an explicit personal-use confirmation in config.
+    """
+    pc = (((cfg or {}).get("data_layer") or {}).get("providers") or {}).get("jquants") or {}
+    if pc.get("tos_personal_use_confirmed") is not True:
+        raise SystemExit(
+            f"J-Quants {operation} は config.data_layer.providers.jquants."
+            "tos_personal_use_confirmed=true が必要です。"
+            "個人利用・raw非公開・再配布禁止・手動purge方針を確認してから有効化してください。"
+        )
 
 
 def utcnow_iso(clock=None) -> str:

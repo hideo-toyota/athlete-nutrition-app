@@ -128,7 +128,7 @@ scripts/automation/retry_doctor.sh YYYY-MM-DD
 - 定期自動化(`claude -p`)は 2026/6/15 以降 別クレジット枠。
 - J-Quants / EDINET DB 有料データ層は**別トラック**(`DATA_LAYER_SPEC.md`)。**A0/A1=実装済・実キー疎通OK**。確認は `python3 -m radar data-check --offline` / `python3 -m radar data-check --live --provider jquants|edinet-db`。
 - A1の疎通OKは「実キーで最小endpointが 200 + JSON object を返した」の意味。鍵有効性の監査証跡にする前に、同じendpointが無効キーで 401/403 になる負例確認を値なしで記録する。
-- EDINET DB `companies` / `financials` の minimal sync は本人確認済みの個人内 raw 一時キャッシュ前提で GO。**J-Quants sync と Claude等LLMへの取得本文投入は NO-GO維持**。radarコア(mirror/check/log/score/review)・target-check・value-audit(Phase A・手入力 snapshot)は**この層なしで動く**。
+- EDINET DB `companies` / `financials` の minimal sync は本人確認済みの個人内 raw 一時キャッシュ前提で GO。J-Quants は本人判断済みの個人内利用・raw非公開・手動purge前提で Premium Bulk local 変換 / REST on-demand が GO。**provider raw本文のLLM投入、公開、第三者提供、wrapper/API は NO-GO維持**。radarコア(mirror/check/log/score/review)・target-check・value-audit(Phase A・手入力 snapshot)は**この層なしで動く**。
 - Daloopa は**外部分析補助の別レーン**(`DALOOPA_LANE_SPEC.md`)。OAuth/setup確認までは `discover_companies("AAPL")` の疎通 probe 以外を実行しない。tearsheet/DCF/earnings review は setup成功後も本体data層へ混ぜず、保有株の仮説点検メモに限定する。
 
 ## 安全
@@ -136,4 +136,4 @@ scripts/automation/retry_doctor.sh YYYY-MM-DD
 - `ANTHROPIC_API_KEY` は未設定。自動発注はしない(分析・通知・記録まで)。
 
 ## まだ未実装(実運用後に必要なら)
-`analyze`(日本中小型スクリーニング)・`backtest`・過熱の価格自動判定・J-Quants `data`接続・Obsidian自動連携。
+`analyze`(日本中小型スクリーニング)・`backtest`・過熱の価格自動判定・J-Quants広域API sync・Obsidian自動連携。

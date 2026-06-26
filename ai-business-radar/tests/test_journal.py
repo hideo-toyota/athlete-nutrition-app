@@ -58,6 +58,41 @@ class JournalActionAwareScoringTests(unittest.TestCase):
         self.assertAlmostEqual(outcome["decision_excess_vs_dca"], 0.10)
         self.assertTrue(outcome["hit"])
 
+    def test_score_requires_explicit_asof_for_reproducibility(self):
+        journal.append_decision(self._decision("buy_new"))
+        with self.assertRaises(SystemExit):
+            journal.score_due({
+                "7203": {"2026-06-01": 120.0},
+                "BENCHMARK": {"2026-06-01": 110.0},
+            })
+
+    def test_score_does_not_use_future_horizon_or_mutate_decision(self):
+        did = journal.append_decision(self._decision("buy_new"))
+        before = journal.LOG.read_text(encoding="utf-8")
+        res = journal.score_due({
+            "7203": {"2026-06-01": 120.0},
+            "BENCHMARK": {"2026-06-01": 110.0},
+        }, asof="2026-05-31")
+        after = journal.LOG.read_text(encoding="utf-8")
+        self.assertEqual(res["scored"], [])
+        self.assertEqual(res["pending_future"], [did])
+        self.assertEqual(before, after)
+
+    def test_score_is_idempotent_and_append_only(self):
+        did = journal.append_decision(self._decision("buy_new"))
+        decision_line = journal.LOG.read_text(encoding="utf-8").splitlines()[0]
+        prices = {
+            "7203": {"2026-06-01": 120.0},
+            "BENCHMARK": {"2026-06-01": 110.0},
+        }
+        first = journal.score_due(prices, asof="2026-06-02")
+        second = journal.score_due(prices, asof="2026-06-02")
+        lines = journal.LOG.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(first["scored"], [did])
+        self.assertEqual(second["scored"], [])
+        self.assertEqual(lines[0], decision_line)
+        self.assertEqual(sum(1 for line in lines if json.loads(line).get("type") == "outcome"), 1)
+
     def test_pass_hits_when_asset_lags_dca(self):
         did = journal.append_decision(self._decision("pass"))
         res = journal.score_due({

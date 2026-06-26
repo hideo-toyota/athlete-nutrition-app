@@ -154,11 +154,10 @@ def score_due(prices: dict, asof: str | None = None) -> dict:
     if not isinstance(prices, dict):
         raise SystemExit("価格データは object である必要があります")
     if asof is None:
-        asof_d = date.today()
-    else:
-        asof_d = _date(asof)
-        if asof_d is None:
-            raise SystemExit(f"asof は実在する 'YYYY-MM-DD' で指定してください: {asof}")
+        raise SystemExit("asof は必須です。監査再現性のため 'YYYY-MM-DD' で明示してください")
+    asof_d = _date(asof)
+    if asof_d is None:
+        raise SystemExit(f"asof は実在する 'YYYY-MM-DD' で指定してください: {asof}")
 
     log = _read_log()
     decisions = {r["id"]: r for r in log if r.get("type") == "decision"}

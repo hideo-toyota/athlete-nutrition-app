@@ -164,9 +164,13 @@ def _table(col: str, d: dict, top: int | None = None) -> str:
 def render_mirror(exp: dict, portfolio: dict, cfg: dict, asof: str | None = None) -> str:
     as_of = portfolio.get("as_of", "?")
     staleness_days = cfg.get("policy", {}).get("discipline", {}).get("staleness_days", 5)
-    ref = date.fromisoformat(asof) if asof else date.today()
+    ref_str = asof or as_of
     try:
-        age = (ref - date.fromisoformat(as_of)).days
+        ref = date.fromisoformat(ref_str)
+    except (TypeError, ValueError):
+        ref = None
+    try:
+        age = (ref - date.fromisoformat(as_of)).days if ref is not None else None
     except ValueError:
         age = None
     stale = age is not None and age > staleness_days

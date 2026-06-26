@@ -11,7 +11,7 @@ from pathlib import Path
 from radar.research import (build_evidence, build_investor_brief, build_llm_handoff,
                             build_research_queue, write_evidence, write_investor_brief,
                             write_llm_handoff, write_research_queue)
-from radar.research.common import FORBIDDEN_OUTPUT_TOKENS
+from radar.research.common import FORBIDDEN_OUTPUT_TOKENS, assert_no_forbidden_output, metric_value
 
 ROOT = Path(__file__).resolve().parent.parent
 SENTINEL = "RAW_SENTINEL_SHOULD_NOT_RENDER"
@@ -203,6 +203,25 @@ class ResearchPhaseDTests(unittest.TestCase):
 
     def tearDown(self):
         self.td.cleanup()
+
+    def test_forbidden_output_guard_catches_case_and_japanese_advice_terms(self):
+        bad_cases = [
+            "BUY 7203 now",
+            "target price is 3000",
+            "rank #1",
+            "この銘柄を推奨します",
+            "目標株価は3000円",
+            "割安銘柄ランキング",
+            "強気で買うべき",
+        ]
+        for text in bad_cases:
+            with self.subTest(text=text):
+                with self.assertRaises(SystemExit):
+                    assert_no_forbidden_output(text)
+
+    def test_metric_value_treats_nan_inf_as_unknown(self):
+        self.assertEqual(metric_value({"status": "CALCULATION", "value": float("nan"), "unit": "ratio"}), "UNKNOWN")
+        self.assertEqual(metric_value({"status": "CALCULATION", "value": float("inf"), "unit": "JPY"}), "UNKNOWN")
 
     def test_research_queue_schema_and_no_forbidden_terms(self):
         q = build_research_queue(asof="2026-06-18", derived_root=self.base / "data" / "derived")

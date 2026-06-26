@@ -8,16 +8,42 @@ from __future__ import annotations
 
 import json
 import os
+import urllib.error
 import urllib.parse
-import urllib.request
+
+from . import common, live
 
 API_BASE = "https://api.jquants.com/v1"
 
 
+def _drop_query(url: str) -> str:
+    parts = urllib.parse.urlsplit(url)
+    return urllib.parse.urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+
+
 class JQuantsRestClient:
-    def __init__(self, *, timeout: int = 60) -> None:
+    def __init__(self, *, timeout: int = 60, opener=None) -> None:
         self._id_token: str | None = None
         self._timeout = timeout
+        self._opener = opener or live.UrllibClient(timeout=timeout)
+
+    def _open_json(self, url: str, headers: dict | None = None, *, method: str = "GET", body: bytes | None = None) -> dict:
+        headers = dict(headers or {})
+        try:
+            resp = self._opener(url, headers, method=method, body=body)
+            status = getattr(resp, "status", None)
+            if status != 200:
+                raise SystemExit(common.redact(f"J-Quants REST HTTP {status}: {_drop_query(url)}"))
+            return common.parse_json_dict(getattr(resp, "body", b"") or b"")
+        except SystemExit:
+            raise
+        except urllib.error.HTTPError as e:
+            safe_url = _drop_query(getattr(e, "url", "") or url)
+            raise SystemExit(common.redact(f"J-Quants REST HTTP {e.code}: {safe_url}")) from e
+        except urllib.error.URLError as e:
+            raise SystemExit(common.redact(f"J-Quants REST network error: {e.reason}")) from e
+        except Exception as e:  # noqa: BLE001
+            raise SystemExit(common.redact(f"J-Quants REST error: {e}")) from e
 
     # --- auth (env only; never log token values) ---
     def _post_json(self, path: str, *, data: dict | None = None, params: dict | None = None) -> dict:
@@ -25,10 +51,7 @@ class JQuantsRestClient:
         if params:
             url = f"{url}?{urllib.parse.urlencode(params)}"
         body = json.dumps(data).encode("utf-8") if data is not None else None
-        req = urllib.request.Request(url, data=body, method="POST",
-                                     headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=self._timeout) as r:
-            return json.loads(r.read().decode("utf-8"))
+        return self._open_json(url, {"Content-Type": "application/json"}, method="POST", body=body)
 
     def authenticate(self) -> None:
         refresh = os.environ.get("JQUANTS_REFRESH_TOKEN")
@@ -46,9 +69,7 @@ class JQuantsRestClient:
         if not self._id_token:
             self.authenticate()
         url = f"{API_BASE}{path}?{urllib.parse.urlencode({k: v for k, v in params.items() if v})}"
-        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {self._id_token}"})
-        with urllib.request.urlopen(req, timeout=self._timeout) as r:
-            return json.loads(r.read().decode("utf-8"))
+        return self._open_json(url, {"Authorization": f"Bearer {self._id_token}"})
 
     def daily_quotes(self, *, code: str, date_from: str | None = None, date_to: str | None = None) -> dict:
         return self._get("/prices/daily_quotes", {"code": code, "from": date_from, "to": date_to})

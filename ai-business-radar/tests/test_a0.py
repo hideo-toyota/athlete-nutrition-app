@@ -66,6 +66,25 @@ class A0Tests(unittest.TestCase):
         self.assertNotIn("dXNlcjpwYXNz", common.redact("Authorization: Basic dXNlcjpwYXNz"))
         self.assertNotIn("tok123", common.redact("Authorization: Token tok123"))
 
+    def test_redact_header_dict_repr_and_stops_at_value_boundary(self):
+        msg = "{'X-API-Key': 'topsecret', 'Authorization': 'Bearer abc.def.ghi', 'other': 'safe'}"
+        out = common.redact(msg)
+        self.assertNotIn("topsecret", out)
+        self.assertNotIn("abc.def.ghi", out)
+        self.assertIn("'other': 'safe'", out)
+
+    def test_redact_jquants_auth_env_values(self):
+        os.environ["JQUANTS_REFRESH_TOKEN"] = "refresh-secret"
+        os.environ["JQUANTS_MAILADDRESS"] = "person@example.test"
+        os.environ["JQUANTS_PASSWORD"] = "password-secret"
+        out = common.redact(
+            "refresh-secret person@example.test password-secret "
+            "https://api.jquants.com/v1/token/auth_refresh?refreshtoken=refresh-secret"
+        )
+        self.assertNotIn("refresh-secret", out)
+        self.assertNotIn("person@example.test", out)
+        self.assertNotIn("password-secret", out)
+
     def test_exception_does_not_leak_key(self):
         os.environ["JQUANTS_API_KEY"] = SECRET
 

@@ -209,6 +209,7 @@ def fetch_bulk(
     `file_downloader(url, dest, timeout=...)` are injectable for offline tests.
     """
     dl, pc = _provider_cfg(cfg)
+    common.require_jquants_personal_use_confirmed(cfg, operation="bulk fetch")
     key_getter = key_getter or common.load_api_key
     key = key_getter(pc.get("key_var", "JQUANTS_API_KEY"))
     base_url = str(pc.get("base_url") or "").rstrip("/")

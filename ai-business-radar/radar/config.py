@@ -91,6 +91,8 @@ def _check_data_layer(dl: dict) -> None:
                     raise SystemExit(f"config: data_layer.providers.{name}.{req} は非空文字列")
             if "plan_or_limit" in pc and (not isinstance(pc["plan_or_limit"], str) or not pc["plan_or_limit"]):
                 raise SystemExit(f"config: data_layer.providers.{name}.plan_or_limit は非空文字列")
+            if "tos_personal_use_confirmed" in pc and not isinstance(pc["tos_personal_use_confirmed"], bool):
+                raise SystemExit(f"config: data_layer.providers.{name}.tos_personal_use_confirmed は真偽値")
             datasets = pc.get("datasets")
             if datasets is not None:
                 if not isinstance(datasets, dict):

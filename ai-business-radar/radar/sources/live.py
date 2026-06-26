@@ -43,8 +43,8 @@ class UrllibClient:
         self.timeout = timeout
         self.max_bytes = max_bytes
 
-    def __call__(self, url, headers):  # pragma: no cover - 実ネットワークはテスト対象外
-        req = urllib.request.Request(url, headers=headers, method="GET")
+    def __call__(self, url, headers, *, method="GET", body=None):  # pragma: no cover - 実ネットワークはテスト対象外
+        req = urllib.request.Request(url, data=body, headers=headers, method=method)
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as r:
                 body = r.read(self.max_bytes + 1)

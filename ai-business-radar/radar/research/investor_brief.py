@@ -15,6 +15,9 @@ from .common import (
     ROOT,
     assert_no_forbidden_output,
     edinet_jquants_cross_check,
+    finite_number,
+    format_multiple,
+    format_pct,
     jquants_market_context,
     jquants_summary,
     load_edinet_company_map,
@@ -35,7 +38,7 @@ def _num(doc: dict, key: str) -> float | None:
     if not isinstance(m, dict) or m.get("status") != "CALCULATION":
         return None
     v = m.get("value")
-    return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+    return finite_number(v)
 
 
 def _text_feature(doc: dict, key: str) -> str:
@@ -43,12 +46,12 @@ def _text_feature(doc: dict, key: str) -> str:
 
 
 def _pct(value) -> str:
-    return "UNKNOWN" if not isinstance(value, (int, float)) else f"{value * 100:.1f}%"
+    return format_pct(value)
 
 
 def _mult(value) -> str:
     """Format a valuation multiple as e.g. '12.34x', or UNKNOWN."""
-    return "UNKNOWN" if not isinstance(value, (int, float)) else f"{value:.2f}x"
+    return format_multiple(value)
 
 
 _MISSING_EDINET_MARKERS = (

@@ -778,7 +778,7 @@ def main() -> None:
     pl.add_argument("path", nargs="?", help="判断JSON(既定: journal/decision_input.json)")
     ps = sub.add_parser("score", help="期日到来分をDCA比で機械採点(未来不参照)")
     ps.add_argument("path", nargs="?", help="価格JSON(既定: journal/prices.json)")
-    ps.add_argument("--asof", help="採点基準日 YYYY-MM-DD(既定: 今日)。過去固定で監査再現可能")
+    ps.add_argument("--asof", required=True, help="採点基準日 YYYY-MM-DD(監査再現性のため必須)")
     sub.add_parser("review", help="較正レポート(裁量 vs 規律 / 対DCA)")
     pt = sub.add_parser("target-check",
                         help="目標倍率の必要条件/破綻条件を純計算で可視化(銘柄なし・推奨なし・予測なし)")

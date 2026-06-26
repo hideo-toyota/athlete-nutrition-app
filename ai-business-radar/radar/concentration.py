@@ -103,8 +103,9 @@ def look_through(portfolio: dict, cfg: dict) -> dict:
                                "top_sum": sum(top.values())})
             it, pt = _asof_tuple(idx_as_of), _asof_tuple(port_as_of)
             if it and pt and it > pt:
-                data_warnings.append(
-                    f"指数 {ref} の as_of({idx_as_of})がポートフォリオ as_of({port_as_of})より新しい(未来データの可能性)")
+                raise SystemExit(
+                    f"指数 {ref} の as_of({idx_as_of})がポートフォリオ as_of({port_as_of})より新しいため停止"
+                )
             if idx_as_of and it is None:
                 data_warnings.append(f"指数 {ref} の as_of '{idx_as_of}' が解釈不能(鮮度を確認できない)")
             if not sw and not rw and not cw and not top:
