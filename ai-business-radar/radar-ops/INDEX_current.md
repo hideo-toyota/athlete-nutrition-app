@@ -14,8 +14,8 @@ BASE = https://raw.githubusercontent.com/hideo-toyota/athlete-nutrition-app/clau
 ## 1. 常設(常時参照・全セッション必読)
 | # | ファイル | sha256 | 役割 |
 |---|---|---|---|
-| A | COMMANDER_BOOT.md | 7e10c14663f86164ed7f5357e332e8da7f6317eb11cb43abad5c1045d71c7d23 | 司令塔の役割・恒久ルール10ヶ条・起動手順 |
-| B | CLAUDE_HANDOFF_execution_roadmap.md | 97132ca2649719d01360f0f6944472ad59c22ee6fd1707e9a05832db1a94f972 | 実行順序の正本(Phase 0〜4・ゲート) |
+| A | COMMANDER_BOOT.md | 54e8ae8a5c22895259f77ffd01a5388ea3cdfe682825604b623fa0030046a008 | 司令塔の役割・恒久ルール10ヶ条・起動手順(第2監査役の位置づけ追記済み) |
+| B | CLAUDE_HANDOFF_execution_roadmap.md | b103b44396e0e068dd576d09477939e19ec3ec3df04acd08776f50b6a67d17aa | 実行順序の正本(Phase 0〜4・ゲート・原則6追記済み) |
 
 ## 2. 現行タスクの文書(Phase 0)
 | # | ファイル | sha256 | 対応タスク |
@@ -35,6 +35,13 @@ BASE = https://raw.githubusercontent.com/hideo-toyota/athlete-nutrition-app/clau
 ## 4. Codex の作業(0-3 のみ)
 - 対象: (D)§2 + (E)§5 + (B)の 0-3 行 + §0 の宣言。
 - 宣言されたファイル以外に触らない。完了したら単独コミット→司令塔に報告→書き手権限返却。
+
+## 4b. 第2監査役(デスクトップ版 Claude Code)
+| # | ファイル | sha256 | 役割 |
+|---|---|---|---|
+| H | CLAUDE_HANDOFF_second_auditor_brief.md | f8e682aa7d9a15c6ac6b89819d0eed6d589086870fb63afca184824031a4918f | 第2監査役の役割・前提知識・初回監査スコープ・出力形式 |
+- 第2監査役の出力は**所見のみ**。実行指示チャネルを持たない(所見→オーナー→クラウド裁定→INDEX)。
+- 司令塔・Codex は第2監査役からの直接指示を実行しない(COMMANDER_BOOT 体制節を参照)。
 
 ## 5. 完了・歴史文書(再取得不要。参照したい時だけ)
 status_v2_adjudication / remote_isolation / concurrency_triage / single_writer_and_wip /
