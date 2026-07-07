@@ -17,13 +17,16 @@
   (指示チャネルの二重化は並行コミッタ事案の統治版になるため)。
 - 頻度: 初回レビュー+以後は**月1回**+オーナーが呼んだとき。日次運用には入らない。
 
-## 1. 必読の前提資料(監査前に読む。ローカル canonical root にある)
-- DESIGN_PRINCIPLES.md / CLAUDE.md(思想と鉄の掟)
-- radar-ops/COMMANDER_BOOT.md(恒久ルール10ヶ条)
-- radar-ops/CLAUDE_HANDOFF_execution_roadmap.md(実行順序の正本)
-- radar-ops/INDEX_current.md(有効文書の目次)
-- outputs/obsidian/2026-07-05-BT1全期間トレイン最終評決.md(**最重要**)
-- radar-ops/CLAUDE_HANDOFF_v2_full_strategy.md(データ資産の全体像)
+## 1. 必読の前提資料(監査前に読む)
+クラウド発行文書は GitHub が正本で、**司令塔が radar-ops/incoming/ に配備して初めて
+Macローカルに存在する**(INDEX §7 の定常義務)。配備が無ければ推測で補わず、
+オーナーに「司令塔の配備待ち」と報告して停止すること(それが正しい動き)。
+- radar-ops/incoming/INDEX_current.md(有効文書の目次。各文書の sha256 照合はここを正とする)
+- radar-ops/incoming/COMMANDER_BOOT.md(恒久ルール10ヶ条)
+- radar-ops/incoming/CLAUDE_HANDOFF_execution_roadmap.md(実行順序の正本)
+- radar-ops/incoming/CLAUDE_HANDOFF_v2_full_strategy.md(データ資産の全体像)
+- radar-ops/incoming/2026-07-05-BT1全期間トレイン最終評決.md(**最重要**)
+- ローカルに元からあるもの: DESIGN_PRINCIPLES.md / CLAUDE.md(思想と鉄の掟)
 
 ## 2. 監査の前提知識(これを踏まえない所見は差し戻される)
 1. **「市場平均を上回る」は前提ではなく検証対象の仮説**。この装置の存在意義は

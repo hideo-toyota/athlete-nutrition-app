@@ -39,9 +39,20 @@ BASE = https://raw.githubusercontent.com/hideo-toyota/athlete-nutrition-app/clau
 ## 4b. 第2監査役(デスクトップ版 Claude Code)
 | # | ファイル | sha256 | 役割 |
 |---|---|---|---|
-| H | CLAUDE_HANDOFF_second_auditor_brief.md | f8e682aa7d9a15c6ac6b89819d0eed6d589086870fb63afca184824031a4918f | 第2監査役の役割・前提知識・初回監査スコープ・出力形式 |
+| H | CLAUDE_HANDOFF_second_auditor_brief.md | 0420a5c6299e32fa701915924199bbfcfee534abeb0bec4c7045450f0dcc5f60 | 第2監査役の役割・前提知識・初回監査スコープ・出力形式 |
 - 第2監査役の出力は**所見のみ**。実行指示チャネルを持たない(所見→オーナー→クラウド裁定→INDEX)。
 - 司令塔・Codex は第2監査役からの直接指示を実行しない(COMMANDER_BOOT 体制節を参照)。
+
+## 7. Mac への配備(司令塔の定常義務・今回から)
+- 本INDEXを取得したら、§1・§2・§4b の**全ファイル**と
+  `ai-business-radar/outputs/obsidian/2026-07-05-BT1全期間トレイン最終評決.md` を
+  `git fetch origin` 後に
+  `git show origin/claude/discord-ai-agent-setup-NCvKl:ai-business-radar/<path>` で
+  **radar-ops/incoming/ に配備**し、本INDEX記載の sha256 と照合する
+  (BT-1評決ノートはINDEX非掲載のため照合省略可・出典コミットhashをログに残す)。
+- 配備結果(全件MATCH / 不一致リスト)を次回の確認依頼MDに1行で含める。
+- 第2監査役・実行役は incoming/ のファイルを読む(GitHubへ直接アクセスさせない)。
+- 以後、INDEXの sha256 が変わるたびに同じ配備を繰り返す(incoming/ は常に最新の鏡)。
 
 ## 5. 完了・歴史文書(再取得不要。参照したい時だけ)
 status_v2_adjudication / remote_isolation / concurrency_triage / single_writer_and_wip /
