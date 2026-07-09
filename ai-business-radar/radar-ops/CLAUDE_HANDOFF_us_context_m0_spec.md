@@ -1,58 +1,63 @@
-# CLAUDE_HANDOFF — 米国地合いレーン M0 実装仕様(司令塔用・Phase 2b発効)
+# CLAUDE_HANDOFF — 米国地合いレーン M0 実装仕様 v2(司令塔用・Phase 2b)
 
-クラウド側裁定者より。棚卸し(CONFIRM_us_sector_inventory_20260709)の確定事実
-「**米国マクロ市況の取得実体は現状ゼロ・us_evidenceは休眠孤立レーン(不介入継続)**」を前提に、
-新規レーンとして設計する。目的は**地合いの観測**(ISSUE_MAP 論点5の計器)であり、
-売買シグナルではない。「大きく負ける日を避ける」ためのBT-1系防御思想の延長。
+**v2改訂(2026-07-10)**: 設計審査パネル(Codex対抗提案・全12項目採用)を反映。v1(afed35f)を置換。
+目的は不変 = 地合いの**観測**(ISSUE_MAP 論点5)。売買シグナルではない。
 
-## 0. オーナーの事前作業(1つ・5分)
-- FRED(セントルイス連銀)の**無料APIキー**を登録取得し、Macのターミナルで .env に
-  `FRED_API_KEY=...` を直接記入(いつもの流儀: チャットに貼らない)。
+## 0. オーナー事前作業
+- FRED無料APIキーを取得し、Macで .env に `FRED_API_KEY=...` を直接記入(チャットに貼らない)。
 
-## 1. データソース(全て無料・日次・遅延許容)
-| 系列 | ソース | 備考 |
+## 1. 実装順序(重要・v2で変更): まず契約書、次に実装
+**D0 → SOURCE_CONTRACT確定 → 実装**、の3段。いきなり実装しない(Codex提案11)。
+- **D0(読み取り・実測)**: 各系列のURL/ライセンス・ToS/更新時刻の実測/欠損時挙動/最新判定条件。
+- **SOURCE_CONTRACT_us_context_m0.md を先に作成**(各系列の契約表)。裁定者が確認後に実装GO。
+
+## 2. 二段階発火(Codex提案1・10採用)
+- **07:00 JST = partial probe**(間に合う系列だけ取得)/ **08:30 JST = retry/finalize**。
+- daily-update/brief は**最新の非stale runだけ**を読む。**全系列成功を待たない**(揃わない系列はUNKNOWN)。
+
+## 3. 系列別の採用方針(Codex提案3・12 = M0-lite・信頼性順)
+| 系列 | ソース | M0での扱い |
 |---|---|---|
-| 米10年金利・2年金利・長短差 | FRED API(DGS10/DGS2) | 公式・無料キー |
-| ドル円 | FRED(DEXJPUS) | 同上 |
-| S&P500 | FRED(SP500) | 同上 |
-| VIX | Cboe公式の日次履歴CSV | 遅延/日次で十分と裁定済み |
-| Nasdaq100・SOX | 実装D0で無料日次ソースを選定(候補: Stooq等)。出典+as_of必須・ToS確認 | 取れない系列はUNKNOWN表示で開始してよい(全系列揃うまで待たない) |
-| 日経先物ナイトセッション | J-Quants /derivatives/bars/daily/futures(NK225F・EO/EC列) | D0でプラン可否と更新時刻を実測 |
+| 米10年/2年金利・長短差 | FRED(DGS10/DGS2) | **本採用**(更新が間に合う) |
+| S&P500 | FRED(SP500) | **鮮度条件付き採用**(更新が07:00に間に合わない日はUNKNOWN・08:30で再取得) |
+| VIX | Cboe日次CSV | **本採用・鮮度ゲート必須**(観測日=対象米セッション日の時のみ文言化。不一致はUNKNOWN(stale_source)) |
+| ドル円 | FRED(DEXJPUS) | **stale注意付き**(NY正午値・遅延あり。鮮度が1営業日超なら文言生成禁止=UNKNOWN)。FX専用ソースは別裁定 |
+| Nasdaq100・SOX | D0で安定CSVソースを探す。Stooqは**candidate/backup**(HTMLを返した実績あり) | 安定ソースが見つかるまで**UNKNOWN許容で開始**(誤ったFACT注入より安全) |
+| 日経先物ナイト | J-Quants NK225F(EO/EC) | D0でプラン可否・更新時刻を実測 |
 
-## 2. 実装
-- `scripts/automation/us_market_context.py` + LaunchAgent `com.radar.us-context`
-  (**平日07:00 JST** = 米市場クローズ後・東京寄り前)。
-- 出力: `data/derived/market_context/<date>.json`(PIT追記・上書きしない)
-  形式例: asof / sp500_1d / nasdaq_1d / sox_1d / vix_level / vix_1d / us10y_bp_1d /
-  us2y_bp_1d / usdjpy_1d / nk_futures_night(EO→EC) / sources(出典+取得時刻) / missing[]
-- **翻訳ルール(固定文言・INFERENCE明記・変更は裁定のみ)**:
-  - SOX ±2%超 → 「半導体・電子材料: 追い風/逆風」
-  - Nasdaq ±1.5%超 → 「グロース系: 追い風/逆風」
-  - ドル円 ±1円超 → 「輸出(自動車等): 追い風/逆風・内需輸入コスト: 逆/順」
-  - 米10年金利 ±10bp超 → 「高PER系: 逆風/追い風」
-  - VIX 25超 or 前日+20%超 → 「ボラ上昇: 新規検証は縮小が既定」
-  - 閾値はconfig(`us_context.*`)・ハードコード禁止。該当なしの日は「特記なし」
-- **注入先(2箇所のみ)**: daily-update サマリに1行(「米地合い: SOX+2.1% 半導体追い風 /
-  VIX 14.8 特記なし」形式)+ investor-brief 冒頭に3行以内のセクション。
-  **codex_selection・検証優先度・シグナルへの接続は禁止**(観測のみ)。
-- 欠損の扱い: 取得失敗した系列は前日値を出さず **UNKNOWN(取得失敗)** と正直表示
-  (educationの完全性ゲートと同思想)。
+## 4. 鮮度とPIT(Codex提案4・7・8採用)
+- **asofを3つに分離(必須)**: `run_date_jst` / `us_session_date` / `source_observation_date`。
+  1日変化はカレンダー前日でなく「**前回有効観測日**」と比較。
+- **正本は immutable な `market_context_runs.jsonl`**(追記専用・同日リトライも別行)。
+  `<date>.json` は最新ビューの再生成扱い(上書き禁止の対象を明確化)。
+- 各系列に `status: ok | stale | missing` を持たせ、statusがokの系列のみ文言化。
 
-## 3. テスト(合成)
-- 各翻訳ルールの閾値境界 / 全系列欠損日でもUNKNOWN表示で完走 / PIT追記(上書きなし) /
-  FORBIDDEN非抵触 / 既存テスト回帰なし
+## 5. 文言(Codex提案5採用・最重要 — 推奨誤読の防止)
+- 「追い風/逆風」は**廃止**。観測語に弱める:
+  例) `SOX -2.1%(as_of 7/8): 半導体・電子材料に外部地合いの負圧を確認(推論/INFERENCE)`
+  「観測上の圧力: positive/negative」「検証時の注意」の枠でのみ表現。
+- **必ず実数・前日比・as_of を併記**(Codex提案6)。閾値補正(実現ボラ等)はM1送り。
+- 固定の但し書き: 「本行は地合いの観測であり売買推奨ではない(ISSUE_MAP論点5)」。
 
-## 4. D0(実装前・30分)
-- FREDキー疎通 / Cboe CSVの形式 / Nasdaq・SOXの無料ソース選定(ToS・出典明記) /
-  NK225F のEO/EC更新タイミング実測(07:00発火で前夜分が取れるか)
+## 6. 注入先(不変)
+- daily-update サマリ1行 + investor-brief 冒頭3行以内。
+- **codex_selection・検証優先度・シグナルへの接続は禁止**。観測のみ。
 
-## 5. DoD
-- 初回実発火で market_context.json 生成+daily-update/briefへの注入を目視 /
-  全テスト通過 / 単独コミット(D0報告含む) / Obsidian記録 / 確認依頼MD(報告リポ経由)
+## 7. launchd実務(Codex提案9採用)
+- LaunchAgentは対話シェル環境を読まない。スクリプトが .env を**明示ロード**すること。
+- D0受領条件に「launchd実行時にキーが設定済み/未設定だけをログ(値は出さない)」を追加。
 
-## 6. 位置づけの明記
-- ISSUE_MAP 論点5の計器。judgment_lane の相場観採点(MV系)の文脈データにもなる。
-- us_evidence(休眠)とは別物・不介入継続。RG-1(レジーム定式化)は本レーンの観測が
-  溜まってから別途裁定(観測なしにレジーム式を作らない)。
+## 8. テスト
+- 二段階発火(07:00で欠け→08:30で補完)/ 各系列のstale判定 / 3つのasof分離 /
+  JSONL追記(上書きなし)/ 全系列欠損でもUNKNOWN表示で完走 / 文言に推奨語が出ない /
+  FORBIDDEN非抵触 / 既存回帰なし。
 
-規律不変: PIT / UNKNOWN正直表示 / シグナル接続禁止 / 秘密は.env / push無し(報告リポのみ)。
+## 9. DoD
+- SOURCE_CONTRACT確定(裁定者確認)→ 実装 → 二段階発火の実発火目視 → 単独コミット →
+  Obsidian記録 → 確認依頼MD(報告リポ経由)。
+
+## 10. 位置づけ
+- ISSUE_MAP論点5の計器 / judgment_lane の相場観採点の文脈データ。
+- us_evidence(休眠)とは別物・不介入継続。RG-1は観測が溜まってから別裁定。
+
+規律不変: PIT / UNKNOWN正直表示 / 推奨語禁止・シグナル接続禁止 / 秘密は.env / push無し(報告リポのみ)。
