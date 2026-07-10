@@ -54,3 +54,16 @@
   INDEX への掲載（相場観ログの正本化・判断記録レーンとの接続）は**次便**で扱う。
   原則の確認（オーナー指示より）: **市場超過は前提でなく、判断ログで検証する仮説**
   （ANALYSIS_QUALITY_RULES R2 および判断記録レーン §1 と整合・矛盾なし）。
+- 2026-07-10（同日・追記2）: オーナー指示により**次便キュー Q10 を登録**。
+
+## 6. 次便キュー（オーナー指示・急ぎでない）
+### Q10 — MV-001 相場観ログの正式取り込み（判断記録レーン接続便で実施）
+- 入力: `HANDOFF_OPEN_ITEMS_20260710.md`・`journal/market_view_log.jsonl`（MV-001・前セッションのローカル
+  = Mac/live に存在。**配送待ち PENDING_DELIVERY**・受領時に sha256 照合）。
+- 作業: MV-001 のスキーマを **judgment_lane（`CLAUDE_HANDOFF_judgment_record_lane.md` §2）と
+  ANALYSIS_QUALITY_RULES の相場観規定（オーナー参照「R9」）に整合**させ、`journal/` の正式台帳として
+  INDEX に掲載する（PIT・append-only・writer 必須・推奨化禁止ガードは判断記録レーンと同一）。
+- ⚠️ 版差の記録（正直申告）: GitHub 正本の `ANALYSIS_QUALITY_RULES.md`（v1 正本化・sha `bf82eb2f…`）は
+  **R0–R7 のみで R9 が存在しない**。オーナー参照の R9 は Mac/live 版の規定と推定 → Q10 実施時に
+  Mac/live 版を受領・突合し、必要なら ANALYSIS_QUALITY_RULES を v2 改版（R8/R9 追補）してから取り込む。
+- 期限: なし（急ぎでない・判断記録レーン実装 SPEC と同便が自然）。
