@@ -69,6 +69,10 @@
 - 期限: なし（急ぎでない・判断記録レーン実装 SPEC と同便が自然）。
 
 ### Q11 — kabutan lunch 分析の訂正と自動品質ゲート追補（Codexレビュー 2026-07-10 受理）
+- **状態更新（2026-07-10 同日）: SPEC を前倒し発行済み** = `CLAUDE_HANDOFF_kabutan_quality_gates_spec.md`
+  （preclose 便でも既知誤り #7/#8 が再発しプロセス欠陥と認定 → 「次便」から当日発行へ繰上げ。
+  訂正2号+暫定措置（因果較正/保有読替の2節降格）は
+  `reports/CLAUDE_HANDOFF_codex_preclose_review_ruling_20260710.md` 参照）。
 - 裁定: Codexレビュー（公開品質4/10・指摘8点）を**概ね妥当と認定**。処置順:
   1. **即時（司令塔）**: 指摘#1（7236 momentum=15.0 vs 本文「80台」）・#2（3銘柄集計の非再現）を
      `kabutan_observer_lunch.json` と**一次突合で確定してから**、投稿済み本文へ訂正返信（append-only・
