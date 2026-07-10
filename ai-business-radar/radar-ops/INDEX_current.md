@@ -24,6 +24,7 @@
 | `CLAUDE_HANDOFF_judgment_record_lane.md` | 判断記録レーン | 発効 ACTIVE |
 | `CLAUDE_HANDOFF_monthly_intake_gate.md` | 月次投入ゲート | 発効 ACTIVE（初回=2026-07） |
 | `CLAUDE_HANDOFF_kabutan_quality_gates_spec.md` | kabutan 品質ゲート（Q11・実装GO） | 発行 2026-07-10（同日追補） |
+| `CLAUDE_HANDOFF_phase2c1_snapshot_spec.md` | Phase 2c-1 snapshot（実装GO・月次ゲート振替枠） | 発行 2026-07-11 |
 
 ## §3 配送経路
 - 報告・確認依頼は `radar-ops/reports/` に置き、`scripts/publish_reports.sh`（秘密スキャン必須）で reports リポ（`equity-radar-reports`）へ配送。
@@ -58,6 +59,7 @@ b687e98b59273a4a33ab9e75290a7e53c5d3140839c416a9c9c2250ed46e520d  session-starte
 31ee8325a4c667a74783d99f08f159aca9ee6206ee409c51b06bd692514fe5d9  session-starters/05_code_audit_fix_session.md
 412bceed218e1cfa79981f4fdcab5a20ccc249dc5dfa54c5592b282f78b784ea  session-starters/06_cloud_adjudicator_session.md
 a93ff45cd2e425dc28eb40fc16b82bd230117cb477c6d03cb227b2437e6f8afa  CLAUDE_HANDOFF_kabutan_quality_gates_spec.md
+aa79ee4f717e3c9017c3640bef20bfa1cf8960a1a2463c5b2009e55a74124255  CLAUDE_HANDOFF_phase2c1_snapshot_spec.md
 ```
 
 > 注: `incoming/` は取込ミラー（gitignore）。上記は正本ツリー（`ai-business-radar/radar-ops/`）配下の実体に対する照合値。
@@ -72,3 +74,4 @@ a93ff45cd2e425dc28eb40fc16b82bd230117cb477c6d03cb227b2437e6f8afa  CLAUDE_HANDOFF
 - v1（`75fceeac…`）: G0/G1 世代の目次・§7 8ファイル配備。
 - v2（本書・2026-07-10）: 正本群を ROLES/ROADMAP v2・判断記録レーン・月次投入ゲート・改訂 session-starters(00–06) に更新。§7 を全13ファイルの sha256 マニフェストに刷新。
 - v2 追補（同日）: kabutan 品質ゲート SPEC（Q11 前倒し発行）を §2/§7 に追加（計14ファイル）。実装時に `CAPABILITY_MANIFEST.md` を追加予定（ゲートC）。
+- v2 追補2（2026-07-11）: Phase 2c-1 snapshot SPEC を §2/§7 に追加（計15ファイル・月次投入ゲート §5 の振替条項発動 = 当月投入枠を M0 から 2c-1 へ）。
