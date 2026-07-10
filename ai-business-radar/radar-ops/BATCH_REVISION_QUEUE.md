@@ -48,3 +48,9 @@
 
 ## 5. 履歴
 - 2026-07-10: 新世代裁定者が Q1–Q9 を発行。Q2 で正本ツリーを `ai-business-radar/radar-ops/` に初配備。M0/2c/DT-1b は次便へ持ち越し（§2）。
+- 2026-07-10（同日・追記）: **オーナー裁定 = 既発行 v2（87b7eec）で宿題A（INDEX v2・ROLES v2）充足**。
+  なお `HANDOFF_OPEN_ITEMS_20260710.md` と `journal/market_view_log.jsonl`（MV-001・オーナー相場観表明）は
+  GitHub 正本に**未配送**（Mac/live のみに存在と推定・PENDING_DELIVERY）。受領後に sha256 照合のうえ、
+  INDEX への掲載（相場観ログの正本化・判断記録レーンとの接続）は**次便**で扱う。
+  原則の確認（オーナー指示より）: **市場超過は前提でなく、判断ログで検証する仮説**
+  （ANALYSIS_QUALITY_RULES R2 および判断記録レーン §1 と整合・矛盾なし）。
