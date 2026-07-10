@@ -42,7 +42,7 @@
 | `session-starters/06_cloud_adjudicator_session.md` | クラウド裁定者（新規） |
 
 ## §7 配備照合マニフェスト（sha256）
-起動時に各正本の sha256 一致を確認する（不一致は着手前に停止・報告）。本 v2 バッチの全13ファイル:
+起動時に各正本の sha256 一致を確認する（不一致は着手前に停止・報告）。**照合対象 = 下記 manifest 15件 + INDEX 自身1件 = 計16件**（INDEX 自身の期待 sha256 は自己参照不能のため、発行カバー/boot 指示書が搬送する）。session-starters は `incoming/session-starters/` 配下の実体を照合する（通常パスの旧版と混同しない）:
 
 ```
 bf82eb2f9b5cdf3ebdbd497abc64d92ec474b56817c50d73f5223c77e876fcb0  ANALYSIS_QUALITY_RULES.md
@@ -75,3 +75,4 @@ aa79ee4f717e3c9017c3640bef20bfa1cf8960a1a2463c5b2009e55a74124255  CLAUDE_HANDOFF
 - v2（本書・2026-07-10）: 正本群を ROLES/ROADMAP v2・判断記録レーン・月次投入ゲート・改訂 session-starters(00–06) に更新。§7 を全13ファイルの sha256 マニフェストに刷新。
 - v2 追補（同日）: kabutan 品質ゲート SPEC（Q11 前倒し発行）を §2/§7 に追加（計14ファイル）。実装時に `CAPABILITY_MANIFEST.md` を追加予定（ゲートC）。
 - v2 追補2（2026-07-11）: Phase 2c-1 snapshot SPEC を §2/§7 に追加（計15ファイル・月次投入ゲート §5 の振替条項発動 = 当月投入枠を M0 から 2c-1 へ）。
+- v2 追補3（2026-07-11）: §7 冒頭の件数誤記を訂正（「全13ファイル」のまま15件掲載していた = Codex F3 指摘・factual_correction）。照合対象の定義（manifest 15 + INDEX 自身 = 16件）と INDEX 自身 sha の搬送方法、session-starters の照合パス（incoming/ 配下）を明文化。

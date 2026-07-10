@@ -104,3 +104,19 @@
      2c-1 で doctor に snapshot 行が並記された今、400/3818 誤読は表示レベルでも解消可能。
 - 位置づけ: 恒久修正クラス（月次ゲート例外）。ただし実装枠は Q11 実弾→2c-2 の直列を乱さない
   タイミングで（遡及監査は読み取りのみなので随時可）。
+- **スコープ更新（2026-07-11・Codex findings F9/F10/F11 受理・append-only）**:
+  1. **EDINET「400」の3指標分離を採用**（F9）: `corpus_coverage`（07-07 に 3818/3818 完了）/
+     `latest_slice_visibility`（旧 reader の最新 asof 可視範囲 400/3818 — この記述は部分的に正しい）/
+     `snapshot_coverage`（2c-1: with_filing 3818/3837・missing 19）。Q12 訂正文はこの3語で書く。
+  2. **遡及監査の対象を拡張**（F10）: 07-09 / 07-10 / **07-11** の3通（07-07 版は当該論点で正しいと
+     Codex 自身が確認 → 監査対象から除外し、正常例として突合表に記載）。
+  3. **前方ゲート要求仕様の確定**（F11・オーナー経由で Codex に依頼する内容）:
+     (a) `incoming/INDEX_current.md`・`ROLES_current.md`・`ANALYSIS_QUALITY_RULES.md` の必読
+     (b) v2 session-starters の正パス（incoming/ 配下）参照
+     (c) EDINET 3指標分離の遵守 (d) 同日再実行は append-only または版管理（PIT 規律との衝突解消）
+     (e) 既確定事実と矛盾する implementation queue を生成しない。
+  4. **orchestrator 統合分析の暫定隔離**（F7 関連）: Q11 ゲートは kabutan レーンのみを保護。
+     orchestrator 経路はゲート外につき、その成果物は**前方ゲート実装まで draft 扱い**
+     （Obsidian/CONFIRM_ への無検証転記禁止）。07-11 04:02 の
+     `orchestrator_integrated_0402.md` は **NO_POST / quarantine** 指定（既知誤認3点を含む）。
+     **月曜の Q11 実弾成功による暫定措置解除は kabutan レーン限定**であり、orchestrator には及ばない。
