@@ -1,0 +1,19 @@
+{
+  "_comment": "value-audit score --from-file の手入力サンプル(Phase A)。価格・実績は手入力=ASSUMPTION。価格には日付と available_at を必須(後知恵防止)。対DCAは未算出(UNKNOWN)。",
+  "thesis_id": "(register で発行された thesis_id を貼る)",
+  "next_earnings_available_at": "2026-08-07T15:30:00+09:00",
+  "price_basis": "manual_next_trading_close",
+  "entry_price": 2800.0,
+  "entry_price_date": "2026-05-11",
+  "entry_price_available_at": "2026-05-11T15:30:00+09:00",
+  "exit_price": 3100.0,
+  "exit_price_date": "2026-08-07",
+  "exit_price_available_at": "2026-08-07T15:30:00+09:00",
+  "actuals": {
+    "revenue_growth": 4.5,
+    "op_margin": 7.5
+  },
+  "asof": "2026-08-08",
+  "source": "manual",
+  "claim_tags": { "actuals": "ASSUMPTION", "prices": "ASSUMPTION", "computed": "CALCULATION(ASSUMPTION依存)" }
+}

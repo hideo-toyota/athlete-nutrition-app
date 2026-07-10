@@ -1,0 +1,34 @@
+# 認証情報・秘密(値は絶対にコミットしない)
+.env
+.claude/settings.local.json
+.cursor/mcp.json
+
+# データ提供元の取得物(raw/cache/derived はローカルのみ)
+data/raw/
+data/cache/
+data/derived/
+data/metadata/
+
+# provider由来の派生分析出力(ローカル運用のみ・再配布しない)
+outputs/research_queue.md
+outputs/research_queue.csv
+outputs/evidence/
+outputs/llm_handoff/
+outputs/ai_audit/
+outputs/doctor.md
+outputs/automation/
+outputs/investor_brief/*.md
+outputs/investor_brief/*.json
+outputs/discord/llm_prompt_*.md
+
+# Python
+__pycache__/
+*.pyc
+.DS_Store
+
+# 個人の判断ログ・実データ(テンプレの *.example.json はコミット、実データは除外)
+decision_log.jsonl
+journal/decision_input.json
+journal/prices.json
+journal/value_thesis.jsonl
+journal/value_outcomes.jsonl

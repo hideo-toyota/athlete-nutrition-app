@@ -1,0 +1,21 @@
+{
+  "_comment": "見送り(pass)用テンプレート。これを decision_input.json にコピーし、調査したが買わない判断も記録する。score では対象がDCAを下回れば hit(避けた判断)として扱う。",
+  "ticker": "7203",
+  "account": "watchlist",
+  "action": "pass",
+  "rationale": "なぜ見送るか(事業・価格・規律・不確実性のどれが主因か)",
+  "prediction": {
+    "claim": "12ヶ月でこの銘柄はDCAベンチに劣後する、または不確実性が高く見送りが妥当だったと検証する",
+    "metric": "対象銘柄リターン - DCAベンチリターン",
+    "threshold": "0%未満なら見送り判断はhit",
+    "horizon": "2027-06-22"
+  },
+  "vs_discipline": "in_discipline",
+  "override_reason": "",
+  "size": { "amount_jpy": 0 },
+  "ref_price": 2800,
+  "benchmark_ref": 67000,
+  "emotion_note": "見送りの心理状態(高値恐怖/過信/面倒/冷静など)",
+  "sources": ["outputs/llm_handoff/YYYY-MM-DD.md", "outputs/data_quality_audit.md"],
+  "retrieved_at": "2026-06-22T21:30:00+09:00"
+}

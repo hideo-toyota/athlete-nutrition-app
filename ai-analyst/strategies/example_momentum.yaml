@@ -1,0 +1,35 @@
+# 戦略ルールの例(雛形)。invest-analyst がこれを読んで判定します。
+# ⚠️ これはデモ用のサンプルです。投資助言ではありません。自己責任で調整してください。
+
+name: example_momentum
+description: 単純な移動平均クロス + 出来高急増の例
+
+# 監視対象銘柄(J-Quants の銘柄コード)
+watchlist:
+  - "8105"   # 例: BitcoinJPN(画像の例)
+  - "7203"   # 例: トヨタ自動車
+
+# シグナル条件(すべてデモ値)
+signals:
+  golden_cross:
+    short_ma: 25
+    long_ma: 75
+    description: 短期MAが長期MAを上抜けたら成立
+  volume_spike:
+    lookback_days: 20
+    multiple: 2.0
+    description: 直近平均出来高の2倍を超えたら「熱量」シグナル
+
+# バックテスト前提(看做し)
+backtest:
+  period_days: 250
+  commission_rate: 0.0
+  slippage: 0.0
+  note: >
+    手数料・スリッページを0と看做した簡易検証。実運用とは乖離します。
+    過去のバックテストは将来を保証しません。
+
+# 注意事項
+disclaimer: >
+  本ルールはAIと投資データの組み合わせの一例であり、特定銘柄の推奨ではありません。
+  投資判断は自己責任で行ってください。

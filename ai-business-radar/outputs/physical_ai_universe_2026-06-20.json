@@ -1,0 +1,2560 @@
+{
+  "asof": "2026-06-20",
+  "feature_asof": "2026-06-20",
+  "items": [
+    {
+      "code": "69540",
+      "ticker": "6954",
+      "company_name": "ファナック",
+      "bucket": "robotics_fa",
+      "physical_ai_reason": "産業用ロボット/FA中核",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-04-24",
+      "metrics": {
+        "latest_close": {
+          "value": 7596.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 2798700.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": -0.00926046693622018,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.2796495956873315,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 1.0375536480686693,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 42.56,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 3.8,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 178.47,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 1998.45,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.07615078613373738,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.2142181851670084,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.19414430115022657,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.09194065314006675,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.9006299325584732,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "65060",
+      "ticker": "6506",
+      "company_name": "安川電機",
+      "bucket": "robotics_fa",
+      "physical_ai_reason": "サーボ/モーション/ロボット",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-04-10",
+      "metrics": {
+        "latest_close": {
+          "value": 7253.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 2337000.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.08286055538966863,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.6346630606265495,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 1.2371992597162245,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 53.38,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 3.89,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 135.88,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 1864.31,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.008257669031137338,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.08726264567754122,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.06500381832871567,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.07552305178279621,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.6076271134280773,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "68610",
+      "ticker": "6861",
+      "company_name": "キーエンス",
+      "bucket": "robotics_fa",
+      "physical_ai_reason": "センサー/FA高収益",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-04-24",
+      "metrics": {
+        "latest_close": {
+          "value": 77520.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 315900.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.007276507276507305,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.3121191604603928,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.3308154506437768,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 42.23,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 5.42,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 1835.63,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 14313.86,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.10399331536286338,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.5095053489770279,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.3807313675233411,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.13531409611879835,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.9457363876474362,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "66450",
+      "ticker": "6645",
+      "company_name": "オムロン",
+      "bucket": "robotics_fa",
+      "physical_ai_reason": "制御機器/センサー",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-05-13",
+      "metrics": {
+        "latest_close": {
+          "value": 5830.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 940600.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.07783324089480503,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.27682873412176967,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.6020884858477604,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 40.26,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 1.37,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 144.8,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 4251.07,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": -0.04290847680021148,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.07810636853278356,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.037123819477657555,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.02944401894786237,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.6598868402117575,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "65030",
+      "ticker": "6503",
+      "company_name": "三菱電機",
+      "bucket": "robotics_fa",
+      "physical_ai_reason": "FA/制御/電機システム",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-04-28",
+      "metrics": {
+        "latest_close": {
+          "value": 6056.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 3506900.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": -0.002142033283901834,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.10450483312055447,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 1.0789564023343634,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 30.54,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 2.76,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 198.31,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 2191.26,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.06755804496106377,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.07347134660741166,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.06917311294276074,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.09366900675701519,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.6292878625274413,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "65010",
+      "ticker": "6501",
+      "company_name": "日立製作所",
+      "bucket": "robotics_fa",
+      "physical_ai_reason": "産業DX/OT/制御",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-04-27",
+      "metrics": {
+        "latest_close": {
+          "value": 4800.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 7595600.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": -0.06304899472965064,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": -0.010105176325015508,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.195516811955168,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 27.16,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 3.29,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 176.76,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 1459.71,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.08212006701167396,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.1132804201768224,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.0757896097028927,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.12533059919287873,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.45026901361762184,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "63830",
+      "ticker": "6383",
+      "company_name": "ダイフク",
+      "bucket": "logistics_automation",
+      "physical_ai_reason": "物流自動化/搬送",
+      "sector33": "機械",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-02-12",
+      "metrics": {
+        "latest_close": {
+          "value": 7215.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 905700.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.076704969407551,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.25565610859728505,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.9137931034482758,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 33.97,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 5.88,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 212.39,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 1228.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.17310218952182765,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.15258413497920462,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.1181976135269795,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.1837587531059408,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.5987183957804911,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "63240",
+      "ticker": "6324",
+      "company_name": "ハーモニック・ドライブ・システムズ",
+      "bucket": "motion_precision",
+      "physical_ai_reason": "精密減速機",
+      "sector33": "機械",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-05-13",
+      "metrics": {
+        "latest_close": {
+          "value": 7770.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 1373000.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.18625954198473282,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.879081015719468,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 1.5064516129032257,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 457.33,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 9.15,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 16.99,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 849.2,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.07030281247192027,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.04310156656648253,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.02699934516513592,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.020184142644649884,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.7216337522441651,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "62680",
+      "ticker": "6268",
+      "company_name": "ナブテスコ",
+      "bucket": "motion_precision",
+      "physical_ai_reason": "精密制御/減速機",
+      "sector33": "機械",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-02-12",
+      "metrics": {
+        "latest_close": {
+          "value": 5364.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 504200.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.009789156626506035,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.23679963108139268,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 1.2825531914893618,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 40.77,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 2.31,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 131.56,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 2320.45,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": -0.047844049179922354,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.06731143963210268,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.050972355738003065,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.05448593329074902,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.6224991433023486,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "62730",
+      "ticker": "6273",
+      "company_name": "ＳＭＣ",
+      "bucket": "motion_precision",
+      "physical_ai_reason": "空圧/FA部品",
+      "sector33": "機械",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-05-14",
+      "metrics": {
+        "latest_close": {
+          "value": 72600.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 200300.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.12088930060213054,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.11916139972252204,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.34944237918215615,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 27.5,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 2.17,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 2640.04,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 33498.92,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.06366934811919589,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.22617059585230867,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.19856837827476645,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.08275014059441886,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.9149614916289441,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "64790",
+      "ticker": "6479",
+      "company_name": "ミネベアミツミ",
+      "bucket": "motion_precision",
+      "physical_ai_reason": "小型モーター/ベアリング/センサー",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-05-12",
+      "metrics": {
+        "latest_close": {
+          "value": 4623.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 1975800.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.19241681712664427,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.7279013268547936,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 1.3799227799227798,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 18.75,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 2.07,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 246.6,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 2238.5,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.0930476921632124,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.062472850364728875,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.05950178654363438,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.11891290878788897,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.5019905368911919,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "65940",
+      "ticker": "6594",
+      "company_name": "ニデック",
+      "bucket": "motion_precision",
+      "physical_ai_reason": "モーター/駆動",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2025-09-26",
+      "metrics": {
+        "latest_close": {
+          "value": 2777.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 3857700.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.055893536121673026,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.283271719038817,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.023967551622418926,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 19.41,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 1.85,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 143.06,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 1497.98,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.00027578599007171967,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.09130869429671529,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.0630279088262847,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.09420919927482445,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.5259845811516508,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "67620",
+      "ticker": "6762",
+      "company_name": "ＴＤＫ",
+      "bucket": "edge_sensor",
+      "physical_ai_reason": "センサー/電子部品/電源",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-04-28",
+      "metrics": {
+        "latest_close": {
+          "value": 3855.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 5730700.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.22731614135625589,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.8119858989424207,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 1.5580623755806235,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 37.39,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 3.35,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 103.09,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 1152.3,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.13607274290799287,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.1087563178192445,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.07811459506072292,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.09747088210393597,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.4990844077528071,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "67230",
+      "ticker": "6723",
+      "company_name": "ルネサスエレクトロニクス",
+      "bucket": "edge_sensor",
+      "physical_ai_reason": "車載/エッジ半導体",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-02-05",
+      "metrics": {
+        "latest_close": {
+          "value": 4550.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 7714600.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.2021136063408191,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.816004789463181,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 1.4377176533619074,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": null,
+          "status": "UNKNOWN",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 3.38,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": -28.65,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 1347.26,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": -0.02022055960826974,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.15225868369345721,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": -0.03917842102554321,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": -0.020743579771292847,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.5861516536462666,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "67580",
+      "ticker": "6758",
+      "company_name": "ソニーグループ",
+      "bucket": "edge_sensor",
+      "physical_ai_reason": "イメージセンサー/AIデバイス",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-05-08",
+      "metrics": {
+        "latest_close": {
+          "value": 3250.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 11594700.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": -0.08553742262239727,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": -0.006420055029043081,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": -0.1424802110817942,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": null,
+          "status": "UNKNOWN",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 2.36,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": -54.7,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 1374.32,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": -0.03684816251582923,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.11598966955724613,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": -0.026191903279106254,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": -0.03840107990371094,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.5428376592199823,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "68570",
+      "ticker": "6857",
+      "company_name": "アドバンテスト",
+      "bucket": "semicap_ai",
+      "physical_ai_reason": "AI半導体テスト",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-04-27",
+      "metrics": {
+        "latest_close": {
+          "value": 30300.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 2650100.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.13292204150308473,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.26355296080066726,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 2.9066529138731303,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 58.82,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 27.61,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 515.15,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 1097.5,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.44747963016876846,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.44224311321005483,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.3325798991680031,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.5764617800524471,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.67905370809069,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "61460",
+      "ticker": "6146",
+      "company_name": "ディスコ",
+      "bucket": "semicap_ai",
+      "physical_ai_reason": "半導体製造/精密加工",
+      "sector33": "機械",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-04-22",
+      "metrics": {
+        "latest_close": {
+          "value": 84990.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 722000.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.29459253617669456,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.22147168726645594,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 1.642723880597015,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 68.0,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 15.72,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 1249.84,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 5408.11,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.11079216806970527,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.4234233409401473,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.3101954958811048,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.2507725558553257,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.7911179564439542,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "69200",
+      "ticker": "6920",
+      "company_name": "レーザーテック",
+      "bucket": "semicap_ai",
+      "physical_ai_reason": "半導体検査",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2025-08-07",
+      "metrics": {
+        "latest_close": {
+          "value": 56450.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 3295100.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.4831844456121912,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.6087204331718439,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 2.832315003394433,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 60.14,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 24.26,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 938.61,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 2327.06,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.17784511910672296,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.488486024566859,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.3366192534506138,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.46870700275459215,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.6368305921401938,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "77350",
+      "ticker": "7735",
+      "company_name": "ＳＣＲＥＥＮホールディングス",
+      "bucket": "semicap_ai",
+      "physical_ai_reason": "半導体製造装置",
+      "sector33": "電気機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-05-13",
+      "metrics": {
+        "latest_close": {
+          "value": 16425.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 1735800.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.5307548928238583,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": -0.17441568233224425,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.5642857142857143,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 33.75,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 6.38,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 486.63,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 2573.25,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": -0.03122016284191287,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.20226562861123767,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.151883291401705,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.20278869445809794,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.6736847350782992,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "72030",
+      "ticker": "7203",
+      "company_name": "トヨタ自動車",
+      "bucket": "mobility_physical_ai",
+      "physical_ai_reason": "自動車/ロボティクス/自動運転",
+      "sector33": "輸送用機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-05-08",
+      "metrics": {
+        "latest_close": {
+          "value": 2793.5,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 12905600.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": -0.061954331766286064,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": -0.15984962406015035,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.053952084512356224,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 9.46,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 0.91,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 295.25,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 3062.82,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.05512967750659992,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.07430639373990135,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.07592190281644146,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.09879713317430944,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.3887335278823589,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "72670",
+      "ticker": "7267",
+      "company_name": "本田技研工業",
+      "bucket": "mobility_physical_ai",
+      "physical_ai_reason": "自動車/二輪/ロボティクス",
+      "sector33": "輸送用機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-05-14",
+      "metrics": {
+        "latest_close": {
+          "value": 1414.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 10289200.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.021676300578034713,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.08602150537634401,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.021676300578034713,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": null,
+          "status": "UNKNOWN",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 0.47,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": -106.06,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 3035.91,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.004972297410913207,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": -0.019009653336000416,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": -0.0194498594047423,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": -0.03422205471172907,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.36252853500156745,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "69020",
+      "ticker": "6902",
+      "company_name": "デンソー",
+      "bucket": "mobility_physical_ai",
+      "physical_ai_reason": "車載AI/センサー/制御",
+      "sector33": "輸送用機器",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-04-28",
+      "metrics": {
+        "latest_close": {
+          "value": 1935.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 5696000.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.04594594594594592,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": 0.010180109631949819,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": 0.017617670260320795,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 11.87,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 0.95,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 162.96,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 2040.42,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.052807843639923524,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.07328114483138207,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.05885364341393705,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.08138735681144894,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.6546721546368774,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    },
+    {
+      "code": "70130",
+      "ticker": "7013",
+      "company_name": "ＩＨＩ",
+      "bucket": "industrial_physical_ai",
+      "physical_ai_reason": "航空宇宙/産業システム",
+      "sector33": "機械",
+      "market": "プライム",
+      "latest_price_date": "2026-06-18",
+      "latest_financial_disclosure_date": "2026-05-25",
+      "metrics": {
+        "latest_close": {
+          "value": 2866.0,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "adjusted close when available"
+        },
+        "latest_volume": {
+          "value": 6075000.0,
+          "status": "CALCULATION",
+          "unit": "shares",
+          "note": null
+        },
+        "return_20d": {
+          "value": 0.07140186915887847,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_60d": {
+          "value": -0.23958609710798617,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "return_252d": {
+          "value": -0.8113853241197763,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "per_trailing": {
+          "value": 18.87,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "trailing: latest_close / last-FY EPS (or close*shares/NP)"
+        },
+        "pbr": {
+          "value": 4.66,
+          "status": "CALCULATION",
+          "unit": "x",
+          "note": "latest_close / BPS (or close*shares/Eq)"
+        },
+        "eps_trailing": {
+          "value": 151.88,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "last-FY EPS (bulk alias; verify coverage)"
+        },
+        "bps": {
+          "value": 615.23,
+          "status": "CALCULATION",
+          "unit": "JPY",
+          "note": "BPS (bulk alias; verify coverage)"
+        },
+        "sales_growth_yoy": {
+          "value": 0.0,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "operating_margin": {
+          "value": 0.10072641995080936,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "net_margin": {
+          "value": 0.0979626409119619,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "roe_proxy": {
+          "value": 0.23622109632577243,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": "NP / average Eq proxy"
+        },
+        "equity_ratio": {
+          "value": 0.2806318479394571,
+          "status": "CALCULATION",
+          "unit": "ratio",
+          "note": null
+        },
+        "dividend_record_present": {
+          "value": true,
+          "status": "CALCULATION",
+          "unit": "bool",
+          "note": null
+        }
+      },
+      "claim": {
+        "entity": "FACT",
+        "price_date": "FACT",
+        "latest_close": "CALCULATION",
+        "returns": "CALCULATION",
+        "valuation": "CALCULATION/UNKNOWN",
+        "physical_ai_reason": "INFERENCE"
+      }
+    }
+  ],
+  "claim_policy": "no recommendation/no ranking"
+}

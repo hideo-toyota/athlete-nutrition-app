@@ -1,0 +1,49 @@
+{
+  "_comment": "value-audit register --from-file の手入力サンプル(Phase A)。値は概算=ASSUMPTION。これは紙上の仮説で購入意思ではない。",
+  "ticker": "7203",
+  "company_name": "トヨタ自動車(例)",
+  "market": "TSE Prime",
+  "sector": "Autos",
+  "position_intent": "paper_only",
+  "snapshot_at": "2026-05-08T15:30:00+09:00",
+  "cycle": {
+    "start_available_at": "2026-05-08T15:30:00+09:00",
+    "next_earnings_expected": "2026-08-07",
+    "next_earnings_available_at": null
+  },
+  "valuation": {
+    "ev_ebit":        { "value": 8.5,  "status": "ASSUMPTION", "unit": "x",  "available_at": "2026-05-08" },
+    "fcf_yield":      { "value": 7.2,  "status": "ASSUMPTION", "unit": "%",  "available_at": "2026-05-08" },
+    "roic":           { "value": 9.0,  "status": "ASSUMPTION", "unit": "%",  "available_at": "2026-05-08" },
+    "net_cash":       { "value": null, "status": "UNKNOWN",    "unit": "円", "note": "手入力未取得" },
+    "op_margin":      { "value": 8.0,  "status": "ASSUMPTION", "unit": "%",  "available_at": "2026-05-08" },
+    "revenue_growth": { "value": 6.0,  "status": "ASSUMPTION", "unit": "%",  "available_at": "2026-05-08" },
+    "op_profit_growth": { "value": 4.0, "status": "ASSUMPTION", "unit": "%", "available_at": "2026-05-08" },
+    "progress_rate":  { "value": null, "status": "UNKNOWN",    "unit": "%",  "note": "会社予想 未取得" },
+    "sector_relative":{ "value": null, "status": "UNKNOWN",    "note": "universe coverage 無し(Phase A)" }
+  },
+  "cheapness_reason": {
+    "classification": "temporary_setback",
+    "explanation": "為替の一時的な逆風と一過性の品質関連費用で減益見込みのため売られているが、本業のキャッシュ創出力は維持されている、という仮説。",
+    "claim": "INFERENCE",
+    "evidence_refs": ["EDINET:docID-XXXX(原本)", "IR:決算説明資料(例)"]
+  },
+  "anti_thesis": {
+    "why_cheap_may_be_deserved": "EV移行の遅れで主力市場のシェアと利益率が構造的に低下し、低評価が正当である可能性。",
+    "structural_risk_case": "値引き拡大が常態化し営業利益率が一時要因でなく趨勢的に低下しているなら、安さは罠。",
+    "intensifies_if": "次決算で op_margin が5%を割り、かつ会社が通期計画を下方修正した場合。",
+    "claim": "INFERENCE"
+  },
+  "falsification": [
+    { "metric": "op_margin", "operator": "<", "threshold": 5.0, "tolerance": 0.0, "horizon": "next_earnings",
+      "why": "一時要因なら維持されるはずの利益率が5%割れなら構造劣化を疑う" }
+  ],
+  "next_earnings_checklist": [
+    { "metric": "revenue_growth", "operator": ">=", "threshold": 3.0, "tolerance": 0.5,
+      "expectation": "微増収の維持", "why": "需要が一時的に落ちただけかを確認", "qualitative_only": false },
+    { "metric": "op_margin", "operator": ">=", "threshold": 7.0, "tolerance": 0.5,
+      "expectation": "利益率の回復基調", "why": "一時費用の剥落で利益率が戻るかを確認", "qualitative_only": false },
+    { "metric": "guidance_tone", "expectation": "通期計画を維持", "why": "経営の自信を定性的に確認", "qualitative_only": true }
+  ],
+  "key_risks": ["為替前提の急変", "EV競争の激化", "一過性費用が恒常化するリスク"]
+}

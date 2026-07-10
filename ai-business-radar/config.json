@@ -1,0 +1,83 @@
+{
+  "principles_ref": "DESIGN_PRINCIPLES.md",
+  "measure_currency": "JPY",
+  "policy": {
+    "core_satellite": { "core_pct": 90, "satellite_pct": 10 },
+    "satellite": {
+      "max_pct_of_total": 10,
+      "min_names": 3,
+      "max_names": 5,
+      "max_pct_per_name": 2.5,
+      "max_pct_per_sector": 5,
+      "size_is_conviction_proof": true,
+      "universe": "JP_individual",
+      "data_source_satellite": "jquants"
+    },
+    "discipline": {
+      "chase_unrealized_pct": 0.25,
+      "averaging_down_pct": -0.25,
+      "staleness_days": 5
+    }
+  },
+  "benchmark": { "type": "dca_index", "index_ref": "indices/acwi.json", "note": "同一CFのDCA" },
+  "data_source": { "index_composition_dir": "indices" },
+  "runtime": {
+    "canonical_root": "/Users/toyodahideo/equity-radar-live",
+    "canonical_enforced_commands": [
+      "sync",
+      "build-features",
+      "build-jquants-features",
+      "build-company-map",
+      "research-queue",
+      "evidence",
+      "jquants-evidence",
+      "llm-brief",
+      "audit-report",
+      "investor-brief",
+      "fetch-jquants",
+      "fetch-jquants-bulk",
+      "daily-update"
+    ]
+  },
+  "value_audit": {
+    "annual_hurdle_pct": 10,
+    "hurdle_basis": "pre_tax",
+    "annualization_day_base": 365,
+    "min_cycle_days": 45,
+    "max_cycle_days": 200,
+    "benchmark_index_ref": null,
+    "min_metrics_for_audit": 3
+  },
+  "data_layer": {
+    "retry_max": 3,
+    "backoff_base_sec": 2,
+    "timeout_sec": 10,
+    "max_response_bytes": 1048576,
+    "daily_request_budget": 1000,
+    "providers": {
+      "jquants": {
+        "base_url": "https://api.jquants.com/v2",
+        "ping_path": "/bulk/list",
+        "auth": "x-api-key",
+        "key_var": "JQUANTS_API_KEY",
+        "ping_params": { "endpoint": "/markets/calendar" },
+        "tos_personal_use_confirmed": true,
+        "plan_or_limit": "Premium plan; Bulk API available for personal local use per user-confirmed subscription",
+        "_note": "A1疎通のみ。Bulk list APIの最小確認としてendpoint=/markets/calendarを使う。取得本文は保存/表示しない"
+      },
+      "edinet-db": {
+        "base_url": "https://edinetdb.jp/v1",
+        "ping_path": "/companies",
+        "auth": "x-api-key",
+        "key_var": "EDINETDB_API_KEY",
+        "plan_or_limit": "unknown-personal-plan",
+        "ping_params": { "per_page": 1 },
+        "datasets": {
+          "companies": { "path": "/companies" },
+          "financials": { "path": "/companies/{code}/financials" }
+        },
+        "_note": "A1疎通 + Phase B最小sync。Base URL/X-API-Key/companies/financials/契約plan_or_limitは本人が公式docs・契約画面で最終確認する"
+      }
+    }
+  }
+}
