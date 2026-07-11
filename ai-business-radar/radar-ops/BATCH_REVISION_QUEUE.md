@@ -215,3 +215,18 @@
 - **追加裁定: 残り3件（09:05・11:39・18:44）は全件 VOID**（投稿ごとに欠陥タグ B1/B2/B3、
   確定できない投稿は「ゲート外産出・入力健全性未検証」と正直に記載 — 欠陥の捏造禁止）。
 - 週末レビュー再生成「しない」= 承認。解除条件（Q14 ゲート DoD）不変・SPEC は次便。
+
+### Q15 スコープ更新+Q14 解除条件改訂（2026-07-12・Codex レビュー11件全受理・append-only）
+- 検証枠組み v2 = `reports/CLAUDE_HANDOFF_verifier_role_20260712.md` 追記(§4-v2 テンプレート置換)。
+- 要点: 割当書に暫定 starter 埋込（00 の明示的例外・Q15 正式配備前のみ）/ 分界は証拠と独立性で定義
+  （固定基準付き commit 検証を Codex レビューへ吸収しない）/ 読取り allowlist 方式（変更のみ禁止）/
+  司令塔が対象 commit 固定の読取り専用 worktree を事前準備 / 出力= outputs/scratch/verifier/ +
+  Return Packet・司令塔が内容不変で保全 / 判定4値（PASS/FAIL/BLOCKED/NOT_RUN）/
+  反証 coverage matrix 事前固定 / OBSERVATION・SAFETY_ESCALATION 欄 / FAIL の後続は裁定者が裁く。
+- **Q14 解除条件の改訂**: kill-switch 解除 = ゲート DoD **+ 検証役の独立 PASS**（H7）。
+- **Q11 への条件追加**: 独立検証 FAIL 時は Q11 即再オープン / Q11 検証器の Q14 流用前に
+  Q11 独立検証を完了（H6）。
+- 2c-1 検証の反証対象を明記: timezone 跨ぎ・同一 available_at・未来 filing・derive_asof tie-break・
+  既存 snapshot 混入。
+- 「独立検証済み」表示の要件: Q13(f6b3077) 等 Codex 実装物は検証役の別人格確認が必要
+  （司令塔10項目レビューは受入条件であって独立検証ではない — 既決のまま有効）。
