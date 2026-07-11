@@ -188,3 +188,19 @@
 - 検証割当書テンプレートは裁定書 §4 に確定済み — starter 発行前でも割当書+オーナー起動で先行起用可。
 - 起用候補: Q11 検証器の反証検証（クローズ条件にはしない・事後）/ 2c-1 snapshot の look-ahead 反証
   （2c-2 前が理想）/ Q14 ゲート実装後 / Q12 標本再検証（任意）。
+
+### Q13 状態更新4（2026-07-12・Codex 改稿完了・司令塔レビュー待ちへ遷移）
+- 完了報告受領: commit `f6b3077 feat(education): add Q13 material quality contract [writer: codex/q13]`
+  / 新仕様 `radar-ops/EDUCATION_MATERIAL_SPEC.md` / 報告 `CODEX_Q13_EDUCATION_REVISION_20260712.md`。
+- 拘束不変条件の遵守申告（Codex）: education_daily.sh:54-66 変更なし / 旧 CLAUDE_HANDOFF_daily_education.md
+  変更なし / 19:00 LaunchAgent 挙動変更なし / PROMPT 改稿案は新仕様側に隔離 / 参照切替は留保 /
+  別セッション差分（orchestrator_post.py 等・Q14 コミット 4c8c595）の巻き込みなし・amend なし。
+- テスト申告: 教育 40件 PASS・全体回帰 492件 PASS（直前基線 486+回帰6件追加=492 と整合・CALCULATION）。
+- **次工程 = 司令塔の軽量レビュー**（10項目 PASS/FAIL+解答キー整合のみ・テーマ再審なし）。
+  レビュー時の確認点3つ（裁定者指定）:
+  1. **grader プロンプト整合の「事前通知」実施の有無**（宣言は「必要な場合のみ・事前通知して」を条件と
+     していた。通知記録が無ければ軽微逸脱として記録 — 処置には影響させない）。
+  2. `git show --stat f6b3077` で不変条件を機械確認（sh:54-66・旧仕様・公開部マーカーへの diff ゼロ）。
+  3. テスト2系統の再実行（教育40・全体492）。
+- 全 PASS → 司令塔が参照切替を判断・実施（切替コミット）→ CONFIRM_ 報告 → 裁定者受領で Q13 クローズ。
+- 優先度は不変: Q14 即時処置 → 月曜 Q11 実弾 → 本レビュー。
