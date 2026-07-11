@@ -137,3 +137,20 @@
   改稿=Codex（書き手宣言 `codex/edu-common-drivers`・対象パスは司令塔が確定）/
   軽量再レビュー=司令塔（10項目 PASS/FAIL+解答キー整合のみ・テーマ再審なし）/
   投入判定=裁定者。実装枠は不消費。再レビューの優先度は月曜 Q11 実弾・訂正投稿確認より後。
+
+### Q14 — orchestrator レーン品質ゲート（2026-07-11 FAIL 裁定・要求仕様確定済み）
+- 契機: 07-11 08:29 orchestrator 統合分析の Codex レビュー = **FAIL 3/10・BLOCKER 3件**
+  （取得層の偽OK: 日経businessがChatGPT画面なのに status=ok / 土曜を「寄り前」扱い /
+  「J-Quants未確定」が manifest 実在と矛盾）。裁定全文 =
+  `reports/CLAUDE_HANDOFF_orchestrator_fail_ruling_20260711.md`。
+- **即時処置（裁定命令・司令塔）**: orchestrator 自動投稿の一時停止（投稿ステップのみ・可逆・
+  生成はdraft継続可）/ append-only VOID訂正の投稿 / 偽OK運用ファイルの訂正記録。
+  解除条件 = 本ゲートの DoD 達成。
+- 要求仕様（SPEC は次便・5点確定）: (a) 取得先ドメインallowlist検証（不一致=FAILED・status=ok禁止）
+  (b) セクション完全性（欠落=partial） (c) 営業日ゲート（DT-1a trading_calendar 使用・
+  非営業日は週末/休日レビュー様式へ） (d) 入力実在チェック（「未確定」主張前に manifest 確認）
+  (e) 投稿前検証器（Q11型: CALC再計算・ラベル昇格阻止=意味強化翻訳含む・能力マニフェスト照合
+  =TOPIX日程はJPX総研公式を追記・基準値as_of開示・答え合わせの再現可能様式）。
+- 裁定者の自省記録: F7 の「draft扱い」は投稿経路の実態確認を欠いた甘い措置だった
+  （0402 は権限で偶然止まっただけ）。停止命令までに投稿到達1件 = 判断遅延として記録。
+
