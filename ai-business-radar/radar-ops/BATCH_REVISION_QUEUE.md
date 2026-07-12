@@ -272,3 +272,17 @@
 - 付随: **publish 全量封印の追認**（Alpha Edge 2件の審査まで選別配送のみ）。Alpha Edge 2件は
   別途審査便として登録（未審査・配送禁止のまま）。Codex アプリ側自動化の申告は repo 内検証不能につき
   UNKNOWN 記録（追認せず否認せず）。
+
+### Q14 状態更新3+2c-1 再オープン（2026-07-12・緊急出力HOLD裁定）
+- 裁定全文: `reports/CLAUDE_HANDOFF_output_hold_ruling_20260712.md`（二段裁定・第1段）。
+- 本日3発火: NewsPicks observer 18:20 / deepdive 18:26 = **投稿のみHOLD**（収集・ローカル保存継続）/
+  投資教育 19:00 = **CONTINUE**（既存ローテ・完全性ゲート済み。教育固有BLOCKERがあれば司令塔が緊急停止可）。
+- R1–R5 = PENDING_DELIVERY（対象文書 `54af35c8…` が reports リポに未配送 — 選別配送後に第2段裁定）。
+- **Q14 スコープ拡張**: orchestrator → ゲート外投稿レーン全般（NewsPicks 3系統+日経取得入力層）。
+  レーン毎 DoD = (a)〜(f)+投稿ゼロ実発火+検証器配線+**検証役PASS** → レーン毎解除。
+- **2c-1 = 狭域再オープン**（検証役 総合FAIL 13/15・F3 TZ跨ぎ/F8 型破損=両latent）:
+  修正2点限定（TZ正規化・破損filing の missing_reason 分離）+テスト。**2c-2 SPEC は F3/F8 の
+  delta 再検証 PASS まで差し止め**（月曜便は Q11 クローズのみ・2c-2 は delta PASS 後へ変更）。
+- 検証役直列を更新: ①2c-1 delta → ②Q11 検証器 → ③Q14 ゲート → ④BT-1。
+- Q13 司令塔レビュー期限 = **2026-07-14(火) EOD JST**。
+- 新着（Alpha Edge findings 等4件）= 受領記録のみ・裁定次便。
