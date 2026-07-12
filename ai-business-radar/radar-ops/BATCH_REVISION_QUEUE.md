@@ -286,3 +286,17 @@
 - 検証役直列を更新: ①2c-1 delta → ②Q11 検証器 → ③Q14 ゲート → ④BT-1。
 - Q13 司令塔レビュー期限 = **2026-07-14(火) EOD JST**。
 - 新着（Alpha Edge findings 等4件）= 受領記録のみ・裁定次便。
+
+### Q17 — データ資産活性化+裁定Relay（2026-07-12 裁定・8項目）
+- 裁定全文: `reports/CLAUDE_HANDOFF_data_activation_relay_ruling_20260712.md`
+  （提案 `7e14a625…0f352` 一致・正規配送 `e53cf46`）。
+- 判定: 5-1 ACCEPT（dispatch/collect 停止継続・再開判定=裁定者。quant 自動起動は Q16 と衝突していた）/
+  5-2 AMEND（ShOutFY・Bulk/REST 衝突=司令塔再現先行→修正の検証のみ検証役へ。consumer-slice=既知につき
+  新規検証不要）/ 5-3 ACCEPT（既裁定どおり。migration は 2c-2 SPEC 経由で授権）/
+  5-4 ACCEPT設計・DEFER実装枠（48KiB evidence packet — 標本バイアス是正として採用・2026-08 ゲート候補）/
+  5-5 DEFER（HB-003・A0 未受領。quant packet=事前登録容器の原則は ACCEPT）/
+  5-6 AMEND（D1 は部分順序 — D1-2 benchmark/lifecycle は既存の指数取得小仕様と同一物につき先行可）/
+  5-7 ACCEPT（有償ソースは増分価値+退役パケット先行・購入=オーナー）/
+  5-8 **ACCEPT（Adjudication Relay M0 = 輸送のみの統治SPEC として採択・修正5条件つき・
+  発行はクリティカルパス(Q11→2c-1 delta→Q14)より後）**。
+- 待ち入力: 司令塔の ShOutFY/パス衝突 再現報告 / HB-003・A0 の選別配送 → 各追補裁定。
