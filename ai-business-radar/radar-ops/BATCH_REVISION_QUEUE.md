@@ -300,3 +300,18 @@
   5-8 **ACCEPT（Adjudication Relay M0 = 輸送のみの統治SPEC として採択・修正5条件つき・
   発行はクリティカルパス(Q11→2c-1 delta→Q14)より後）**。
 - 待ち入力: 司令塔の ShOutFY/パス衝突 再現報告 / HB-003・A0 の選別配送 → 各追補裁定。
+
+### Q17 §5-5 追補（2026-07-12・A0/HB-003 統合裁定・DEFER 解消）
+- 裁定全文: `reports/CLAUDE_HANDOFF_a0_hb003_integration_ruling_20260712.md`
+  （4実体 sha256 全一致・HB-003 行 `dda237be…5423` 含む。独立仕様 MD の不存在を実体で確認・補完推測なし）。
+- **統合可・方向を訂正**: 「A0 を HB-003 へ fold」でなく **A0 = HB-003 の仮説中立な enabling substrate**。
+  IFCG は別仮説として DEFERRED 維持（HB-003 へ併合しない）。事前登録の器 = quant design packet に一本化
+  （Alpha Edge §5/6 は初適用例として吸収・二重統治禁止）。
+- A0 = **2026-08 ゲート候補**（DT-1b・D0-EVIDENCE-PACKET と並列判定）。拘束条件: リターン/ランキング/
+  投稿/自動化/test 禁止・観測版保持+pit_confidence 3値=A0 要件・lifecycle/CA/指数=B1 ブロッカー・
+  credibility score の出力先=人間検証順のみ・RAW_PRESENT 計数の分析文引用禁止。
+- Alpha Edge §9 処置: QD-1=PASS（ゲート外障害修正）/ QD-2=**W1/W3 正本文言の改版=裁定者事項**として
+  バンドル同梱（それまで現行文言維持）/ QD-3=条件付き PASS（owner_attested フロー確定とセット）/
+  QD-4=CAPABILITY_MANIFEST へ状態列統合 / 9-8=SPEC 時に DEFER。
+- **Alpha Edge 2件の配送封印は解除**（審査+裁定完了）。全量 publish 再開は別件のまま。
+- 残る待ち入力: 司令塔の ShOutFY/Bulk-REST 衝突 読み取り再現（Q17 5-2）。
