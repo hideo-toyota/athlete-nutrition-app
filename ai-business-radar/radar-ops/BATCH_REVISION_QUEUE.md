@@ -252,3 +252,23 @@
   worktree を準備**。起動はオーナー（新セッション+割当書参照）。
 - **総合 PASS = 2c-2 実装開始の前提**。FAIL → 2c-1 再オープン・2c-2 差し止め。
 - 次の割当（予告）: Q11 検証器の独立検証（月曜実弾後・Q14 流用前の完了条件）。
+
+### Q16 — 定量データサイエンス運用モデルの条件付き採用（2026-07-12 裁定）
+- 裁定全文: `reports/CLAUDE_HANDOFF_quant_ds_ruling_20260712.md`（提案 `eace474a…`・依頼書 `2596b6d0…`・
+  司令塔 findings `e00b2c69…` 全一致確認済み・司令塔の条件付き肯定を追認）。
+- 採用: on-demand profile（常設レーン化しない）/ Codex 配下・常設書込権限なし / starter 08 採番 /
+  claim taxonomy 一本化（AQR v2 同便）/ SUPERSEDED 台帳新設（第1号=遺産06アダプタ）/
+  **恒久採用は shadow 発動3回の packet レビュー後**（それまで CONDITIONAL）。
+- 拘束条件: falsifier 定式化=research の翻訳（quant 新規発明禁止）/ coverage matrix=quant 起草・裁定者確定 /
+  **トリガー判定者=裁定者・self-invoke 禁止** / 入力健全性の正本=Q14(f) / outcome ledger 消化（open 55件）を
+  2026-08 月次ゲートの容量計算に算入。
+- **BT-1 = 隔離確定**: research_claim・experiment_or_test 暫定STOP / normal_operations CONTINUE /
+  **W1-W4 防御ルールは CONTINUE 側**（遡及適用しない・FAIL 確定時の再評価は裁定者別件）。
+  現行 BT-1 結果はアルファ主張・test 開封・実装優先度の根拠に使用禁止。
+  独立検証 = V1–V10 固定・**検証役第3便**（2c-1 → Q11 検証器 → BT-1）。
+- 正本書き手 = 裁定者・**1バンドル発行**: ROLES v2.1（検証役行+#10+profile サブ表 §1c）/
+  starter 07・08 / INDEX 追補4（CAPABILITY_MANIFEST 等）/ AQR v2。前提入力 = manifest 配送+
+  Mac/live 版 AQR 受領（揃わなければ揃った分で切る）。
+- 付随: **publish 全量封印の追認**（Alpha Edge 2件の審査まで選別配送のみ）。Alpha Edge 2件は
+  別途審査便として登録（未審査・配送禁止のまま）。Codex アプリ側自動化の申告は repo 内検証不能につき
+  UNKNOWN 記録（追認せず否認せず）。
