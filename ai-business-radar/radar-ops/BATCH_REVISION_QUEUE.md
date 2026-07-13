@@ -327,3 +327,18 @@
 - 解除は別途の明示裁定（INDEPENDENT_PASS は証拠であって解除命令ではない — 依頼書 §4 を追認）。
 - 裁定文書: `reports/CLAUDE_HANDOFF_q14_c12_ruling_20260713.md`
   sha256 `a71f4d5ee97429e173acd7c3706c2e8a3c95b2a768081cfd578f7328fa3283d2`（commit dde046d）。
+
+### Q14 状態更新5（2026-07-14・NewsPicks deepdive レーン解除裁定）
+- 独立検証 INDEPENDENT_PASS（43a1806・delta 2ケース PASS・manifest 386/386 前後一致・append-only 実証）
+  を受領 → **NewsPicks deepdive レーン限定で解除可**。方法 = launchctl bootstrap 再登録のみ・
+  kickstart/手動/特例投稿禁止・次回定時 slot（08:26/18:41 JST）= LIVE-CONFIRM。
+- LIVE-CONFIRM 発効: 正当な非投稿（NO_POST/partial skip）は消費しない（投稿発生 slot まで持越し）。
+  必須記録 = msg id・marker 実在+mtime・receipt・検証器ログ・ledger 整合。
+  tripwire = marker 挙動異常 → 裁定を待たず bootout で自動再 HOLD。
+  正常完了の CONFIRM_ 受領 → 裁定者が Q14（deepdive）完全クローズ宣言。
+- **orchestrator レーンは解除対象外**（停止スイッチ維持・解除には検証器実運用実績を含む別途依頼）。
+- BLOCKER 申告の受理+標準化: 「停止スイッチが deepdive スクリプトを遮断しない」発見 → bootout 是正は
+  正当な fail-closed 措置。**新標準: HOLD/解除依頼書に「HOLD 機構と遮断対象スクリプトの対応表」を必須**
+  （HOLD の実在と実効は別物 — 到達実態全数確認と同列）。
+- 裁定文書: `reports/CLAUDE_HANDOFF_q14_release_newspicks_20260714.md`
+  sha256 `f2067dced5819aff756a9830c847f4f71ce2390b97a780805b88a3df6a762431`（commit 08f18d4）。
