@@ -342,3 +342,17 @@
   （HOLD の実在と実効は別物 — 到達実態全数確認と同列）。
 - 裁定文書: `reports/CLAUDE_HANDOFF_q14_release_newspicks_20260714.md`
   sha256 `f2067dced5819aff756a9830c847f4f71ce2390b97a780805b88a3df6a762431`（commit 08f18d4）。
+
+### Q14 状態更新6（2026-07-14・orchestrator レーン解除裁定）
+- 依頼 `4aa20f03…b452` 一致・実運用実績（07-13: 実データ VALIDATED_DRAFT 1件・receipt sha3・
+  VALIDATE_FAIL 5件全 fail-closed・投稿0・HOLD 実効を一次ログで実証）+INDEPENDENT_PASS 該当分
+  → **orchestrator レーン解除可**。操作 = 停止スイッチ削除のみ。
+- 禁止継続: 手動/kickstart/**07-13 draft の遡及投稿**（遡及は別裁定）。
+- LIVE-CONFIRM（レーン能力適合）: receipt sha3+post ログ対応=必須 / msg id=受信側照合・不能なら
+  UNKNOWN 明示（送信側に実装なし — 取得できない証拠を要求しない）/ FAIL・NO_POST は消費しない。
+  tripwire = スイッチ再作成で即時再 HOLD（裁定不要）。
+- **健全性チェック新設**: 解除後3営業日投稿0なら FAIL パターン要約を報告（過剰遮断 vs 品質の判定は
+  裁定者・fail-closed は現場で緩めない）。
+- クローズ条件: 両レーンの LIVE-CONFIRM 完了 → Q14 全体クローズ+暫定措置（2節降格）解除を同時判定。
+- 裁定文書: `reports/CLAUDE_HANDOFF_q14_release_orchestrator_20260714.md`
+  sha256 `807e0981c9fd5f24aad2cc950193e4da0240a5e2dfb6465cd56d07756c01796f`（commit 51b4fa2）。
