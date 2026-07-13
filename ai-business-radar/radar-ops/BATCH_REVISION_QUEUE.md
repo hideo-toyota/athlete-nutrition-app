@@ -315,3 +315,15 @@
   QD-4=CAPABILITY_MANIFEST へ状態列統合 / 9-8=SPEC 時に DEFER。
 - **Alpha Edge 2件の配送封印は解除**（審査+裁定完了）。全量 publish 再開は別件のまま。
 - 残る待ち入力: 司令塔の ShOutFY/Bulk-REST 衝突 読み取り再現（Q17 5-2）。
+
+### Q14 状態更新4（2026-07-13・独立検証 残1項目の裁定 = (a)+LIVE-CONFIRM）
+- 検証役 `VERIFY_q14_newspicks_20260713`（INDEPENDENT_NOT_COMPLETE・FAIL 0/NOT_RUN 1）への裁定:
+  **(a) 採用** — offline fake poster rc=0 の marker 生成 positive（隔離コピー内 delta 2ケース・
+  外部送信ゼロ）で C-12/F-I 充足 → INDEPENDENT_PASS へ更新可。
+- (b) 棄却理由: HOLD 中の認可実投稿 = 検証対象の停止機構への bypass 新設（fail-open 経路を作らない原則）。
+  Q11 先例 = 実弾 positive は解除後の最初の定時スロットで取得。
+- **LIVE-CONFIRM 条項（不可分）**: 解除後の初回定時実投稿で msg id・marker・receipt を CONFIRM_ 記録。
+  marker 挙動異常 → 当該レーン自動再 HOLD（裁定を待たない）。
+- 解除は別途の明示裁定（INDEPENDENT_PASS は証拠であって解除命令ではない — 依頼書 §4 を追認）。
+- 裁定文書: `reports/CLAUDE_HANDOFF_q14_c12_ruling_20260713.md`
+  sha256 `a71f4d5ee97429e173acd7c3706c2e8a3c95b2a768081cfd578f7328fa3283d2`（commit dde046d）。
