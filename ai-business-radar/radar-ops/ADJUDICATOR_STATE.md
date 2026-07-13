@@ -1,6 +1,6 @@
 # ADJUDICATOR_STATE.md — 裁定者ダッシュボード(3分で読む現在地)
 
-- as_of: **2026-07-14** / writer: クラウド裁定者 [writer: adjudicator]
+- as_of: **2026-07-14（第2便後）** / writer: クラウド裁定者 [writer: adjudicator]
 - 性質: **再生成可能なビュー・正本ではない**(正本は BATCH_REVISION_QUEUE.md=詳細台帳と各裁定文書。
   本書は毎便更新・上書き可。INDEX §7 の sha 照合対象に**含めない**)。
 - 使い方: ターミナルなら `git fetch && git show origin/claude/radar-batch-revision-lk9h56:ai-business-radar/radar-ops/ADJUDICATOR_STATE.md`。外出時は GitHub モバイルで本ファイルを直接閲覧。
@@ -23,6 +23,7 @@
 
 ## 3. 配送待ち(PENDING_DELIVERY・受領後に裁定者が処置)
 - CAPABILITY_MANIFEST.md(CONFIRM_ 埋込方式)→ INDEX 追補4
+- **Relay dry-run 2ファイル**(CONFIRM_relay_dryrun_delivery・F4 方式)→ SPEC 後に追認判定
 - Mac の CLAUDE.md(+AGENTS.md あれば)→ 監査 → 薄いブートストラップ版を発行
 - HANDOFF_OPEN_ITEMS_20260710・MV-001(Q10)/ Mac/live 版 ANALYSIS_QUALITY_RULES(R8/R9 突合)
 - FRED_API_KEY 記入(オーナー)→ M0 v2 契約確認と合わせて実装 GO 判定
@@ -39,6 +40,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-14 | ハイブリッド/Relay: Q18追補 ACCEPT・SPEC DEFER(条件3点)・dry-run 保留資産 | `CLAUDE_HANDOFF_relay_m0_hybrid_ruling_20260714.md` |
 | 07-14 | Q14 orchestrator 解除可+健全性チェック | `CLAUDE_HANDOFF_q14_release_orchestrator_20260714.md` |
 | 07-14 | Q14 NewsPicks deepdive 解除可+LIVE-CONFIRM 発効+HOLD 実効対応表の標準化 | `CLAUDE_HANDOFF_q14_release_newspicks_20260714.md` |
 | 07-13 | Q14 C-12/F-I =(a)採用+LIVE-CONFIRM 条項 | `CLAUDE_HANDOFF_q14_c12_ruling_20260713.md` |

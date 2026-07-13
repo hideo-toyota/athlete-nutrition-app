@@ -367,3 +367,15 @@
 - 仮定の明示（確認ツール障害2回のため既定採用・オーナー訂正可）: 「選定者」=裁定者の言い換え /
   ターミナル管理=状態可視化のみ（併走なし）。訂正があれば PROTOCOL §5 と本項を改版。
 - INTAKE_PROTOCOL の INDEX §7 掲載 = 追補4（バンドル）で実施。
+
+### Q18 追補+Q17 5-8 状態更新（2026-07-14・ハイブリッド/Relay M0 申請への裁定）
+- 裁定文書: `reports/CLAUDE_HANDOFF_relay_m0_hybrid_ruling_20260714.md`
+  sha256 `507257d322c92cd730ceb6f87e605c70a5d3197e1aaf7baf5077b605f734921f`（commit 3b6d654）。
+- **Q18 追補 ACCEPT（発効）**: 自動 Claude Code = 非拘束 draft worker（DRAFT_ONLY 明示・区分 B 入力のみ・
+  単一裁定者不変・自己ループ禁止・CLAUDE_HANDOFF_ の様式模倣も禁止）。INTAKE_PROTOCOL 次回改版に収載。
+- **Relay M0 SPEC = DEFER**（解消条件3点: Q11 実弾報告 / 2c-1 delta 修正+再検証 / Q14 LIVE-CONFIRM ×2）。
+  申請 §5 停止条件・§6 段階(M0-a〜d)は SPEC 基底要件として事前採用。
+- **dry-run 2ファイル = PENDING_DELIVERY**（CONFIRM_ 埋込・F4 方式）+ **先行実装逸脱の記録**:
+  commit ecc38dc = 保留資産（本番接続禁止・上に積まない・巻き戻し不要）。追認は配送+SPEC+検証役の3点後。
+- その他: adapter 分離 ACCEPT / owner 判断 JSONL = 証跡であって裁定でない（AMEND）/ live 費用0固定 ACCEPT /
+  CLI 認証の矛盾観測（司令塔 true vs Codex false）= 環境別 UNKNOWN・live 前に実行環境の認証確定必須。
