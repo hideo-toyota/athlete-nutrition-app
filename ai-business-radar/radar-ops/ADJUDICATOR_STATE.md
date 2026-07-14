@@ -1,15 +1,16 @@
 # ADJUDICATOR_STATE.md — 裁定者ダッシュボード(3分で読む現在地)
 
-- as_of: **2026-07-14（第3便後）** / writer: クラウド裁定者 [writer: adjudicator]
+- as_of: **2026-07-14（第4便後）** / writer: クラウド裁定者 [writer: adjudicator]
 - 性質: **再生成可能なビュー・正本ではない**(正本は BATCH_REVISION_QUEUE.md=詳細台帳と各裁定文書。
   本書は毎便更新・上書き可。INDEX §7 の sha 照合対象に**含めない**)。
 - 使い方: ターミナルなら `git fetch && git show origin/claude/radar-batch-revision-lk9h56:ai-business-radar/radar-ops/ADJUDICATOR_STATE.md`。外出時は GitHub モバイルで本ファイルを直接閲覧。
 
 ---
 
-## 0. 🔴 最優先(全件のブロッカー)
-**司令塔が起動不能(claude auth loggedIn:false)。オーナーの Mac での `claude login` が第0手。**
-07-15 EOD JST 未復旧で代替担当が発効(Q13→検証役 / 2c-1・Q11→Codex 限定宣言)。
+## 0. 現行性能主張の正(R4・2026-07-14 固定)
+**safety=PARTIAL / reproducible delivery=FAIL / outcome learning=INSUFFICIENT / investable alpha=NOT_PROVEN**
+(矛盾する性能表現は全レーン禁止・昇格には軸ごとの定義済み証拠。詳細= completion_blueprint 裁定)
+✅ 司令塔は復旧済み(af26aaf 実証・07-15 期限の代替条項は不発効)。
 
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
@@ -31,6 +32,7 @@
 - **Relay dry-run 2ファイル**(CONFIRM_relay_dryrun_delivery・F4 方式)→ SPEC 後に追認判定
 - Mac の CLAUDE.md(+AGENTS.md あれば)→ 監査 → 薄いブートストラップ版を発行
 - HANDOFF_OPEN_ITEMS_20260710・MV-001(Q10)/ Mac/live 版 ANALYSIS_QUALITY_RULES(R8/R9 突合)
+- **統合審査便の原本4件**: COMPLETION_BLUEPRINT packet(`ae055fdf…`)+AOL(8771130)/POC-M0(b7fabeb)/SD(8ac65a7)
 - FRED_API_KEY 記入(オーナー)→ M0 v2 契約確認と合わせて実装 GO 判定
 
 ## 4. 裁定者の宿題(発行予定)
@@ -45,6 +47,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-14 | Blueprint R1-R4: 性能主張固定・信頼性4点=即応クラス・構造化出力=設計のみ・Gates C/D=原則のみ | `CLAUDE_HANDOFF_completion_blueprint_ruling_20260714.md` |
 | 07-14 | クリティカルパス: 司令塔復旧第一・Q11 限定SPEC・担当の期限付き代替構造 | `CLAUDE_HANDOFF_critical_path_ruling_20260714.md` |
 | 07-14 | ハイブリッド/Relay: Q18追補 ACCEPT・SPEC DEFER(条件3点)・dry-run 保留資産 | `CLAUDE_HANDOFF_relay_m0_hybrid_ruling_20260714.md` |
 | 07-14 | Q14 orchestrator 解除可+健全性チェック | `CLAUDE_HANDOFF_q14_release_orchestrator_20260714.md` |

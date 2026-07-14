@@ -395,3 +395,19 @@
 - 「3連続遮断で契約再審」採用（再審者=裁定者・fail-open は選択肢に含めない）。
 - 凍結継続: Relay 追加実装・A0/POC・新データ源（クリティカルパス完了まで）。
 - 状態事実は Codex 転記=UNKNOWN 残置 → 司令塔復旧後の初回 CONFIRM_ で一次ログ裏取り必須。
+
+### Completion Blueprint 裁定（2026-07-14・R1〜R4 分類・拘束）
+- 裁定文書: `reports/CLAUDE_HANDOFF_completion_blueprint_ruling_20260714.md`
+  sha256 `1abd4b970c7024d466675e7bcb17b698b696be1ab615118b20bc34918cec9540`（commit 91a25d4）。
+- **R4 即時発効**: 現行性能主張の固定 = safety=PARTIAL / reproducible delivery=FAIL /
+  outcome learning=INSUFFICIENT / investable alpha=NOT_PROVEN（唯一の正・矛盾表現は全レーン禁止・
+  昇格には軸ごとの定義済み証拠が必要）。
+- **R1 = 障害即応クラス**（偽記録ファミリーの欠陥修正・writer=司令塔・1コミット1点・
+  R1-1 state非前進 → R1-2 配達receipt(message_id束縛・LIVE-CONFIRM証拠様式を更新予定) →
+  R1-3 partial終端 → R1-4 3連続自動HOLD。クリティカルパス直後に接続・割込みなし）。
+- **R2 = 設計SPECのみ ACCEPT**（schema拘束LLM+決定論renderer。実装授権は8月ゲート・
+  D0-EVIDENCE-PACKET と設計一本化・LLM の数値発明禁止を裁定条項に昇格）。
+- **R3 = 原則ACCEPT・登録は原本配送後**（Gates C/D 定義は未配送 packet にのみ存在 — 未読の定義を
+  登録しない。AOL/POC-M0/SD の3件と合わせ統合審査便で扱う）。
+- 副事実認定: **af26aaf [writer: commander] = 司令塔復旧**（クリティカルパス第0手クリア・代替条項不発効）。
+- 逸脱記録: 依頼提示 sha が62桁（末尾 b4 欠落）— 実体照合で前方一致確認・完全値を裁定文書に記録。
