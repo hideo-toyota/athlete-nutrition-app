@@ -1,11 +1,15 @@
 # ADJUDICATOR_STATE.md — 裁定者ダッシュボード(3分で読む現在地)
 
-- as_of: **2026-07-14（第2便後）** / writer: クラウド裁定者 [writer: adjudicator]
+- as_of: **2026-07-14（第3便後）** / writer: クラウド裁定者 [writer: adjudicator]
 - 性質: **再生成可能なビュー・正本ではない**(正本は BATCH_REVISION_QUEUE.md=詳細台帳と各裁定文書。
   本書は毎便更新・上書き可。INDEX §7 の sha 照合対象に**含めない**)。
 - 使い方: ターミナルなら `git fetch && git show origin/claude/radar-batch-revision-lk9h56:ai-business-radar/radar-ops/ADJUDICATOR_STATE.md`。外出時は GitHub モバイルで本ファイルを直接閲覧。
 
 ---
+
+## 0. 🔴 最優先(全件のブロッカー)
+**司令塔が起動不能(claude auth loggedIn:false)。オーナーの Mac での `claude login` が第0手。**
+07-15 EOD JST 未復旧で代替担当が発効(Q13→検証役 / 2c-1・Q11→Codex 限定宣言)。
 
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
@@ -16,7 +20,8 @@
 | 2c-1 delta 修正 | 狭域再オープン中(TZ 正規化+破損 filing 区別)・実装待ち | 実装→検証役 delta 再検証(F3/F8 の2面)→ PASS で 2c-2 SPEC 発行(裁定者) |
 
 ## 2. 報告待ち(司令塔からの CONFIRM_ 未着・状態 UNKNOWN)
-- **Q11 kabutan 月曜実弾(07-13 09:27)の結果** — 受領すれば kabutan 限定クローズ+暫定措置解除を発行
+- ~~Q11 月曜実弾の結果~~ → Codex 転記で **VALIDATE_FAIL 14・NO_POST** と判明(裏取り待ち)。
+  Q11 限定修正 SPEC 発行済み → 修正後の実スロット POSTED_OK で完全クローズ
 - 訂正1号(lunch)/2号(preclose)の投稿完了記録(msg id)
 - ShOutFY 自己株控除・Bulk/REST パス衝突の読み取り再現(Q17 5-2)
 - starters 通常パス配備・scratch 3件所有者確認(boot v2 タスク)
@@ -40,6 +45,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-14 | クリティカルパス: 司令塔復旧第一・Q11 限定SPEC・担当の期限付き代替構造 | `CLAUDE_HANDOFF_critical_path_ruling_20260714.md` |
 | 07-14 | ハイブリッド/Relay: Q18追補 ACCEPT・SPEC DEFER(条件3点)・dry-run 保留資産 | `CLAUDE_HANDOFF_relay_m0_hybrid_ruling_20260714.md` |
 | 07-14 | Q14 orchestrator 解除可+健全性チェック | `CLAUDE_HANDOFF_q14_release_orchestrator_20260714.md` |
 | 07-14 | Q14 NewsPicks deepdive 解除可+LIVE-CONFIRM 発効+HOLD 実効対応表の標準化 | `CLAUDE_HANDOFF_q14_release_newspicks_20260714.md` |

@@ -379,3 +379,19 @@
   commit ecc38dc = 保留資産（本番接続禁止・上に積まない・巻き戻し不要）。追認は配送+SPEC+検証役の3点後。
 - その他: adapter 分離 ACCEPT / owner 判断 JSONL = 証跡であって裁定でない（AMEND）/ live 費用0固定 ACCEPT /
   CLI 認証の矛盾観測（司令塔 true vs Codex false）= 環境別 UNKNOWN・live 前に実行環境の認証確定必須。
+
+### クリティカルパス裁定（2026-07-14・Codex 依頼 §6 への回答・司令塔不在の認定）
+- 裁定文書: `reports/CLAUDE_HANDOFF_critical_path_ruling_20260714.md`
+  sha256 `2307d9ca030c3ca60262e0314a3c3b3ebb26c2ba223f0de884250356bb5a5ac7`（commit 0c262d5）。
+- **第0手 = オーナーの Mac `claude login`**（司令塔復旧・全件のアンロック）。
+- 担当構造（全件共通）: 第1順位=復旧後の司令塔 / **07-15 EOD JST 未復旧で代替発効**:
+  Q13 受入→検証役（Codex 不可=自己受理）/ 2c-1→Codex（2ファイル限定・F3/F8 検証役再検証は不変）/
+  Q11→Codex（5ファイル限定・検証役の独立検証を受入条件に昇格）。
+- **Q11 限定 SPEC 発行**（依頼記載スコープ+DoD 採択・検証器緩和禁止・fail-open 封鎖・
+  実スロット POSTED_OK 1回=DoD③再充足で完全クローズ）。07-13 FAIL14 = ゲートが本番で不良出力を
+  遮断した実証として記録（投稿事故ゼロ）。
+- Q14: producer/contract 側のみ修正・着手前に (a)producer欠落 vs (b)契約定義誤り の1行切り分け必須・
+  (b)なら契約改定=裁定者へ差し戻し。LIVE-CONFIRM 継続条件不変。
+- 「3連続遮断で契約再審」採用（再審者=裁定者・fail-open は選択肢に含めない）。
+- 凍結継続: Relay 追加実装・A0/POC・新データ源（クリティカルパス完了まで）。
+- 状態事実は Codex 転記=UNKNOWN 残置 → 司令塔復旧後の初回 CONFIRM_ で一次ログ裏取り必須。
