@@ -523,3 +523,18 @@
   通知は held レーン経路を通さない・通知失敗でも HOLD 維持。R1-1 記録裁定の「3連続で
   パターン報告」条項は R1-4 実装後 HOLD 通知に吸収。
 - **R1-5 = 未定義が正・非スコープ確認**(候補登録のみ・R1-4 後の新規裁定まで着手禁止)。
+
+### R1-3 SPEC 追補1 — F1〜F3+ファイル列挙承認(2026-07-15・壁打ち2/5)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_3_spec_amendment_20260715.md`
+  sha256 `4147aeead30d392ed43cfec7a718ec6a2ce432b1430416eb61a834186bcbc8a7`(commit 56b6aee)。
+- **F1(BLOCKER)採用**: §2(a) を限定改訂 — 投稿→receipt→archive 不変・state touch への
+  失敗検査追加のみ可(fail-closed: touch 失敗=PARTIAL_DELIVERY・POSTED_OK log 出さない・
+  marker 作らない)。独立検証で「差分=touch の if 化のみ」を親 SHA 監査。現行の
+  「touch 失敗でも POSTED_OK」は偽記録ファミリーの実在確認でもある。
+- **F2 採用**: partial(i)=現行到達不能 → 単一メッセージ制約維持の反証テストへ置換。
+  synthetic 機構は追加しない。**反証テスト FAIL 転化(複数投稿導入)=R1-3 再裁定トリガー**。
+- **F3=B 採用**: post.py 非接触・取得済み項目のみ棚卸し・不明は UNKNOWN 明示(推定埋め禁止)。
+  重複防止は content_hash で必要十分 — A 案は将来候補としても登録しない。
+- ファイル列挙(6+宣言1)承認・orchestrator_analysis.sh は終端処理+touch 検査に限定。着手可。
+- 記録: 裁定者 SPEC が現行コード実態と両立しない2点を実装前差し戻しで検出 — 差し戻し運用が
+  機能した実例(SPEC は Mac 実コードを読めない裁定者の限界を差し戻しで補完する設計どおり)。
