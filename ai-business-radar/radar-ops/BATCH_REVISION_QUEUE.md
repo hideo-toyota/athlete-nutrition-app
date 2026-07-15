@@ -591,3 +591,18 @@
   司令塔専管(R1-3 も同じ扱いに統一・着地 commit は司令塔が CONFIRM_ 申告)**。
 - D: 壁打ち通常枠 5/5 消費。以後 BLOCKER 残存時のみオーナー許可枠10以内(承認済み記録)。
   R1-4 は宣言列挙をもって着手可。
+
+### R1-3 最終受理+司令塔着地割当(2026-07-15・許可枠 6/10)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_3_final_acceptance_20260715.md`
+  sha256 `9e8f2144a970fe59f5af6789caabd0a57ffb81431e9ccce415ffb7ab309efea7`(commit 6ba7595)。
+- **R1-3(f5f7898)最終受理**(F4 2/2 sha 照合・reports main 34afbd7)。必須5点全充足:
+  6ファイル厳密 write set / post.py・post_validate.py blob 親SHA完全一致+唯一差分=touch rc 検査 /
+  入口対応表3分類(transport-wide 主張なし) / corrigendum / R1-2 identity 消費のみ
+  (contract test で定数 pin+stale intent 拒否)。
+- 検証5例目: 初回 FAIL 3件(stale intent 誤 partial 化・ID 無上限 40万 byte・fixture 不足)→
+  是正→原 probe 込み PASS。identity=sha256(channel+NUL+manifest_sha+NUL+content_sha)。
+  authority 4文書の sha を実装側でも照合(双方向改竄検知が機能)。
+- **司令塔割当**: f5f7898 を mac/live へ着地・着地 commit を CONFIRM_ 申告(証拠帰属アンカー
+  切替)。plist 変更不要。**R1-4 counter seed は別件(今回行わない)**。Codex は配備しない。
+- 不変: R4 delivery=FAIL / 3イベント待ち / 自然 FAIL 連続2(2/3)監視 — R1-3 は生成側を
+  変えないため着地後の FAIL で3連続条項が発動し得る。
