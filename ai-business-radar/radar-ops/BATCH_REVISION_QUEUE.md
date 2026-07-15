@@ -606,3 +606,20 @@
   切替)。plist 変更不要。**R1-4 counter seed は別件(今回行わない)**。Codex は配備しない。
 - 不変: R4 delivery=FAIL / 3イベント待ち / 自然 FAIL 連続2(2/3)監視 — R1-3 は生成側を
   変えないため着地後の FAIL で3連続条項が発動し得る。
+
+### R1-4 最終受理+司令塔工程(2026-07-15・許可枠 7/10)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_4_final_acceptance_20260715.md`
+  sha256 `faf25e5dfd1f5e748989829c5e4efff622992a1b895344f317b829bae9c17919`(commit e616103)。
+- **R1-4(e24d1b3・parent=f5f7898)最終受理**(F4 2/2 sha 照合・reports main fec0ddd・
+  独立検証 11/11 PASS)。C-1〜C-7 全充足: 5ファイル厳密+ファイル別 sha 同梱 / bootstrap なし・
+  欠損/破損/分裂書込み=0600 空 fail-safe HOLD / seed=司令塔留保 / count-once を artifact
+  SHA-256 identity で保証(別 path 二重加算封鎖) / 判定表・C-6 schema 強制回帰・全遷移 replay
+  検証 / 通知 Discord 不使用・unhold 非実装 / Codex=worktree+F4 停止。
+- 検証6例目: Round1=履歴連鎖非検証+schema 逸脱 / Round2=同一内容別 path 二重加算 →
+  是正→Round3 原 probe 込み 11/11 PASS(ラウンド毎セッション ID 開示)。
+- **司令塔工程(この順)**: ①e24d1b3 着地(R1-3 と同時可・commit 申告) ②18:31+19:03
+  dead-letter 実物再照合(間に完全成功なし=streak2 確定) ③seed=2 の state+JSONL 作成
+  (basis_artifacts・sha を CONFIRM_) ④配備(plist 不要のはず・必要なら差し戻し) ⑤1便 CONFIRM_。
+- **注意**: seed=2 につき配備後最初の自然 FAILED 終端で自動 HOLD 発動(3連続目)— 既定の
+  2/3 監視と整合。発動時は FAIL 類型サンプル添付で生成側是正の起案判断を裁定者へ。
+- **blueprint R1 系(R1-1〜R1-4)実装・受理完了**。運用完了は司令塔工程+自然証拠で判定。
