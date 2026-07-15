@@ -423,3 +423,15 @@
 - **Q11 fec5a29 = オーナー授権として追認**（代替条項の発効条件は厳密には不成立だった逸脱を記録・
   巻き戻しなし。独立反証検証→着地→fixture→dry run→自然スロット POSTED_OK の HOLD 維持は有効）。
   以後、代替条項の発動は条件成立確認を1行添える。
+
+### Q11/R1 完了報告の条件付き受領（2026-07-15）
+- 裁定文書: `reports/CLAUDE_HANDOFF_q11_r1_receipt_20260715.md`
+  sha256 `e5ac210ff6b8f16ce48e9723c615378572bdc08e249c2c72fee4062d8f133e16`（commit 7f97fa7）。
+- 受領: c9e87e3[codex/q11] / 823d47d[codex/r1-1] / c2442c4[codex/r1-2]・独立検証3 PASS 申告・772/772。
+  **確定は配送照合後**（完了パケット+VERIFY 3本の F4 配送・宣言ファイル列挙の事後確認込み）。
+- 証拠条件: Q11=自然スロット POSTED_OK まで未close / R1-2=v2 receipt+自然投稿まで delivery 主張凍結 /
+  R1-3・R1-4 未着手維持。
+- **新規発効2点**: LIVE-CONFIRM 証拠様式 = v2 receipt(message_id/channel_id/content_hash/posted_at)
+  必須・受信側照合は補助へ格下げ / POSTING・DELIVERY_UNKNOWN の自動再送禁止=恒久条項。
+- 次イベント: 17:32 自然スロット POSTED_OK → **Q11 クローズ+kabutan 降格解除+delivery FAIL→PARTIAL
+  昇格を同一裁定で判定**。

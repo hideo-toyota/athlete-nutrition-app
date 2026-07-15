@@ -1,6 +1,6 @@
 # ADJUDICATOR_STATE.md — 裁定者ダッシュボード(3分で読む現在地)
 
-- as_of: **2026-07-14（第4便後）** / writer: クラウド裁定者 [writer: adjudicator]
+- as_of: **2026-07-15**  / writer: クラウド裁定者 [writer: adjudicator]
 - 性質: **再生成可能なビュー・正本ではない**(正本は BATCH_REVISION_QUEUE.md=詳細台帳と各裁定文書。
   本書は毎便更新・上書き可。INDEX §7 の sha 照合対象に**含めない**)。
 - 使い方: ターミナルなら `git fetch && git show origin/claude/radar-batch-revision-lk9h56:ai-business-radar/radar-ops/ADJUDICATOR_STATE.md`。外出時は GitHub モバイルで本ファイルを直接閲覧。
@@ -21,8 +21,8 @@
 | 2c-1 delta 修正 | 狭域再オープン中(TZ 正規化+破損 filing 区別)・実装待ち | 実装→検証役 delta 再検証(F3/F8 の2面)→ PASS で 2c-2 SPEC 発行(裁定者) |
 
 ## 2. 報告待ち(司令塔からの CONFIRM_ 未着・状態 UNKNOWN)
-- ~~Q11 月曜実弾の結果~~ → Codex 転記で **VALIDATE_FAIL 14・NO_POST** と判明(裏取り待ち)。
-  Q11 限定修正 SPEC 発行済み → 修正後の実スロット POSTED_OK で完全クローズ
+- **Q11/R1-1/R1-2 = Codex 実装+独立検証 PASS(条件付き受領・07-15)** → 17:32 自然スロット
+  POSTED_OK で Q11 クローズ+kabutan 降格解除+delivery 昇格を同一裁定。完了パケット+VERIFY 3本の配送待ち
 - 訂正1号(lunch)/2号(preclose)の投稿完了記録(msg id)
 - ShOutFY 自己株控除・Bulk/REST パス衝突の読み取り再現(Q17 5-2)
 - starters 通常パス配備・scratch 3件所有者確認(boot v2 タスク)
