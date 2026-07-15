@@ -568,3 +568,26 @@
   候補登録もしない(誤用の実例が出た場合のみ起案) ④別 RADAR_ROOT=既知の限界と記載。
 - **独立検証へ進行可**(宣言文書への対応表追記のみ・追加コード編集不要)。検証必須項目に
   「対応表の主張と実配置の一致」を追加。入口監査 subagent 019f6540… は事前承認条件内。
+
+### R1-3 条件付き受領+自然証拠分類+R1-4 拘束境界(2026-07-15・壁打ち5/5)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_3_receipt_r1_4_spec_20260715.md`
+  sha256 `726fefaf11a25ceaa44805d071c50fd9eba3eeafca51dfd2a9e196de1a180b04`(commit 25c8622)。
+- **A: R1-3=条件付き受領(PENDING_DELIVERY)**。Mac worktree(f5f7898)は裁定者から確認不能 —
+  受理偽装せず二段方式。最終受理は F4 2文書(COMPLETION_PACKET+VERIFY・commit+path+sha256)
+  照合後。packet 必須記載: 成功経路+post.py 親SHA一致監査 / 入口対応表 / corrigendum /
+  idempotency 是正が R1-2 照合の意味を変えていない旨。独立検証(019f654e…)が実欠陥3系統を
+  発見→是正→PASS=枠組み機能4例目。
+- **B: 教育レーン 19:00=delivery UNKNOWN の正直記録**(マトリクス外・証拠非消費・
+  R1-5 候補スコープに教育レーンを追記)。**orchestrator 19:03=R1-1 自然実証2例目・
+  自然 validator FAIL 連続2(2/3)**・R1-2 receipt 未取得・昇格なし。
+- **C: R1-4 全7点確定**: ①write set=analysis.sh(hook のみ)+新規 module+テスト+宣言
+  (実名は宣言列挙) ②bootstrap=司令塔が配備時に作成・以後 state 欠損/破損=fail-closed・
+  自動再生成恒久禁止 ③遡及=dead-letter 実物から seed(現時点 2・artifact 裏付のみ・
+  推定加算禁止) ④increment=終端 artifact 書込み時のみ・1 run=最大1増分 ⑤判定表確定
+  (FAILED 終端+1 / VALIDATED_DRAFT・STALE・入力不存在・非営業日・遮断中=中立 / 完全成功=
+  リセット / 手動=司令塔+記録) ⑥outputs/automation/ 配下・schema 必須フィールド拘束・
+  transition log=append-only JSONL・HOLD sentinel は R1-3 sentinel と別ファイル・
+  **通知は Discord 不使用で確定** ⑦**Codex=worktree+独立検証+F4 まで・canonical 着地+配備=
+  司令塔専管(R1-3 も同じ扱いに統一・着地 commit は司令塔が CONFIRM_ 申告)**。
+- D: 壁打ち通常枠 5/5 消費。以後 BLOCKER 残存時のみオーナー許可枠10以内(承認済み記録)。
+  R1-4 は宣言列挙をもって着手可。
