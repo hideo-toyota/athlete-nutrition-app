@@ -435,3 +435,16 @@
   必須・受信側照合は補助へ格下げ / POSTING・DELIVERY_UNKNOWN の自動再送禁止=恒久条項。
 - 次イベント: 17:32 自然スロット POSTED_OK → **Q11 クローズ+kabutan 降格解除+delivery FAIL→PARTIAL
   昇格を同一裁定で判定**。
+
+### Q11/R1 最終受理+証拠分離（2026-07-15）
+- 裁定文書: `reports/CLAUDE_HANDOFF_q11_r1_final_acceptance_20260715.md`
+  sha256 `6c6ed2f4c2b004e8bce623eaa8ad533e7db37d99286078b809ee6870808d9f69`（commit 31bb678）。
+- **3実装とも受理**（4/4 sha 照合・R1-1 検証は既存偽成功経路2本を発見・封鎖させた実例として特記）。
+- **検証者認定（先例限定）**: Codex 別サブエージェント検証は本件受理に限り有効。
+  「検証役 PASS」明示要件の裁定（Q14 ゲート削減・BT-1・2c-1 delta・relay 追認）には不適用。
+  以後の subagent 代替は**事前承認必須**（今回は事後=逸脱記録）。
+- **証拠分離の訂正裁定**: 「最初の自然投稿が両者を兼ねる」は**同一 orchestrator 経路に限る**。
+  証拠マトリクス: kabutan POSTED_OK→Q11 クローズ+降格解除のみ / orchestrator 自然投稿+v2 receipt
+  →orchestrator LIVE-CONFIRM+delivery FAIL→PARTIAL / NewsPicks 自然投稿→同レーン LIVE-CONFIRM
+  （v2 receipt 非要求=レーン能力適合）。3件完了で Q14 全クローズ+暫定措置全解除。
+- **R1-5 候補登録**: v2 receipt の他レーン展開（NewsPicks/kabutan）— blueprint 順序の後・裁定まで着手禁止。

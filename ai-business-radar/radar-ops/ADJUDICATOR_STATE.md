@@ -21,8 +21,9 @@
 | 2c-1 delta 修正 | 狭域再オープン中(TZ 正規化+破損 filing 区別)・実装待ち | 実装→検証役 delta 再検証(F3/F8 の2面)→ PASS で 2c-2 SPEC 発行(裁定者) |
 
 ## 2. 報告待ち(司令塔からの CONFIRM_ 未着・状態 UNKNOWN)
-- **Q11/R1-1/R1-2 = Codex 実装+独立検証 PASS(条件付き受領・07-15)** → 17:32 自然スロット
-  POSTED_OK で Q11 クローズ+kabutan 降格解除+delivery 昇格を同一裁定。完了パケット+VERIFY 3本の配送待ち
+- **Q11/R1-1/R1-2 = 最終受理済み(07-15・4/4 sha 照合)**。残イベント=証拠マトリクスの3件:
+  ①kabutan POSTED_OK→Q11 クローズ+降格解除 ②orchestrator 自然投稿+v2 receipt→LIVE-CONFIRM+
+  delivery 昇格 ③NewsPicks 自然投稿→LIVE-CONFIRM。3件揃いで Q14 全クローズ
 - 訂正1号(lunch)/2号(preclose)の投稿完了記録(msg id)
 - ShOutFY 自己株控除・Bulk/REST パス衝突の読み取り再現(Q17 5-2)
 - starters 通常パス配備・scratch 3件所有者確認(boot v2 タスク)
