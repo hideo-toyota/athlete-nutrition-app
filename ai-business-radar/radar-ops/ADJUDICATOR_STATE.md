@@ -18,8 +18,7 @@
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
 | orchestrator 生成側監視 | 自然 VALIDATE_FAIL **連続2**(07-15 18:31・19:03 とも dead-letter/state 非前進=R1-1 実証2例)| **次の自然 FAIL(3連続)でパターン報告 → Q11-R 同型の是正起案可(未授権)** |
-| **R1-3(writer=Codex)** | **最終受理済み(07-15・F4 2/2 照合・6ba7595)** | 司令塔: f5f7898 を mac/live へ着地 → 着地 commit を CONFIRM_ 申告(証拠帰属アンカー切替)。plist 変更不要・R1-4 seed は別件 |
-| **R1-4(writer=Codex)** | 拘束境界7点確定(壁打ち5/5・25c8622)。counter bootstrap/seed=司令塔配備専管(現 seed=2)・通知 Discord 不使用・Codex は worktree+F4 まで | 宣言(ファイル列挙)→実装→独立検証→F4。壁打ち通常枠消費済み(BLOCKER 時のみ許可枠10) |
+| **R1-3+R1-4(writer=Codex)** | **両方とも最終受理済み(07-15・F4 各2/2 照合・6ba7595/e616103)**。blueprint R1 系の実装・受理完了 | **司令塔工程**: ①f5f7898+e24d1b3 を mac/live へ着地(同時可・commit 申告)②dead-letter 2実物再照合 ③seed=2 state+JSONL 作成 ④配備 ⑤1便 CONFIRM_。**注意: seed=2 → 配備後最初の自然 FAILED 終端で自動 HOLD 発動** |
 | Q13 教材 | Codex 改稿完了(f6b3077)・司令塔10項目レビュー **期限 07-14 EOD JST** | PASS→参照切替→クローズ |
 | 2c-1 delta 修正 | 狭域再オープン中(TZ 正規化+破損 filing 区別)・実装待ち | 実装→検証役 delta 再検証(F3/F8 の2面)→ PASS で 2c-2 SPEC 発行(裁定者) |
 
