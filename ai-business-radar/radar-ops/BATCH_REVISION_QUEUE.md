@@ -553,3 +553,18 @@
   処置(content_hash 照合込み)を CONFIRM_ 報告 ④partial 発生=R1-4 失敗1件・以後の遮断周期=
   中立の2段を fixture 検証。
 - 着手手順承認: 宣言ファイル先行→確定済み対象のみ編集。壁打ち残 2/5。
+
+### R1-3 SPEC 追補3 — 「レーン全停止」保証範囲の確定(2026-07-15・壁打ち4/5)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_3_spec_amendment3_20260715.md`
+  sha256 `597bd937e1b1a7712c3de56f1c39ac5bf9a9f77c40d4a3ba79a4ee5aa2cd1576`(commit 8166578)。
+- **A 採用**: 技術保証範囲=canonical 正式自動レーン(LaunchAgent→analysis.sh→post.py)+
+  同 shell の manual wrapper。範囲外(post.py 直接 CLI/import・別 RADAR_ROOT・汎用 webhook・
+  kabutan poster・人間/plugin)=技術保証外+**sentinel 中は運用禁止**を対応表に明記。
+  transport-wide/no-Discord-delivery は主張しない。write set 不変。
+- 根拠: R1-3=障害即応の小修正。広域封鎖は新統治機構=別 SPEC 案件。「HOLD 実在≠実効」の
+  要件は主張と遮断範囲の一致であり全域遮断ではない。
+- 条件: ①対応表3分類(sentinel 遮断/kill-switch のみ/技術可・運用禁止)+根拠1行ずつ・主張
+  文言の上限固定 ②sentinel 中の範囲外投稿=逸脱・CONFIRM_ 自己申告 ③transport-wide ガードは
+  候補登録もしない(誤用の実例が出た場合のみ起案) ④別 RADAR_ROOT=既知の限界と記載。
+- **独立検証へ進行可**(宣言文書への対応表追記のみ・追加コード編集不要)。検証必須項目に
+  「対応表の主張と実配置の一致」を追加。入口監査 subagent 019f6540… は事前承認条件内。
