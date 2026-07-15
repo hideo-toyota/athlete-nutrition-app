@@ -623,3 +623,21 @@
 - **注意**: seed=2 につき配備後最初の自然 FAILED 終端で自動 HOLD 発動(3連続目)— 既定の
   2/3 監視と整合。発動時は FAIL 類型サンプル添付で生成側是正の起案判断を裁定者へ。
 - **blueprint R1 系(R1-1〜R1-4)実装・受理完了**。運用完了は司令塔工程+自然証拠で判定。
+
+### R1-4 配備手順改訂 — 3件目 FAIL の遡及 reconciliation(2026-07-15・許可枠 8/10)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_4_deployment_reconciliation_20260715.md`
+  sha256 `6128bc1792397a808277969b6dcfac11b6102026ca62cc9c4bf9f9b22a8c1872`(commit f718d68)。
+- **事実認定(転記・CONFIRM_ で hash 再照合)**: 19:36 に3件目の自然 VALIDATE_FAIL
+  (dead-letter sha `56083b8c…`)→ **連続 3/3 到達・パターン報告条項発動**。3件は同一 input
+  manifest(9a02d891…)の反復失敗=1不良入力を30分毎に再試行する構造。
+- **A〜E 採用**(e616103 §2「seed=2 で配備」を追記型で上書き): A 着地 / B seed=2(basis=
+  最初の2件)/ **C=19:36 実物を既存 record-failure へ1回入力する配備時 reconciliation**
+  (条件: 実 artifact のみ・新コード経路なし・actor=commander の正直記録・一回性 — 以後の
+  手動投入は裁定者事前承認必須)/ D CONFIRM_ 1便+HOLD 維持(是正裁定前の解除は失敗ループ
+  再入 — 解除には理由明記)/ E 起案許可。
+- 追加条項: 着地〜seed 間に自然周期が走れば state 欠損→fail-safe HOLD が発生し得る=設計どおり。
+  発生時は artifact 保全・報告・置換を記録(無言削除禁止)。
+- **生成側是正(orchestrator 版 Q11-R 同型)の起案を許可**(実装は裁定後)。必須内容:
+  ①3件の FAIL 類型内訳 ②同一入力の再試行上限/鮮度ゲート(30分毎の同一不良入力への生成・
+  トークン消費を止める) ③HOLD 解除手順とセット(滞留 stale 入力のバースト処理禁止)
+  ④narrow fix スコープ(validator 非接触)。
