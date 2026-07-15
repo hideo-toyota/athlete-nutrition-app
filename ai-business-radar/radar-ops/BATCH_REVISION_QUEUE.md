@@ -538,3 +538,18 @@
 - ファイル列挙(6+宣言1)承認・orchestrator_analysis.sh は終端処理+touch 検査に限定。着手可。
 - 記録: 裁定者 SPEC が現行コード実態と両立しない2点を実装前差し戻しで検出 — 差し戻し運用が
   機能した実例(SPEC は Mac 実コードを読めない裁定者の限界を差し戻しで補完する設計どおり)。
+
+### R1-3 SPEC 追補2 — F4 kill-switch 帰属+F5 partial sentinel(2026-07-15・壁打ち3/5)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_3_spec_amendment2_20260715.md`
+  sha256 `0424abd7defb12f7a0358af12a170bcc365bf2af3141d5570e3bcedeac4cc6b7`(commit 142d9af)。
+- **F4=A 採用**: kill-switch 下の VALIDATED_DRAFT+state 前進=意図的な非配達終端(HOLD 解除後の
+  過去 draft バースト再投稿防止)・R1-3 非対象。条件: 配達成功にどの記録上も不算入(ledger/
+  POSTED_OK/LIVE-CONFIRM)・R1-4 中立リストに正式追加・completion packet §4-3 の訂正は追記型
+  (配送済み packet は不変・宣言文書に corrigendum 1行)・kill-switch 非接触条項不変。
+- **F5 承認(条件4点)**: partial sentinel(原子生成・runner 冒頭停止・解除は人間のみ・解除
+  コマンド非実装・record 失敗時も空 sentinel fail-safe・sentinel 中周期は中立)。条件:
+  ①エントリポイント網羅の対応表を DoD に(deepdive 前例の再発防止) ②レーン全停止であることを
+  宣言文書に明記+健全性チェックで sentinel 起因停止日を明示 ③解除は時刻・理由・dead-letter
+  処置(content_hash 照合込み)を CONFIRM_ 報告 ④partial 発生=R1-4 失敗1件・以後の遮断周期=
+  中立の2段を fixture 検証。
+- 着手手順承認: 宣言ファイル先行→確定済み対象のみ編集。壁打ち残 2/5。
