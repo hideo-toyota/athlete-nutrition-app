@@ -448,3 +448,26 @@
   →orchestrator LIVE-CONFIRM+delivery FAIL→PARTIAL / NewsPicks 自然投稿→同レーン LIVE-CONFIRM
   （v2 receipt 非要求=レーン能力適合）。3件完了で Q14 全クローズ+暫定措置全解除。
 - **R1-5 候補登録**: v2 receipt の他レーン展開（NewsPicks/kabutan）— blueprint 順序の後・裁定まで着手禁止。
+
+### Q11 自然発火 FAIL の記録+Q11-R 授権(2026-07-15)
+- 裁定文書: `reports/CLAUDE_HANDOFF_q11r_reproducibility_ruling_20260715.md`
+  sha256 `64f5507b6940326190179eb899411c61d033c5986aa98a34e5bc7ecaaf5a985b`(commit dfea8ae)。
+- **17:32 自然スロット FAIL**(Codex 転記・オーナー承認済み): VALIDATE_FAIL morning14/lunch10
+  (前日 fallback)/preclose5・実投稿0・marker0・手動介入なし。**Q11 未クローズ維持・降格解除なし・
+  delivery 昇格なし**(証拠マトリクス第1行イベント不成立)。fail-closed 安全動作の実証2例目として記録。
+- 認定: validator 強化だけでは自然 PASS 再現性は上がらない — **生成側の構造問題**(LLM が独自
+  field 名・タグ欠落・CAPABILITY 逸脱を発明できる自由度)。検証側(受理済み Q11)は有効なまま。
+- **Q11-R 授権 = 生成側再現性是正・障害即応クラス(gate-exempt・8月ゲート容量を消費しない)**。
+  writer=Codex [writer: codex/q11-r]。スコープ=A〜E のみ:
+  A validator 不変(拘束) / B 許可 claim manifest の決定論生成(validator 再計算経路と実装独立・
+  R2/D0-EVIDENCE-PACKET と将来一本化・二重正本禁止) / C LLM 本文の限定(必須セクション維持・
+  「次検証」欄は CAPABILITY 許可リスト方式) / D slot 別鮮度ゲート(trading_calendar 正本参照・
+  期限超過は NO_POST(STALE_PACKET) 理由付き記録・無音スキップ禁止) / E 再試行最大1回
+  (入力=validator エラーのみ・両試行ログ・なお FAIL なら投稿しない)。
+- 境界: 可=kabutan 生成パイプライン(プロンプト構築/manifest 生成/catch-up 鮮度判定/再試行)。
+  不可=Q11 validator 一式・orchestrator_post.py/v2 receipt 経路・LaunchAgent・kill-switch・正本類。
+  編集前に対象ファイル完全列挙を宣言(分界条件1と同一)。
+- **subagent 検証の事前承認(本タスク限り)**: 最終受理 §2 の事前承認要件を満たす正規発動。
+  条件同一(セッション ID 明示・別インスタンス・反証指向・自己申告)。
+- 受入確定=完了パケット+VERIFY の F4 配送後(FAIL 実測の一次ログ抜粋を同梱)。
+  クローズ条件不変: 是正後の自然スロット POSTED_OK+CONFIRM_ のみ。R1-3/R1-4/R1-5 順序不変。

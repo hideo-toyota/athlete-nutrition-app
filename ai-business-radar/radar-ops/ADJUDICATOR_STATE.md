@@ -24,6 +24,9 @@
 - **Q11/R1-1/R1-2 = 最終受理済み(07-15・4/4 sha 照合)**。残イベント=証拠マトリクスの3件:
   ①kabutan POSTED_OK→Q11 クローズ+降格解除 ②orchestrator 自然投稿+v2 receipt→LIVE-CONFIRM+
   delivery 昇格 ③NewsPicks 自然投稿→LIVE-CONFIRM。3件揃いで Q14 全クローズ
+- **07-15 17:32 自然スロット = FAIL**(VALIDATE_FAIL 14/10/5・実投稿0)→ ①は不成立のまま。
+  **Q11-R 授権済み**(生成側再現性是正・writer=Codex・A〜E・gate-exempt・subagent 検証事前承認)。
+  是正実装→F4 受入→**是正後の自然スロット POSTED_OK** が①の新しい経路
 - 訂正1号(lunch)/2号(preclose)の投稿完了記録(msg id)
 - ShOutFY 自己株控除・Bulk/REST パス衝突の読み取り再現(Q17 5-2)
 - starters 通常パス配備・scratch 3件所有者確認(boot v2 タスク)
@@ -48,6 +51,8 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-15 | Q11 自然発火 FAIL 記録+Q11-R 授権(生成側是正 A〜E・writer=Codex・gate-exempt) | `CLAUDE_HANDOFF_q11r_reproducibility_ruling_20260715.md` |
+| 07-15 | Q11/R1 最終受理+証拠分離マトリクス+subagent 検証の先例限定 | `CLAUDE_HANDOFF_q11_r1_final_acceptance_20260715.md` |
 | 07-14 | Blueprint R1-R4: 性能主張固定・信頼性4点=即応クラス・構造化出力=設計のみ・Gates C/D=原則のみ | `CLAUDE_HANDOFF_completion_blueprint_ruling_20260714.md` |
 | 07-14 | クリティカルパス: 司令塔復旧第一・Q11 限定SPEC・担当の期限付き代替構造 | `CLAUDE_HANDOFF_critical_path_ruling_20260714.md` |
 | 07-14 | ハイブリッド/Relay: Q18追補 ACCEPT・SPEC DEFER(条件3点)・dry-run 保留資産 | `CLAUDE_HANDOFF_relay_m0_hybrid_ruling_20260714.md` |
