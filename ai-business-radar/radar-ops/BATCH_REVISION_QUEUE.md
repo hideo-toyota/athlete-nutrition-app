@@ -641,3 +641,18 @@
   ①3件の FAIL 類型内訳 ②同一入力の再試行上限/鮮度ゲート(30分毎の同一不良入力への生成・
   トークン消費を止める) ③HOLD 解除手順とセット(滞留 stale 入力のバースト処理禁止)
   ④narrow fix スコープ(validator 非接触)。
+
+### f718d68 §④ 訂正追補 — actor=記録主体の定義確定(2026-07-15・許可枠 9/10)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_4_reconciliation_amendment_20260715.md`
+  sha256 `9006a9a520b9ebd551edf066ea53b855e022b42cd10ed64fece9483417be7592`(commit f8be9e8)。
+- **裁定者起因の訂正**: f718d68 条件3「actor=commander 明記」は e24d1b3 実コード
+  (record_failure=actor "orchestrator" 固定・chain validator が他 actor の increment を拒否)を
+  知らずに課した条件 — 実行すれば違反 or 自己 HOLD の両立不能。**実行前停止3例目**。
+- **A 採用(コード変更なし)**: `transition.actor`=**状態機械の記録主体**と定義確定(C-6 解釈・
+  以後拘束)。人間の実行主体は CONFIRM_ 側で記録: invoked_by=commander /
+  mode=deployment_reconciliation / approved_by=f718d68+本追補 / terminal_sha256 /
+  **追記 JSONL 行の ts 明記**(自然実行との区別を後日照合可能に)。
+- B(R1-4a 専用 reconcile command)不採用 — 一回性条項下の再利用なし機構への投資。将来
+  reconciliation が実際に再必要になった場合のみ事例付きで起案。
+- 進行許可: ①着地→②sha 再照合→③seed=2→改訂④→⑤CONFIRM_。他条件(一回性・HOLD 維持・
+  fail-safe HOLD 保全)不変。
