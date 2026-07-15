@@ -492,3 +492,16 @@
   オーナー帰属(較正時にカテゴリ粒度見直しを裁定可能)。
 - 逸脱記録: raw URL 404(非公開)→ origin/main コミット固定抽出で照合(等価)。以後 F4 は
   commit+path 指定で足りる。
+
+### R1-1 失敗経路の自然実運用実証+R1-2 未消費の分離(2026-07-15)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_natural_evidence_record_20260715.md`
+  sha256 `981b79b5ff9942135dc2f15e0601435dacc91a842d7b20c00352749b61c50a0f`(commit af0355b)。
+- **R1-1 自然実証1例目を記録**(18:31:48 JST 自然実行・Q14 VALIDATE_FAIL 1件=third-party label
+  欠落 → NO_POST・dead-letter v1 生成・3 artifact sha256 保持・state 非前進を mtime 時系列で確認)。
+  偽 NO_POST・偽記録の再演なし。claim taxonomy ゲートの本番機能実例として特記。
+- **分離確定**: R1-2 v2 receipt 証拠は未消費・未取得。証拠マトリクス第2行は不成立・待機継続。
+  R4 delivery=FAIL 不変(失敗を正しく記録できる証拠であり配達再現性の証拠ではない)。
+- 処置: 手動再送なし(投稿前 VALIDATE_FAIL につき自動再送禁止条項とは別領域・次の自然スロットで
+  再生成)/ dead-letter JSON+sha 一覧は次回 CONFIRM_ 便に同梱して一次裏取り / 本日投稿0は
+  健全性チェック(3営業日)窓に算入 / **validator FAIL 3回連続でパターン報告 → orchestrator 版
+  生成側是正(Q11-R 同型)を起案可(現時点では非授権)**。
