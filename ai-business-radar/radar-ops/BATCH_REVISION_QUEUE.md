@@ -471,3 +471,24 @@
   条件同一(セッション ID 明示・別インスタンス・反証指向・自己申告)。
 - 受入確定=完了パケット+VERIFY の F4 配送後(FAIL 実測の一次ログ抜粋を同梱)。
   クローズ条件不変: 是正後の自然スロット POSTED_OK+CONFIRM_ のみ。R1-3/R1-4/R1-5 順序不変。
+
+### Q11-R 受理+allowlist 信頼境界確定(2026-07-15)
+- 裁定文書: `reports/CLAUDE_HANDOFF_q11r_acceptance_20260715.md`
+  sha256 `e69a38a9e6e3cee8326bc9695b10f3d798e99541742d3db0030a035dcc25220e`(commit 21b032a)。
+- **Q11-R 実装(canonical cc4b35d・宣言7ファイル)+独立検証 PASS を受理**(F4 2/2 sha 照合・
+  reports main 5c6d44d)。A〜E 全充足。C は授権より保守側(自由文全廃・カテゴリ ID 選択のみ・
+  最終文は allowlist テンプレート決定論生成)— 追加授権不要と認定。
+- **subagent 検証3例目の実質実証**: 実バイパス5件(stale payload/自由文推奨/rc=2 再試行/
+  漢数字/retry-NO_POST 偽 marker)+同義語攻撃で blacklist 不十分性を証明→構造的 allowlist へ
+  設計変更を強制。転記 FAIL 14/10/5 は一次ログ抜粋で裏取り(分類不変・確度上昇)。
+- **allowlist=validator と同格の信頼境界(二層レジーム)**: 文言のみ=宣言+独立レビュー PASS /
+  意味に触れる変更(ID 追加削除・数量/方向/評価文型)=加えて裁定者事前承認。売買推奨・順位・
+  価格目標相当の文型は恒久禁止(拒否 probe 群を fixture 維持)。
+- **Q11 クローズ証拠確定(open 維持)**: 是正後の自然 eligible スロット POSTED_OK(marker+ledger)
+  +Discord 受信側 message 記録+CONFIRM_ → クローズ+kabutan 降格解除を同一裁定。kabutan は
+  v2 receipt 未実装レーンにつき受信側照合が正規証拠。17:32 FAIL は cc4b35d 以前=不算入。
+- **材料ゲート較正トリガー(観測のみ)**: 自然運用3スロット連続 NO_POST(材料起因)→ サンプル付き
+  FAIL パターン報告(停止条項でなく較正レビュー)。テンプレート化による情報価値の評価は
+  オーナー帰属(較正時にカテゴリ粒度見直しを裁定可能)。
+- 逸脱記録: raw URL 404(非公開)→ origin/main コミット固定抽出で照合(等価)。以後 F4 は
+  commit+path 指定で足りる。
