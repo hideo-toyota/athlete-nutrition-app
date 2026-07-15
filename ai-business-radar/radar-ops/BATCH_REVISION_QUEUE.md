@@ -505,3 +505,21 @@
   再生成)/ dead-letter JSON+sha 一覧は次回 CONFIRM_ 便に同梱して一次裏取り / 本日投稿0は
   健全性チェック(3営業日)窓に算入 / **validator FAIL 3回連続でパターン報告 → orchestrator 版
   生成側是正(Q11-R 同型)を起案可(現時点では非授権)**。
+
+### R1-3/R1-4 writer 再割当+SPEC 確定(2026-07-15・壁打ち1/5)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_3_4_demarcation_spec_20260715.md`
+  sha256 `4b64d11057c59b6524cb37a5dff66c6dff4429ec759dd5c56d6b9aa993576fbc`(commit 37f35d2)。
+- **R1-3/R1-4 = Codex 再割当**(オーナー直接指示・分界5条件踏襲・subagent 検証を両タスク限り
+  事前承認)。blueprint 原本未読の前提を明示 — 原本と食い違えば黙って乗り換えず質問で差し戻し。
+- **R1-2 自然証拠を待たず R1-3 着手可(条件2点)**: (a) 成功経路(投稿→receipt→archive→state)
+  diff 非接触を独立検証必須項目に / (b) 着地 commit 宣言+以後の CONFIRM_ に実行時 commit 明記
+  (証拠帰属の一意化)。
+- **R1-3 SPEC**: 対象=orchestrator のみ(kabutan 対象外)。partial=4類型(一部投稿成功/receipt
+  欠落/archive 失敗/state 前進失敗)+UNKNOWN 同載。専用終端 PARTIAL_DELIVERY+成功分/失敗分
+  棚卸し必須・partial で state 非前進・content_hash 重複防止消費・自動再送禁止。
+- **R1-4 SPEC**: 3連続の単位=**自然 eligible 実行**(正当 NO_POST は中立=増分もリセットもしない・
+  リセットは完全成功のみ)。カウンタ永続化+**破損時は fail-closed(0 扱い禁止)**。HOLD は
+  kill-switch と合成(置換禁止)+機構-遮断対象対応表を DoD に。解除=人間のみ・記録必須。
+  通知は held レーン経路を通さない・通知失敗でも HOLD 維持。R1-1 記録裁定の「3連続で
+  パターン報告」条項は R1-4 実装後 HOLD 通知に吸収。
+- **R1-5 = 未定義が正・非スコープ確認**(候補登録のみ・R1-4 後の新規裁定まで着手禁止)。

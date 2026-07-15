@@ -18,6 +18,7 @@
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
 | orchestrator 生成側監視 | 07-15 18:31 自然 VALIDATE_FAIL 1回目(R1-1 失敗経路は設計どおり動作・dead-letter 保全)| **3回連続 FAIL でパターン報告 → Q11-R 同型の是正起案可(未授権)** |
+| **R1-3/R1-4 実装(writer=Codex)** | SPEC 発行済み(壁打ち1/5)・R1-3 は R1-2 自然証拠を待たず着手可(成功経路 diff 非接触+着地 commit 宣言が条件)| 宣言(ファイル列挙)→実装→独立検証→F4 受入。壁打ち残 4/5 |
 | Q13 教材 | Codex 改稿完了(f6b3077)・司令塔10項目レビュー **期限 07-14 EOD JST** | PASS→参照切替→クローズ |
 | 2c-1 delta 修正 | 狭域再オープン中(TZ 正規化+破損 filing 区別)・実装待ち | 実装→検証役 delta 再検証(F3/F8 の2面)→ PASS で 2c-2 SPEC 発行(裁定者) |
 
@@ -54,6 +55,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-15 | R1-3/R1-4 Codex 再割当+SPEC 確定・R1-5 非スコープ(壁打ち1/5) | `CLAUDE_HANDOFF_r1_3_4_demarcation_spec_20260715.md` |
 | 07-15 | R1-1 自然実証1例目記録+R1-2 証拠未消費の分離(delivery=FAIL 不変) | `CLAUDE_HANDOFF_r1_natural_evidence_record_20260715.md` |
 | 07-15 | Q11-R 受理(cc4b35d・A〜E 充足)+allowlist 信頼境界二層レジーム+クローズ証拠確定 | `CLAUDE_HANDOFF_q11r_acceptance_20260715.md` |
 | 07-15 | Q11 自然発火 FAIL 記録+Q11-R 授権(生成側是正 A〜E・writer=Codex・gate-exempt) | `CLAUDE_HANDOFF_q11r_reproducibility_ruling_20260715.md` |
