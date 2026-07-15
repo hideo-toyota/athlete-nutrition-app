@@ -656,3 +656,24 @@
   reconciliation が実際に再必要になった場合のみ事例付きで起案。
 - 進行許可: ①着地→②sha 再照合→③seed=2→改訂④→⑤CONFIRM_。他条件(一回性・HOLD 維持・
   fail-safe HOLD 保全)不変。
+
+### Q14-R 授権 — orchestrator 生成側再現性是正(2026-07-15・許可枠 10/10)
+- 裁定文書: `reports/CLAUDE_HANDOFF_q14r_authorization_20260715.md`
+  sha256 `a7a6d9a6d54844912fd790f72c09bae3674b4dc127ea0ec7979ac8567a5f3f70`(commit 076dbb7)。
+- 提案書(reports main 68a5991・sha `8e539a3a…`)照合済み。**G1〜G4 全採用**(G2 は validator
+  非緩和・prompt 3例示のみ・自動文字列書換なし=正しい向き)。
+- **Q14-R = 障害即応クラス授権・writer=Codex・HOLD 継続下で実装**。write set 4系統
+  (analysis.sh / 新規 generation_guard / テスト / 宣言)・除外群拘束・**correction pass 必須**
+  (rc=1 のみ・最大1回・引用違反のみ修正・新事実数値禁止・NO_POST 変換禁止・両試行保全・
+  1 run=R1-4 増分1)。
+- **提案内矛盾を検出・修正**: input_set_id は §3-2 の (path,sha) pairs では T5(同一 bytes 別名=
+  同一 id)が不成立 → **内容 sha256 の sorted 集合のみから導出**に確定(path は metadata)。
+  混在集合=開示ルート(quarantine メンバー列挙必須・自動分割なし)。guard state 欠損=
+  fail-closed・budget 無言リセット禁止・記録に生成文/prompt/秘密の永続化禁止。
+- **T1〜T12 凍結採用**(T5 は内容ベース読み替え)・subagent 検証を Q14-R 限り事前承認。
+- **HOLD 解除 runbook 確定(司令塔専管)**: 受理後着地/配備(HOLD 下)→ 失敗 input_set
+  quarantine+cursor 前進(07-15 backlog 生成投稿ゼロ)→ manual_reset 3→0 → CONFIRM_
+  (旧新 state hash・quarantine id・reset ts・理由・commit)→ **live 証拠は次の真に新規な
+  自然入力のみ**(証拠マトリクス不変)。実装受理だけでは解除しない。
+- 往復枠 10/10 消費。既定フロー(宣言→実装→検証→F4→受理→CONFIRM_)は事前確定済みで
+  追加枠不要。BLOCKER/矛盾/スコープ変更時のみ新規オーナー承認枠。
