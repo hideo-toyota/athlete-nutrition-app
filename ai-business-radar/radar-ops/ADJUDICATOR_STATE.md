@@ -17,8 +17,8 @@
 |---|---|---|
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
-| orchestrator 生成側監視 | 自然 VALIDATE_FAIL **連続2**(07-15 18:31・19:03 とも dead-letter/state 非前進=R1-1 実証2例)| **次の自然 FAIL(3連続)でパターン報告 → Q11-R 同型の是正起案可(未授権)** |
-| **R1-3+R1-4(writer=Codex)** | **両方とも最終受理済み(07-15・F4 各2/2 照合・6ba7595/e616103)**。blueprint R1 系の実装・受理完了 | **司令塔工程**: ①f5f7898+e24d1b3 を mac/live へ着地(同時可・commit 申告)②dead-letter 2実物再照合 ③seed=2 state+JSONL 作成 ④配備 ⑤1便 CONFIRM_。**注意: seed=2 → 配備後最初の自然 FAILED 終端で自動 HOLD 発動** |
+| orchestrator 生成側監視 | 自然 VALIDATE_FAIL **連続3/3 到達**(18:31・19:03・19:36=同一 manifest の反復失敗)・パターン報告条項発動 | **生成側是正の起案を許可済み**(f718d68 §4・実装は裁定後)。提案書待ち |
+| **R1-3+R1-4(writer=Codex)** | **両方とも最終受理済み(07-15・F4 各2/2 照合・6ba7595/e616103)**。blueprint R1 系の実装・受理完了 | **司令塔工程(f718d68 で改訂)**: ①着地 ②3 dead-letter の sha 再照合 ③seed=2 ④19:36 実物の reconciliation 入力→count=3・HOLD 発動 ⑤1便 CONFIRM_(hash 一式+FAIL 類型=パターン報告)。**レーンは HOLD 維持** |
 | Q13 教材 | Codex 改稿完了(f6b3077)・司令塔10項目レビュー **期限 07-14 EOD JST** | PASS→参照切替→クローズ |
 | 2c-1 delta 修正 | 狭域再オープン中(TZ 正規化+破損 filing 区別)・実装待ち | 実装→検証役 delta 再検証(F3/F8 の2面)→ PASS で 2c-2 SPEC 発行(裁定者) |
 
