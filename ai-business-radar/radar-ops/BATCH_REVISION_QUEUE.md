@@ -677,3 +677,22 @@
   自然入力のみ**(証拠マトリクス不変)。実装受理だけでは解除しない。
 - 往復枠 10/10 消費。既定フロー(宣言→実装→検証→F4→受理→CONFIRM_)は事前確定済みで
   追加枠不要。BLOCKER/矛盾/スコープ変更時のみ新規オーナー承認枠。
+
+### Q14-R 最終受理+07-16 FAIL 組込み+着地順序(2026-07-16・新規枠 1/3)
+- 裁定文書: `reports/CLAUDE_HANDOFF_q14r_final_acceptance_20260716.md`
+  sha256 `c50394662a4922f1b58025d49959e74d71fd0dfe51933ad530c368f1f66f47a1`(commit faa2335)。
+- **Q14-R(45f21e1)最終受理**(F4 2/2 sha 照合・reports main f327ad9・T1〜T12 PASS)。
+  授権条項全充足。initial_no_post(accepted NO_POST も budget 消費)=保守側強化として承認。
+  **reconcile-quarantine(commander 専用面)承認**(偽装 actor 両方向拒否を反証済み・
+  アクセス制御ベースの信頼モデルは開示どおり記録)。検証7例目(T5/T7 実 FAIL→是正)。
+- **07-16 08:17 FAIL(4件目・dead-letter `df1beaae…`)= 閾値後追加証拠**: counter へ投入しない
+  (reconciliation は seed=2+19:36 の1回のまま)。照合3項目を司令塔へ指定: ①07-16 manifest
+  (`6ed3bbe6…`)の内容 identity を導出し 334e1c76… と比較(不一致なら第2 legacy identity
+  として quarantine 登録) ②08:17 validator 3類型の G2 被覆確認(**新類型あれば解除保留**)
+  ③19:36〜08:17 に POSTED_OK なしの log 監査(20:08 NO_POST=中立の裏取り)。
+- **確定順序**: 前提=unload 維持(再ログインで旧 agent 再ロードの実証あり→1〜4 は同一メンテ窓)
+  →①3 commit 順次着地→②seed=2→③reconciliation(HOLD 有効化)→④guard 初期化+quarantine
+  登録→⑤cursor 確認(backlog 再生成ゼロ)→⑥CONFIRM_ 1便→⑦解除3条件(新類型なし+identity
+  処理完了+CONFIRM_ 済み)で manual_reset→HOLD 除去→reload まで追加裁定不要。
+- D 確認: 手動投稿/kickstart/draft 再投稿禁止・LIVE-CONFIRM 候補=解除後の真に新規な自然入力
+  のみ(v2 receipt 必須)。教育=UNKNOWN/R1-5 不変。
