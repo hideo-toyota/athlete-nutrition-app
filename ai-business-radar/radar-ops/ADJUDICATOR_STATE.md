@@ -15,6 +15,8 @@
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
 |---|---|---|
+| **新レーン2本(区分D 受付済み・b2098e3)** | outcome lane(781ae31・forecast 1件 pending)/ guidance revision(104f1f7・research substrate)。Discord 投稿 OFF・選定利用禁止・モデル凍結(60件まで) | A1/A2 独立検証(subagent 事前承認)→ F4(write set 全列挙+plist hash+オーナー授権1行)→ 受理裁定 |
+| **R1-2a(receipt 偽陰性是正)** | 授権済み(writer=codex/r1-2a・照合正規化のみ)。経過措置: 受理前の偽陰性は再送せず保全・報告 | 宣言→実装→検証→F4 |
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
 | **R1-3/R1-4/Q14-R** | **全て着地・配備・解除完了(07-16)**: 着地 2bd87ba/59943b9/d6cd6a7・seed=2・reconcile→count=3→HOLD→manual_reset 3→0→reload。**deployment クローズ(974d44b)**。08:50 legacy DELIVERY_UNKNOWN=恒久 UNKNOWN(tripwire 付き・証拠不算入) | 司令塔残手順: d1c7f90 訂正追記+**cursor 境界一回実施(08:15:33〜09:15:42 の間)**→ 自然運用復帰。次の自然実行(fresh Kabutan のみ)が LIVE-CONFIRM 候補 — POSTED_OK+v2 receipt の CONFIRM_ で delivery 昇格裁定 |
