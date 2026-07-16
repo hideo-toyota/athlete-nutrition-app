@@ -763,3 +763,15 @@
 - **A8**: 検証はローカル別人格で完結(外部送信不要=保護の迂回は不要かつ不許可)・配送は
   既存 F4 経路。検証役の書込みゼロ(編集・commit・投稿・設定変更なし)。
 - FAIL 差し戻し先=裁定者(修正範囲と書き手を指定)。104f1f7 は PASS 後も research substrate。
+
+### A1/A2 独立 FAIL — 可逆 HOLD+是正授権+R1-2a PASS 受付(2026-07-16)
+- 裁定文書: `reports/CLAUDE_HANDOFF_new_lanes_fail_hold_20260716.md`
+  sha256 `9cff177e8ebf29e86cd751e266f25f1b5b8f7819990c8f19f708d64cc6af69cd`(commit cb678ae)。
+- **両 LaunchAgent(22:05/22:15)を可逆 unload**(FAIL 実装の夜間実行=append-only 台帳への
+  欠陥記録蓄積・ライブ系列の証拠汚染リスク)。unload ts 記録・削除/巻き戻しなし・plist 非編集・
+  再ロードは是正受理後の裁定で。fc_2e6b8614… の解決遅延は available_at 正直記録で valid。
+- **A1/A2 是正授権**(同一タスク継続): スコープ=FAIL 所見のみ・除外群接触は編集前差し戻し・
+  再検証は原 probe 込み全再判定・受理は是正後 F4 照合後。
+- **R1-2a 独立 PASS 受付**(確定は F4 後)。**A1/A2 を待たず単独受理・着地可** —
+  orchestrator LIVE-CONFIRM の偽 UNKNOWN リスク解消のため優先度高。
+- 配送指示: F4 packet(申告 sha 01e953b3…)+VERIFY 3件+b2098e3 §5 証拠を reports main へ。
