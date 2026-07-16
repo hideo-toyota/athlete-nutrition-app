@@ -817,3 +817,31 @@
   以後、第2世代は裁定権を持たない。就任前の停止系依頼のみ例外的に処理可。
 - 第2世代の在任記録: バッチ改版 v2 発行から R1 系完了・Q11-R/Q14-R・R1-2a・新レーン統制まで。
   拘束裁定文書 30本超・自己訂正6回(全て追記型)・独立検証は8タスク連続で実欠陥検出。
+
+### 第3世代クラウド裁定者 就任(2026-07-16・世代交代 効力発生)
+- ブート文書: `radar-ops/CLAUDE_HANDOFF_adjudicator_gen3_boot_20260716.md`
+  (sha256 `0e7f8293f27a14e9f29b821627f523c52ab6ed0cdd1488bf8ad9adab375b9986`・commit aa35737)。
+- **就任手続き完了**(§1 の順): 本ブート文書 + ADJUDICATOR_STATE + 本台帳(2026-07-15 以降 全読)
+  + ADJUDICATOR_INTAKE_PROTOCOL + ROLES_current/INDEX_current を読了。§7 sha256 を実バイト照合
+  (`git show origin/claude/radar-batch-revision-lk9h56:… | sha256sum`)= **7件全一致・不一致ゼロ**:
+  ブート `0e7f8293…` / INTAKE_PROTOCOL `1d468e2a…` / INDEX `786cd44c…` / ROLES `a1138519…` /
+  ROADMAP `2a8310e2…` / ANALYSIS_QUALITY_RULES `bf82eb2f…` / ISSUE_MAP `c112fa99…`。
+- **就任効力発生点 = 本節の push**。以後、裁定権は第2世代 → **第3世代へ完全移行**(単一裁定者原則・
+  二重裁定なし)。第2世代セッションは裁定権を持たない。
+- **承認・継承した拘束**:
+  ①R4 性能主張(不変・全レーン): safety=PARTIAL / reproducible delivery=FAIL /
+    outcome learning=INSUFFICIENT / investable alpha=NOT_PROVEN。昇格は軸ごとの定義済み証拠+裁定のみ。
+  ②絶対禁止: 売買推奨・順位・価格目標を出さない / 秘密(API キー・webhook URL・トークン・.env 実値・
+    有料本文)を読まない・保存しない・出力しない(状態表記 SET/EMPTY/ABSENT のみ)。
+  ③検証規律: 未照合の口頭情報のみでは解除・受理・GO を出さない(停止は常に可・非対称)。正規裁定は
+    実体 fetch+sha256 照合後のみ。push は branch `claude/radar-batch-revision-lk9h56` のみ・PR 不可。
+- **継承した現在地**(詳細= ADJUDICATOR_STATE + 直近各節):
+  進行中= A1 是正(write set 7+2 凍結・契約1〜7・writer=codex/a1-fix)/ A2 fix2(G4 lane=="live"・
+  G6 carried baseline・2ファイル・writer=codex/a2-fix2)。新レーン2本の LaunchAgent = 可逆 HOLD 中
+  (rc=113・POST=0・性能昇格禁止)。R1-2a(040715a)最終受理済(matcher 132,496 PASS)— 着地 CONFIRM_ 未着。
+  待ちイベント= ①kabutan 自然 POSTED_OK→Q11 完全クローズ+降格解除 ②orchestrator 自然投稿+v2 receipt
+  →LIVE-CONFIRM+delivery FAIL→PARTIAL ③NewsPicks 自然投稿→LIVE-CONFIRM(3件揃いで Q14 全クローズ+
+  暫定措置全解除)/ R1-2a 着地 CONFIRM_ / fc_2e6b8614… 初回ライブ解決。
+- 第2世代への謝辞と申し送りの受領を記録(自己訂正6回=全て追記型・独立検証8タスク連続で実欠陥検出=
+  「正直さが割に合う制度」を維持する)。以後、本セッションが裁定を発行する。
+- [writer: adjudicator]
