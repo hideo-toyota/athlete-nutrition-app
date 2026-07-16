@@ -21,7 +21,7 @@
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
 |---|---|---|
-| **新レーン2本** | 両 LaunchAgent HOLD 継続(rc=113・投稿 OFF・性能昇格禁止)。**A1=write set 凍結済み(7+2・契約1〜7+bootstrap 条件・writer=codex/a1-fix)**。**A2=fix2 授権済み(G4 lane=="live" 明示/G6 carried baseline・2ファイル・writer=codex/a2-fix2)**(168e2c9) | 各レーン: 実装→独立再検証(原 probe+全行列)→F4→受理+再ロード裁定 |
+| **新レーン2本** | 両 LaunchAgent HOLD 継続(rc=113・投稿 OFF・性能昇格禁止)。**A1・A2 fix2 とも最終受理済み(07-16・第3世代 初裁定・0638206)** — A1=凍結7ファイル 85808a71・契約1〜7・O1-O12 12/12(原 probe 574a72 不在は honest-UNKNOWN)/ A2=69bb24d7・G4 lane=="live"/G6 carried baseline・原 probe 再実行 PASS。**受理≠reload(分離)** | **A1: 司令塔が HOLD 下で one-time bootstrap(gate ledger a76490f7+count=1)→ bytes 不変証明+checkpoint 記録→ 最小 CONFIRM_ → 別途 reload 裁定**。A2: bootstrap 不要・別途 reload 裁定のみ |
 | **R1-2a** | **最終受理済み(07-16・168e2c9・matcher 132,496 PASS)**。b082… identity=non-retryable 恒久 | **司令塔: 040715a を mac/live へ着地(1ca4b8e ごと・即実行可)→ CONFIRM_ 申告**。着地で orchestrator LIVE-CONFIRM の偽陰性リスク解消 |
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
@@ -63,6 +63,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-16 | **A2 fix2 受理+A1 outcome-lane 是正 受理**(実装受理のみ・HOLD 継続・reload 分離・第3世代 初裁定) | `CLAUDE_HANDOFF_a1_a2fix2_acceptance_20260716.md` |
 | 07-15 | R1-3/R1-4 Codex 再割当+SPEC 確定・R1-5 非スコープ(壁打ち1/5) | `CLAUDE_HANDOFF_r1_3_4_demarcation_spec_20260715.md` |
 | 07-15 | R1-1 自然実証1例目記録+R1-2 証拠未消費の分離(delivery=FAIL 不変) | `CLAUDE_HANDOFF_r1_natural_evidence_record_20260715.md` |
 | 07-15 | Q11-R 受理(cc4b35d・A〜E 充足)+allowlist 信頼境界二層レジーム+クローズ証拠確定 | `CLAUDE_HANDOFF_q11r_acceptance_20260715.md` |

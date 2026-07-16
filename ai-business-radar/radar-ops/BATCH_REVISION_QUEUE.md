@@ -845,3 +845,33 @@
 - 第2世代への謝辞と申し送りの受領を記録(自己訂正6回=全て追記型・独立検証8タスク連続で実欠陥検出=
   「正直さが割に合う制度」を維持する)。以後、本セッションが裁定を発行する。
 - [writer: adjudicator]
+
+### A2 fix2 受理 + A1 outcome-lane 是正 受理(2026-07-16・第3世代 初裁定)
+- 裁定文書: `reports/CLAUDE_HANDOFF_a1_a2fix2_acceptance_20260716.md`
+  sha256 `fd0dea72272cdc2991321c40bc0684f3e4191c1b49818723f61214d179f04560`
+  (reports commit `0638206`・branch claude/radar-batch-revision-lk9h56)。
+- **照合(区分C・実体 fetch+sha256)**: A2 F4 `911b56cd`(RP `fb7326c5…`/VERIFY `4d0a6dc5…`)・
+  A1 F4 `47bea937`(RP `7071ea48…`/VERIFY `b328069e…`)= 全 manifest 一致・両 commit は
+  origin/main ancestor。授权 anchor `168e2c9` sha `d0d318f4…` 一致。canonical 実コードは
+  クラウド不読につき F4 Markdown 実体を正規証拠として照合(impl 別 sha は独立 verifier が commit blob 一致確認)。
+- **A2 fix2 = ACCEPT**: G4 現 source.lane=="live" 明示(`guidance_revisions.py:372-374`)/
+  G6 per-metric carried FNP baseline / write set 2ファイル(`69bb24d7`)/ 原 probe `e7eb96f…`
+  再実行 PASS・focused 12/12・G1-G9 9/9・strict 6/6 / HOLD rc=113。ブロッカーなし。
+- **A1 = ACCEPT**: 凍結7ファイル(`85808a71`・parent `301ca16`)+記録2(宣言 `6a9e29f`→`301ca16`
+  + RP `3c3bcb5`)/ 契約1〜7 / 独立 O1-O12 **12/12**・focused 38/38・strict PASS。原5所見を
+  file:line で fail-closed 確認: 台帳競合=O1 / backdate=O2 / 二重調整=O4+契約2 / 二重送信=O8
+  (sender 1回)/ kill switch 迂回=O8(内部+pre-sender)。**原 probe `574a72…` は body 不在 →
+  byte 同一 replay 不可を honest-UNKNOWN として記録**(再構成 probe `9f327661…`+O1-O12+committed
+  adversarial 回帰で実質充足・「取得できない証拠を要求しない」/ ブロッカー不該当・同一バイト等価は非主張)。
+  checkpoint bootstrap は R1-4 原則充足(silent create 禁止・宣言明記・初期化後欠損=fail-closed・
+  実施は司令塔受理後工程)。canonical ledger 不変(`a76490f7…`・count=1・size=10336・fingerprint start=end)。
+- **受理 ≠ reload(分離・明示)**: 実装受理のみ。reload/kickstart/自然・manual firing/外部 POST/
+  retry/state advance/性能・alpha 昇格は本裁定で不許可 — 別途 reload 裁定が必須。両レーン HOLD 継続
+  (`analysis-outcomes`/`guidance-revisions` とも rc=113)・`RADAR_ANALYSIS_OUTCOMES_POST=0`・R4 不変。
+- **受理後工程**: A1=司令塔が HOLD・POST=0 維持のまま宣言記載の one-time bootstrap を1回のみ実行
+  (actor=commander・gate ledger `a76490f7…`+count=1)→ ledger bytes 不変証明+checkpoint の
+  hash/head/count/time/actor 記録(不一致=delete/reseed/repair せず停止・保全・報告)→ 最小 `CONFIRM_`
+  → 別途 **A1 reload 裁定**。A2=bootstrap 不要・受理→reload 間の config 変更なし前提で **A2 reload 裁定**のみ。
+- 第3世代の初裁定。A1/A2 の初回独立 FAIL→是正→PASS は「解除前検証」の制度目的が機能した証拠として維持。
+  自己制限の明示開示(byte-identity 非主張)を正しい様式として特記。
+- [writer: adjudicator]
