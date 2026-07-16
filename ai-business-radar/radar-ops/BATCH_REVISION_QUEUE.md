@@ -696,3 +696,16 @@
   処理完了+CONFIRM_ 済み)で manual_reset→HOLD 除去→reload まで追加裁定不要。
 - D 確認: 手動投稿/kickstart/draft 再投稿禁止・LIVE-CONFIRM 候補=解除後の真に新規な自然入力
   のみ(v2 receipt 必須)。教育=UNKNOWN/R1-5 不変。
+
+### 解除ゲート — 条件付き PROCEED+最小 CONFIRM_ 形式(2026-07-16・往復 2/3)
+- 裁定文書: `reports/CLAUDE_HANDOFF_release_gate_confirm_format_20260716.md`
+  sha256 `ef88fae490afa167b924bfd5fc6eed6d99882e7532209393b244d71ac468035b`(commit 081c41f)。
+- 実質3条件充足を確認: 07-15/07-16=別 identity(334e1c76…/79b99e87…)両方 quarantine 済み /
+  08:17=既存 G2 型のみ / streak 監査済み(20:11 NO_POST=中立)。着地 2bd87ba→59943b9→d6cd6a7・
+  seed=2・reconcile 1回・count=3・HOLD 発火・08:17 不加算 — 全て手順どおり。
+- **CODEX_ 証拠文書は CONFIRM_ の代替にならない**(CONFIRM_=司令塔専用 prefix・本番操作の
+  責任主体による自認記録。Codex の代筆回避は正しい)。二重作業不要 — 参照方式の最小8行
+  CONFIRM_ を指定(executed_by / evidence path+sha / commits / hash 追認 / quarantine 2件 /
+  照合追認 / 実行 ts 追記 / [writer: commander])。executed_by=Codex の場合はオーナー授権逸脱
+  1行明記(fec5a29 と同扱い・巻き戻し不要)。
+- **PROCEED 条件 = 上記 CONFIRM_ 作成**。以後 manual_reset→HOLD 除去→reload まで追加裁定不要。
