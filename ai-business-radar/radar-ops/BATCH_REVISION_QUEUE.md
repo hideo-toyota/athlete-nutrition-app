@@ -709,3 +709,20 @@
   照合追認 / 実行 ts 追記 / [writer: commander])。executed_by=Codex の場合はオーナー授権逸脱
   1行明記(fec5a29 と同扱い・巻き戻し不要)。
 - **PROCEED 条件 = 上記 CONFIRM_ 作成**。以後 manual_reset→HOLD 除去→reload まで追加裁定不要。
+
+### Q14-R 配備後開示への裁定 — PROCEED(2026-07-16・往復 3/3)
+- 裁定文書: `reports/CLAUDE_HANDOFF_q14r_post_release_ruling_20260716.md`
+  sha256 `194e62da21f73c386bb463bc011c0c167cee615ae291ae463dc4462f82e922fa`(commit 974d44b)。
+- 開示文書(2f6f790・sha `b6245ec7…`)照合済み。reset/HOLD 除去/reload 完了(00:52 UTC 系列・
+  post-reset hash 記録)。開示様式の適正(自己訂正・遅延発見の即時開示・bounded scan の限定)を特記。
+- **①08:50 DELIVERY_UNKNOWN = 再 HOLD/legacy sentinel とも不要**(quarantine+mixed_blocked+
+  自動再送禁止の3層で目的達成・4層目は冗長)。条件: 恒久 UNKNOWN(POSTED_OK 昇格禁止・
+  証拠永久不算入)/ retry_eligible=legacy 表示で行動根拠にしない / tripwire(content_hash
+  `0254ca43…`・nonce 一致の将来発見→操作せず報告)。
+- **②mixed 解消 = adjudicated cursor boundary 授権**(一回限り・08:15:33 と 09:15:42 の間・
+  旧/新値と方法を記録・入力ファイルは現位置保全)。cleanup SPEC は反復実態が出た場合のみ起案。
+- **③Q14-R deployment = 完了扱いでクローズ**。残りは運用証拠イベントのみ(証拠マトリクス不変)。
+  付帯: d1c7f90 の文言誤り(quarantine consumption only→mixed_blocked)へ append-only 訂正。
+- 手順4点(訂正追記→cursor 境界→UNKNOWN 恒久指定→自然運用復帰)。次の自然実行=fresh Kabutan
+  のみの新 identity → POSTED_OK+v2 receipt で LIVE-CONFIRM+delivery 昇格裁定へ。
+- 往復枠 3/3 消費。以後は既定フロー(CONFIRM_/自然証拠)のみで進行可。
