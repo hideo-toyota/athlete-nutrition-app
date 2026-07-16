@@ -17,7 +17,7 @@
 |---|---|---|
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
-| **Q14-R(writer=Codex)** | **最終受理済み(07-16・F4 2/2・faa2335)**。R1-3/R1-4/Q14-R とも mac/live **未着地**(HEAD 45b57c6)。07-16 08:17 に旧コードで4件目 FAIL(閾値後追加証拠・counter 不投入)・agent は unload 中 | **司令塔**: faa2335 §C の7段(3 commit 着地→seed=2→reconciliation→guard 初期化+quarantine→cursor 確認→CONFIRM_→解除3条件で reset/reload)。照合3項目(identity 比較・G2 被覆・streak 監査)を CONFIRM_ に |
+| **R1-3/R1-4/Q14-R** | **全て着地・配備・解除完了(07-16)**: 着地 2bd87ba/59943b9/d6cd6a7・seed=2・reconcile→count=3→HOLD→manual_reset 3→0→reload。**deployment クローズ(974d44b)**。08:50 legacy DELIVERY_UNKNOWN=恒久 UNKNOWN(tripwire 付き・証拠不算入) | 司令塔残手順: d1c7f90 訂正追記+**cursor 境界一回実施(08:15:33〜09:15:42 の間)**→ 自然運用復帰。次の自然実行(fresh Kabutan のみ)が LIVE-CONFIRM 候補 — POSTED_OK+v2 receipt の CONFIRM_ で delivery 昇格裁定 |
 | **R1-3+R1-4(writer=Codex)** | **両方とも最終受理済み(07-15・F4 各2/2 照合・6ba7595/e616103)**。blueprint R1 系の実装・受理完了 | **司令塔工程(f718d68 で改訂)**: ①着地 ②3 dead-letter の sha 再照合 ③seed=2 ④19:36 実物の reconciliation 入力→count=3・HOLD 発動 ⑤1便 CONFIRM_(hash 一式+FAIL 類型=パターン報告)。**レーンは HOLD 維持** |
 | Q13 教材 | Codex 改稿完了(f6b3077)・司令塔10項目レビュー **期限 07-14 EOD JST** | PASS→参照切替→クローズ |
 | 2c-1 delta 修正 | 狭域再オープン中(TZ 正規化+破損 filing 区別)・実装待ち | 実装→検証役 delta 再検証(F3/F8 の2面)→ PASS で 2c-2 SPEC 発行(裁定者) |
