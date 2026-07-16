@@ -7,6 +7,11 @@
 
 ---
 
+## ⚠ 世代交代進行中(2026-07-16)
+第2世代→第3世代への移行がオーナー指示で開始。ブート文書 =
+`CLAUDE_HANDOFF_adjudicator_gen3_boot_20260716.md`(sha `0e7f8293f27a14e9f29b821627f523c52ab6ed0cdd1488bf8ad9adab375b9986`・commit aa35737)。
+**第3世代が台帳へ就任節を push するまで裁定権は第2世代にあり、push 後は第3世代へ完全移行**(二重裁定なし)。
+
 ## 0. 現行性能主張の正(R4・2026-07-14 固定)
 **safety=PARTIAL / reproducible delivery=FAIL / outcome learning=INSUFFICIENT / investable alpha=NOT_PROVEN**
 (矛盾する性能表現は全レーン禁止・昇格には軸ごとの定義済み証拠。詳細= completion_blueprint 裁定)
