@@ -789,3 +789,22 @@
   受理まで継続(rc=113 ×2 遵守確認)。
 - **A1=DEFER**(所見未達につき write set を推測確定しない)。R1-2a 経路再確認(F4→受理→
   司令塔着地・A1/A2 と独立・優先)。
+
+### R1-2a 最終受理+A1 write set 凍結+A2 fix2 授権(2026-07-16)
+- 裁定文書: `reports/CLAUDE_HANDOFF_r1_2a_acceptance_a1_a2_scope_20260716.md`
+  sha256 `d0d318f4e16e17c2674a397cdbac800bc195547dadc8b735480ae336105b8cdc`(commit 168e2c9)。
+- F4 直接配送(reports main 89fd69d・17文書)照合: 申告4文書 4/4 一致・R1-2a 文書は commit
+  固定抽出・b2098e3 §5 残証拠(write set 14+8+3/plist hash/オーナー授権)全充足。
+- **R1-2a(040715a)最終受理**: matcher 132,496 ケース・outbound 完全一致のまま受信照合のみ
+  末尾改行1個許容・validator/poster 不変・宣言 1ca4b8e が直接親。lone-CR/非文字列の committed
+  テスト化は受理条件にしない(probe 被覆で足りる・次回正規授権時に同梱)。b082… identity=
+  non-retryable 恒久。**司令塔: 040715a 着地(A1/A2 と独立・即実行可)**。
+- **A1 write set 凍結**: 7実装+記録2・契約1〜7 拘束昇格・追加条件=checkpoint bootstrap は
+  R1-4 原則(silent create-if-missing 禁止・宣言に明記・初期化後欠損=fail-closed)。
+  writer=codex/a1-fix。再検証=O1〜O12+原 probe+補足行列。
+- **A2 fix2 授権**: writer=codex/a2-fix2・2ファイルのみ。G4=source.lane=="live" の明示要求 /
+  G6=split 検出は per-metric carried baseline 参照。3巡目再検証=原 probe+全行列。
+- **HOLD 継続**(両 agent・rc=113 証拠受領)・POST=0・性能昇格禁止を正式記録。
+- edge review 依頼(同便)=5項目とも既決(b2098e3/d11091a/A4〜A7)で回答済み・新規裁定なし。
+- A1 所見(台帳競合・backdate・二重調整・二重送信・kill switch 迂回)は投稿 OFF 段階で
+  検出=解除前検証の制度目的どおり。
