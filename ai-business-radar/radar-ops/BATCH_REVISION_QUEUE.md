@@ -748,3 +748,18 @@
   VERIFY 2・write set 全列挙(事後宣言=今回限り)+LaunchAgent plist hash+オーナー授権1行。
 - 観測イベント6件登録(初回ライブ解決 / orchestrator v2 receipt / kabutan / NewsPicks /
   A1A2 検証完了 / 60件判定点)。R4 不変・60件前の昇格主張禁止。
+
+### 学習レーン検証基準採択+解除経路確定(2026-07-16)
+- 裁定文書: `reports/CLAUDE_HANDOFF_outcome_lanes_verification_release_20260716.md`
+  sha256 `ccb4eb35c9d9974f6b6924f1bfec86b6cede65ac378863c3a43c5a414f2aa7ae`(commit d11091a)。
+- b2098e3 の具体化(再審なし)。**O1〜O10・G1〜G8 凍結採用+追加4点**: O11/G9=write set
+  厳密性(ファイル単位非接触)/ O12=投稿テンプレートの禁止事項検査(推奨・順位・価格目標・
+  アルファ主張が構造的に不可能)/ O1 強化=append-only の反証(書換・削除・再登録経路なし)/
+  O8 強化=receipt hash 対象 bytes の厳密定義(R1-2a 型偽陰性の有無)。判定4値+file:line+
+  再現コマンド様式採用。
+- **A4 AMEND**: PASS→F4 受理→解除裁定→**司令塔が flag 変更**(本番設定=司令塔専管)。
+  A5=既存 #radar-ops 可(新規チャンネル不要)。A6=初回自然発火を LIVE-CONFIRM 型最終証拠
+  (message ID+receipt 一致・不一致は tripwire で flag 0 戻し+保全報告)。
+- **A8**: 検証はローカル別人格で完結(外部送信不要=保護の迂回は不要かつ不許可)・配送は
+  既存 F4 経路。検証役の書込みゼロ(編集・commit・投稿・設定変更なし)。
+- FAIL 差し戻し先=裁定者(修正範囲と書き手を指定)。104f1f7 は PASS 後も research substrate。
