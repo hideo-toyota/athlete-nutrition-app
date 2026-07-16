@@ -15,8 +15,8 @@
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
 |---|---|---|
-| **新レーン2本** | 両 LaunchAgent 可逆 HOLD 中(rc=113 ×2 確認済み・投稿 OFF)。**A2 是正実装済み(35ab02b・2ファイル)→ 再検証割当済み(31bd825)**。A1=所見未達につき DEFER | **F4 未着(main=2f6f790 のまま)** — Codex 直接配送可・配送物5点指定済み。到着 → A1 所見確認+R1-2a 最終受理。A2 再検証 PASS → 受理+再ロード裁定 |
-| **R1-2a(receipt 偽陰性是正)** | **独立 PASS・受付済み**(確定は F4 照合後)。A1/A2 と独立に単独受理・着地可(LIVE-CONFIRM 偽 UNKNOWN リスク解消のため優先) | F4 到着 → 最終受理 → 司令塔着地 |
+| **新レーン2本** | 両 LaunchAgent HOLD 継続(rc=113・投稿 OFF・性能昇格禁止)。**A1=write set 凍結済み(7+2・契約1〜7+bootstrap 条件・writer=codex/a1-fix)**。**A2=fix2 授権済み(G4 lane=="live" 明示/G6 carried baseline・2ファイル・writer=codex/a2-fix2)**(168e2c9) | 各レーン: 実装→独立再検証(原 probe+全行列)→F4→受理+再ロード裁定 |
+| **R1-2a** | **最終受理済み(07-16・168e2c9・matcher 132,496 PASS)**。b082… identity=non-retryable 恒久 | **司令塔: 040715a を mac/live へ着地(1ca4b8e ごと・即実行可)→ CONFIRM_ 申告**。着地で orchestrator LIVE-CONFIRM の偽陰性リスク解消 |
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
 | **R1-3/R1-4/Q14-R** | **全て着地・配備・解除完了(07-16)**: 着地 2bd87ba/59943b9/d6cd6a7・seed=2・reconcile→count=3→HOLD→manual_reset 3→0→reload。**deployment クローズ(974d44b)**。08:50 legacy DELIVERY_UNKNOWN=恒久 UNKNOWN(tripwire 付き・証拠不算入) | 司令塔残手順: d1c7f90 訂正追記+**cursor 境界一回実施(08:15:33〜09:15:42 の間)**→ 自然運用復帰。次の自然実行(fresh Kabutan のみ)が LIVE-CONFIRM 候補 — POSTED_OK+v2 receipt の CONFIRM_ で delivery 昇格裁定 |
