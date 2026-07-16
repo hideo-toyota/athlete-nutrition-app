@@ -726,3 +726,25 @@
 - 手順4点(訂正追記→cursor 境界→UNKNOWN 恒久指定→自然運用復帰)。次の自然実行=fresh Kabutan
   のみの新 identity → POSTED_OK+v2 receipt で LIVE-CONFIRM+delivery 昇格裁定へ。
 - 往復枠 3/3 消費。以後は既定フロー(CONFIRM_/自然証拠)のみで進行可。
+
+### 新レーン受付裁定 A1〜A8+R1-2a 授権(2026-07-16・区分D 二段)
+- 裁定文書: `reports/CLAUDE_HANDOFF_new_lanes_intake_ruling_20260716.md`
+  sha256 `56eb74eee4e43dcdc1a1ef9f49f7167118bda3ded9f3b9a5ed56c4d0ea087b49`(commit b2098e3)。
+- **ガバナンス記録**: outcome lane(781ae31)+guidance revision(104f1f7)+LaunchAgent 2本=
+  月次ゲート外・事前宣言なしの新機能実装 → オーナー中継授権の逸脱として記録(巻き戻しなし・
+  外部送信なし)。以後の新レーンは着手前宣言+裁定必須(再確認)。無差 null 結果
+  (MAE 0.899/0.899)の正直報告を特記。禁止事項抵触なし(ユニバース中央値予測・選定利用保留)。
+- **A1/A2 ACCEPT**: 独立検証割当(§11 凍結+追加4点: write set 厳密・既存レーン非接触・
+  forecast 改竄不能性の反証・PIT 分離集計の構造強制)。subagent 代替を A1/A2 限り事前承認。
+- **A3 ACCEPT+条件**: Discord 投稿=独立 PASS+F4 受理+解除裁定まで OFF(自動 ON 禁止)。
+- **A4 ACCEPT+条件**: target/λ0.94/20日窓をライブ60件まで凍結・変更は新系列登録(in-place 禁止)・
+  遡及とライブの混合禁止=恒久。
+- **A5 ACCEPT**: research substrate・選定利用は事前登録+別裁定まで禁止・PIT 4区分は分離集計。
+- **A6 ACCEPT+条件**: 二層化採用(Q14 契約不変・研究層は外部送信不可・prefix 不変)。
+- **A7→R1-2a 授権**: receipt 末尾改行偽陰性の是正を独立タスク化(writer=codex/r1-2a・
+  照合正規化のみ・LIVE-CONFIRM 証拠を偽 UNKNOWN 化し得る実害欠陥として即応クラス)。
+  経過措置: 受理前に偽陰性が出たら再送せず artifact 保全・報告(証拠採否は裁定者)。
+- **A8 ACCEPT**: F4=reports main へ commit+path+sha256。必要文書: 裁定入力・return packet 2・
+  VERIFY 2・write set 全列挙(事後宣言=今回限り)+LaunchAgent plist hash+オーナー授権1行。
+- 観測イベント6件登録(初回ライブ解決 / orchestrator v2 receipt / kabutan / NewsPicks /
+  A1A2 検証完了 / 60件判定点)。R4 不変・60件前の昇格主張禁止。
