@@ -15,7 +15,7 @@
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
 |---|---|---|
-| **新レーン2本(区分D 受付済み・b2098e3)** | outcome lane(781ae31・forecast 1件 pending)/ guidance revision(104f1f7・research substrate)。Discord 投稿 OFF・選定利用禁止・モデル凍結(60件まで) | A1/A2 独立検証(subagent 事前承認)→ F4(write set 全列挙+plist hash+オーナー授権1行)→ 受理裁定 |
+| **新レーン2本(区分D 受付済み・b2098e3)** | outcome lane(781ae31・forecast 1件 pending)/ guidance revision(104f1f7・research substrate)。Discord 投稿 OFF・選定利用禁止・モデル凍結(60件まで) | **検証基準確定(d11091a)**: O1〜O12+G1〜G9・4値判定+file:line+再現コマンド → F4 → 受理+解除裁定 → 司令塔 flag 変更 → dry run → 初回自然発火(LIVE-CONFIRM 型・tripwire 付き) |
 | **R1-2a(receipt 偽陰性是正)** | 授権済み(writer=codex/r1-2a・照合正規化のみ)。経過措置: 受理前の偽陰性は再送せず保全・報告 | 宣言→実装→検証→F4 |
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
