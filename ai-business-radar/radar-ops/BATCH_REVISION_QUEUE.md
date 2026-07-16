@@ -775,3 +775,17 @@
 - **R1-2a 独立 PASS 受付**(確定は F4 後)。**A1/A2 を待たず単独受理・着地可** —
   orchestrator LIVE-CONFIRM の偽 UNKNOWN リスク解消のため優先度高。
 - 配送指示: F4 packet(申告 sha 01e953b3…)+VERIFY 3件+b2098e3 §5 証拠を reports main へ。
+
+### F4 直接配送可+A2 再検証割当+A1 DEFER(2026-07-16)
+- 裁定文書: `reports/CLAUDE_HANDOFF_f4_route_a2_reverify_20260716.md`
+  sha256 `4c88d991c4fd14b3041120375abc2403a7fdce2d9e57d998c8409f4fe04b26df`(commit 31bd825)。
+- 記録: チャット中継が §2 で切断(A1 所見・F4 詳細欠落)+reports main は 2f6f790 のまま=
+  cb678ae 指示の F4 packet 未着。欠落部は F4 全文で充足可(再貼付不要)。
+- **F4=Codex 直接配送可**(前例4件)。配送物5点: packet(01e953b3…)/VERIFY 3系統(初回
+  FAIL 版含む)/A2 是正3点セット(宣言 1f7d319・実装 35ab02b・RP da1b58b)/A1 所見+是正案/
+  b2098e3 §5 残証拠。
+- **A2 再検証割当**: 原 FAIL probe 込み G1〜G9 全再判定+write set 厳密性(2ファイル)+
+  是正5点の反証(MIXED_VENDOR_LIVE 非混入・分割除外が実改定を捨てない)。HOLD は PASS+
+  受理まで継続(rc=113 ×2 遵守確認)。
+- **A1=DEFER**(所見未達につき write set を推測確定しない)。R1-2a 経路再確認(F4→受理→
+  司令塔着地・A1/A2 と独立・優先)。
