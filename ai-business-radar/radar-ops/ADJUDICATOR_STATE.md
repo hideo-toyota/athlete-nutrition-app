@@ -21,7 +21,7 @@
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
 |---|---|---|
-| **新レーン2本** | A1・A2 fix2 受理(0638206)→ HOLD 復元+A1 bootstrap PROCEED(19877fa)→ **司令塔 bootstrap 実行済(checkpoint 39888c50・ledger a76490f7 不変・rc=113×2・POST=0)**。**07-17 reload 依頼 = A1・A2 とも bounded RETURN(08657e0)** — reload=解除/GO につき照合必須だが bootstrap CONFIRM_ が canonical-only(reports 未配送)で照合不能。defect ではなく配送ゲート | **単一ブロッカー: bootstrap CONFIRM_(`CONFIRM_a1_hold_restore_bootstrap_20260717.md`・HEAD e0362740・sha afce8e4d…)を F4 で reports main へ配送**→ 私が file sha/ledger/checkpoint/rc=113/POST=0/plist sha を照合→ **A1・A2 各 load-only RELOAD ACCEPT**(`launchctl bootstrap`・postcheck rc=0+無発火+POST=0)。kickstart/fire/POST/retry/state-advance/promote は禁止継続 |
+| **新レーン2本** | A1・A2 fix2 受理→bootstrap PROCEED→**bootstrap CONFIRM_ F4 配送(reports main 634bea7・sha afce8e4d)照合成立**→ **A1・A2 とも RELOAD ACCEPT(load-only)発行済(0bf6f83)**。照合: file sha afce8e4d/ledger a76490f7·count1·size10336·head 03073ebe 不変/checkpoint 39888c50(v1·commander·UTC01:09:51)/rc=113×2/POST=0/plist 231622d8·964ed82c | **司令塔: 逐次 `launchctl bootstrap gui/501 <plist>`(A1→postcheck→A2→postcheck)。各 postcheck=rc=0+登録+直後無発火+POST=0+ledger/checkpoint 不変。予定外即時発火=STOP・保全・報告。完了 CONFIRM_ を F4 配送**。次イベント=各レーン初回自然発火(LIVE 観測点・force しない)。kickstart/fire/POST/retry/state-advance/promote・POST=1 有効化は別裁定 |
 | **R1-2a** | **最終受理済み(07-16・168e2c9・matcher 132,496 PASS)**。b082… identity=non-retryable 恒久 | **司令塔: 040715a を mac/live へ着地(1ca4b8e ごと・即実行可)→ CONFIRM_ 申告**。着地で orchestrator LIVE-CONFIRM の偽陰性リスク解消 |
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
@@ -63,6 +63,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-17 | **A1・A2 RELOAD ACCEPT(load-only)**(CONFIRM_ F4 配送 634bea7 を全5項目照合成立・逐次 bootstrap+postcheck・POST=0/昇格は別裁定) | `CLAUDE_HANDOFF_a1_a2_reload_accept_20260717.md` |
 | 07-17 | **A1/A2 reload = bounded RETURN**(bootstrap CONFIRM_ が reports 未配送=照合不能・解除は照合必須。単一ブロッカー=F4 配送) | `CLAUDE_HANDOFF_a1_a2_reload_return_pending_confirm_delivery_20260717.md` |
 | 07-17 | **再起動後 HOLD 復元(exact 2 bootout)+ A1 one-time bootstrap 継続 PROCEED**(条件付き・rc=113 訂正受理) | `CLAUDE_HANDOFF_a1_hold_restore_bootstrap_proceed_20260717.md` |
 | 07-16 | **A2 fix2 受理+A1 outcome-lane 是正 受理**(実装受理のみ・HOLD 継続・reload 分離・第3世代 初裁定) | `CLAUDE_HANDOFF_a1_a2fix2_acceptance_20260716.md` |

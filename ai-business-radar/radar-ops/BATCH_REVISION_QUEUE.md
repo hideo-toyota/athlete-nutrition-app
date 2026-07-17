@@ -937,3 +937,30 @@
 - HOLD 継続(rc=113 ×2)・POST=0・R4 不変。commander の bootstrap 実行・独立再検証・時刻表記の
   append-only 自己訂正を正しい様式として特記。
 - [writer: adjudicator]
+
+### A1・A2 RELOAD ACCEPT(load-only・2026-07-17)
+- 裁定文書: `reports/CLAUDE_HANDOFF_a1_a2_reload_accept_20260717.md`
+  sha256 `725922a75f89e9f7afa00480d6e6b116c81afaf1887ea22a2b1b46b99d76cdac`
+  (reports commit `0bf6f83`・branch claude/radar-batch-revision-lk9h56)。
+- **解除ブロッカー(08657e0)解消の照合**: bootstrap CONFIRM_ が reports main へ F4 配送
+  (`634bea7`・parent `47bea93`・`CONFIRM_a1_hold_restore_bootstrap_20260717.md` 単独 commit・origin/main tip)。
+  §2 の1〜5を実体照合し全一致: ①file sha256 `afce8e4d…` ②ledger `a76490f7…`/count=1/size=10336/
+  head `03073ebe…`(bootstrap 前後バイト等価)③checkpoint `39888c50…`(schema `analysis_ledger_checkpoint_v1`・
+  actor=commander・UTC `01:09:51`・lock 事前 exists=False→生成)④rc=113 ×2/POST=0/実行痕跡なし/
+  plist sha analysis `231622d8…`・guidance `964ed82c…` ⑤時刻訂正版・authority 引用正・writer=commander
+  (transport=codex/f4-direct-delivery=授権 F4 直送)。軽微所見(非ブロッカー): lock size=0 の doc 内明示再掲なし。
+- **判定 = A1 RELOAD ACCEPT(load-only)/ A2 RELOAD ACCEPT(load-only)**。根拠: impl 受理(0638206)+
+  checkpoint bootstrap 完了(正しい ledger を正しい checkpoint で anchor)+ HOLD 健全 + POST=0。reload は
+  HOLD 解除だが **load-only + POST=0** につき「schedule 適格化」に留まり外部送信・強制発火なし。
+- **手順(司令塔専管・逐次・uid=501)**: STEP A1 `launchctl bootstrap gui/501 <analysis-outcomes plist
+  (sha 231622d8…)>` → postcheck(print rc=0+登録/直後無発火(runs 不変・/tmp out|err 不在)/POST=0 不変/
+  ledger `a76490f7…`·size=10336 不変/checkpoint `39888c50…` 不変)→ 予定外即時発火なら A2 に進まず
+  STOP・保全・報告。STEP A2 `launchctl bootstrap gui/501 <guidance-revisions plist(sha 964ed82c…)>` →
+  同 postcheck。完了 CONFIRM_(各 rc=0・無発火・POST=0・ledger/checkpoint 不変・ts)を F4 配送。
+- **DO NOT(不変)**: kickstart/fire/POST/retry/state-advance/promote は不許可。**POST 有効化
+  (RADAR_ANALYSIS_OUTCOMES_POST=1)は別裁定**。reload ≠ 性能昇格・R4 不変。
+- **次イベント**: 各レーンの最初の自然発火が LIVE 観測点(force しない・POST=0=外部送信なし)。A1 は初回
+  自然入力の登録/評価が checkpoint chain と整合(fail-closed 契約)を確認 → CONFIRM_。異常(即時発火・
+  POST 試行・state 破損・chain 不整合)は STOP・報告。60件判定点前の昇格主張禁止・証拠マトリクス不変。
+- commander の単一ブロッカー完遂(byte-for-byte 単独配送)を特記。
+- [writer: adjudicator]
