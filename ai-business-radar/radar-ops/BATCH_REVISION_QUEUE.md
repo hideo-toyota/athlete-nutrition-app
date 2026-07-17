@@ -964,3 +964,32 @@
   POST 試行・state 破損・chain 不整合)は STOP・報告。60件判定点前の昇格主張禁止・証拠マトリクス不変。
 - commander の単一ブロッカー完遂(byte-for-byte 単独配送)を特記。
 - [writer: adjudicator]
+
+### A1/A2 load-only reload — 再ログイン自動登録を成立として ACCEPT(2026-07-17)
+- 裁定文書: `reports/CLAUDE_HANDOFF_a1_a2_reload_relogin_accept_20260717.md`
+  sha256 `ffd99420875bfe529d2b015e3dd65f9bde0874eac2b5b1493ffae865745265e7`
+  (reports commit `d2d9460`・branch claude/radar-batch-revision-lk9h56)。
+- 事象: RELOAD ACCEPT(`0bf6f83`)発行後、実行直前 `2026-07-17T18:33:06+0900` までに macOS 再ログインが
+  成立し、両 plist が OS により自動登録(domain `gui/501`)。Codex は bootstrap/bootout/kickstart/fire
+  未実行・既 registered につき exact bootstrap を重複実行せず STOP(逸脱回避の正しい判断)。
+- **判定 = 選択肢1採用: 再ログイン自動登録を load-only reload の成立として ACCEPT**(A1・A2 とも)。
+  根拠: reload ACCEPT の受入基準は end-state(0bf6f83 §2 postcheck)であり、exact `launchctl bootstrap` は
+  その手段であって唯一経路の要件ではない。現観測値が全 postcheck を充足 — A1/A2 print rc=0・登録・
+  not running・runs=0・last exit=never(無発火)/ /tmp out|err 4件 ABSENT / POST=0 / ledger `a76490f7…`·
+  size=10336 不変 / checkpoint `39888c50…` 不変 / stable lock size=0 / plist sha `231622d8…`·`964ed82c…`=
+  受理実装と一致。機構(OS 再ログイン自動登録=gui/501 への installed plist ロード)は既知 benign 挙動で、
+  私の bootstrap と同一 domain・同一 plist・同一結果。
+- **選択肢2(bootout→bootstrap 再実行)は不採用**: 既に正しい target end-state のレーンを解体→再構築する
+  追加操作で安全上の利得なし・照合可能性も増えず・操作面のみ増える(「必要の実証なしに機構を積まない」）。
+  exact `launchctl bootstrap` は目的達成済につき **superseded=実行不要**(already-registered への重複 bootstrap
+  は no-op/エラーで逸脱のため実行しない)。
+- **要件**: 司令塔/Codex は reload 完了 CONFIRM_ を F4 で reports main へ配送 — 機構=再ログイン自動登録
+  (explicit bootstrap ではない)を明記・bootstrap/bootout/kickstart/fire 未実行を明記・上記 end-state 値・
+  観測 ts・[writer: commander]。配送後、私が照合し STATE を「reload 済・自然発火観測中」へ更新。
+  **不一致(発火痕跡・POST≠0・ledger/checkpoint 変化・plist sha 不一致)= clean reload 不成立 → STOP・
+  保全・報告(bounded RETURN)**。
+- **DO NOT(不変)**: kickstart/fire/POST/retry/state-advance/promote 不許可・POST=1 有効化は別裁定・
+  reload≠昇格・R4 不変。各レーンの最初の自然発火が LIVE 観測点(force しない)。
+- Codex が scripted な exact bootstrap を already-registered ラベルへ盲目実行せず STOP・照会した点を
+  正しい開示・逸脱回避として特記。
+- [writer: adjudicator]
