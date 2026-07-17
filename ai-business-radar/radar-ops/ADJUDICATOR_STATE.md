@@ -26,6 +26,7 @@
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
 | **R1-3/R1-4/Q14-R** | **全て着地・配備・解除完了(07-16)**: 着地 2bd87ba/59943b9/d6cd6a7・seed=2・reconcile→count=3→HOLD→manual_reset 3→0→reload。**deployment クローズ(974d44b)**。08:50 legacy DELIVERY_UNKNOWN=恒久 UNKNOWN(tripwire 付き・証拠不算入) | 司令塔残手順: d1c7f90 訂正追記+**cursor 境界一回実施(08:15:33〜09:15:42 の間)**→ 自然運用復帰。次の自然実行(fresh Kabutan のみ)が LIVE-CONFIRM 候補 — POSTED_OK+v2 receipt の CONFIRM_ で delivery 昇格裁定 |
+| **orchestrator partial-delivery blocker** | 07-16 11:24 以降 partial sentinel で毎30分 fail-closed(fail-safe)。真因=b082 terminal-LF 偽陰性=R1-2a で是正・クローズ済。cursor 背後に backlog 22件(増え得る) | **復旧一体裁定 D1〜D7 発行(07-17・16395f0)**。司令塔専管・実行時 hash gate: STEP0 pre-flight→1 再列挙+凍結→2 D2 reconciled_evidence(append-only)→3 D3 backlog quarantine/skip+一回限り cursor cutover(max mtime)→4 D4 sentinel archive+clear(単純削除禁止)→5 F4 recovery CONFIRM_。batch 処理禁止・既存 quarantine 32de5f35 untouched・reason_code DEFER・LIVE-CONFIRM=次の自然 v2 POSTED_OK のみ・不一致=STOP |
 | **R1-3+R1-4(writer=Codex)** | **両方とも最終受理済み(07-15・F4 各2/2 照合・6ba7595/e616103)**。blueprint R1 系の実装・受理完了 | **司令塔工程(f718d68 で改訂)**: ①着地 ②3 dead-letter の sha 再照合 ③seed=2 ④19:36 実物の reconciliation 入力→count=3・HOLD 発動 ⑤1便 CONFIRM_(hash 一式+FAIL 類型=パターン報告)。**レーンは HOLD 維持** |
 | Q13 教材 | Codex 改稿完了(f6b3077)・司令塔10項目レビュー **期限 07-14 EOD JST** | PASS→参照切替→クローズ |
 | 2c-1 delta 修正 | 狭域再オープン中(TZ 正規化+破損 filing 区別)・実装待ち | 実装→検証役 delta 再検証(F3/F8 の2面)→ PASS で 2c-2 SPEC 発行(裁定者) |
@@ -63,6 +64,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-17 | **Q14-R partial-delivery blocker 復旧一体裁定(D1〜D7)**(reconciled_evidence append-only/backlog quarantine+cursor cutover/sentinel archive-clear/reason_code DEFER/LIVE-CONFIRM=v2 POSTED_OK・実行時 hash gate) | `CLAUDE_HANDOFF_q14r_partial_delivery_recovery_ruling_20260717.md` |
 | 07-17 | **A1/A2 reload 完了確認 + R1-2a 着地 CONFIRM 完了(R1-2a 完全クローズ)**(両 CONFIRM_ F4 照合成立・A1/A2=自然発火観測フェーズ) | `CLAUDE_HANDOFF_reload_and_r1_2a_landing_confirmation_20260717.md` |
 | 07-17 | **A1/A2 再ログイン自動登録を load-only reload 成立として ACCEPT**(end-state 全 postcheck 充足・exact bootstrap superseded・完了 CONFIRM_ 要) | `CLAUDE_HANDOFF_a1_a2_reload_relogin_accept_20260717.md` |
 | 07-17 | **A1・A2 RELOAD ACCEPT(load-only)**(CONFIRM_ F4 配送 634bea7 を全5項目照合成立・逐次 bootstrap+postcheck・POST=0/昇格は別裁定) | `CLAUDE_HANDOFF_a1_a2_reload_accept_20260717.md` |

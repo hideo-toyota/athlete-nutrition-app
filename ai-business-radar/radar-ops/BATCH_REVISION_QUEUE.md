@@ -1018,3 +1018,42 @@
   自然入力の checkpoint chain 整合(fail-closed 契約)を確認 → CONFIRM_。異常は STOP・報告。
 - commander の byte-for-byte 単独配送2件・honest provenance(再ログイン機構の明示)・独立再読を特記。
 - [writer: adjudicator]
+
+### Q14-R partial-delivery blocker 復旧一体裁定(D1〜D7)(2026-07-17)
+- 裁定文書: `reports/CLAUDE_HANDOFF_q14r_partial_delivery_recovery_ruling_20260717.md`
+  sha256 `5c2eb80b106a4fbf716ee6406f227bd771ee1cbecf4a7c6b7fa7bddd03969b84`
+  (reports commit `16395f0`・branch claude/radar-batch-revision-lk9h56)。
+- intake: `CONFIRM_q14r_partial_delivery_blocker_20260717.md`(canonical `5c307d8f`・parent `fc5ae779`・
+  upload sha256 `aa6f9c32…` 照合一致)。区分D(runtime=Mac のみ・二段)。source finding(`ca750581…`)・runtime
+  artifacts は canonical-only につき **intake の hash 群を実行時「必須一致境界」に固定**(1件でも drift=STOP)。
+- 現状: orchestrator は 07-16 11:24 以降 partial sentinel で毎30分 fail-closed(fail-safe)。真因=b082
+  terminal-LF 偽陰性=R1-2a 是正・クローズ済(D1 成立)。cursor(watermark 07-16 08:30:00)背後に allowlisted
+  backlog 記録時22件(sentinel 継続中は増え得る)。sentinel 単純削除は 22件超の1バッチ異常 cadence+遡及/ライブ
+  混合+無審査自動発火のため不可。
+- **判定(D2〜D7 一体)**:
+  D2=b082/message `1527138934172287077` を **append-only reconciled_evidence 1件のみ**で記録(evidence_of_message_
+  existence・delivery_status UNCHANGED/DELIVERY_UNKNOWN/non-retryable・live_confirm=NO・既存 intent/receipt/
+  dead-letter/sentinel の in-place rewrite 禁止・FAIL→PARTIAL 昇格に非該当)。
+  D3=**backlog を batch 処理しない**。read-only 再列挙→22件 manifest 全件 present+hash 不変を照合(欠落/変化=STOP)→
+  凍結集合(≥22)を append-only 保全し **recovery quarantine/skip**(既存 `32de5f35` と別レコード)→ **一回限りの
+  adjudicated cursor cutover**(凍結集合 max mtime・既存 state-advance 機構・新コード禁止・cursor pre/post sha+mtime
+  記録)→ 再列挙で live-eligible=0 確認(残存=STOP)。
+  D4=**D2+D3 完了・全 hash 一致後に sentinel を最後に clear**。単純削除禁止=元 bytes を archive 保全(原 `40ab354e`/
+  size450)→ active 除去。pre/archive/post 記録。
+  D5=既存 quarantine `32de5f35`(1件)は**別枠・対象外・untouched**(前後不変を確認)。
+  D6=`reason_code` 永続化は **DEFER**(必須でない・実施時は別途 宣言+裁定・raw 例外/response/秘密は永続化しない)。
+  D7=LIVE-CONFIRM=**復旧後の次の真に新規・自然30分実行の fresh v2 POSTED_OK のみ**(b082/message は証拠であり
+  LIVE-CONFIRM でない・kickstart/fire/manual 代替不可・delivery 昇格も同 receipt が要)。
+- **手順(司令塔専管・単一窓・同一 CONFIRM・actor=commander)**: STEP0 pre-flight hash gate(sentinel `40ab354e`/
+  dead-letter `212117a0`/intent `ab55ebe9`/cursor 空 `e3b0c44`@08:30:00/quarantine `32de5f35`/finding `ca750581`)
+  → STEP1 再列挙+凍結 → STEP2 D2 → STEP3 D3(quarantine+cutover+recheck)→ STEP4 D4(archive+clear)→ STEP5 F4
+  recovery CONFIRM_ 配送(全 pre/post hash・凍結 full manifest・reconciled_evidence path+sha・cursor pre/post sha+mtime・
+  sentinel archive+clear・`32de5f35` 不変証明・実行 ts)+ intake `aa6f9c32`・source finding `ca750581` も F4 配送
+  (recovery-complete 認定の要件)。
+- **STOP 条件**: 添付値との hash 不一致 / 22件の mutation・欠落 / cutover 後も backlog eligible 残存 / sentinel drift /
+  予定外発火 → 即 STOP・preserve・report・delete/reseed/auto-repair せず。
+- **DO NOT(不変)**: kickstart/fire/manual POST/retry/promote 禁止・state-advance は本裁定の一回限り cutover のみ・
+  in-place rewrite 禁止(archive-preserve のみ)・POST=1 有効化は別裁定・R4 不変。
+- 裁定者は runtime 操作・POST・cursor/sentinel/quarantine 変更を実行しない(SPEC 発行のみ)。commander の
+  fail-safe 認識・honest intake(count 増加可能性の開示・bounded 本文非再現)を正しい様式として特記。
+- [writer: adjudicator]
