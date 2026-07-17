@@ -904,3 +904,36 @@
 - 訂正 STATUS(canonical `10d5846a`・no_push・reports 未配送)は次便で F4 配送推奨(記録照合可能性のため・
   ブロッカーではない)。commander の独立再現 + 自己訂正(rc=113 の意味づけ明確化)を正しい開示として特記。
 - [writer: adjudicator]
+
+### A1/A2 reload 裁定 — bounded RETURN(bootstrap CONFIRM_ 未配送・2026-07-17)
+- 裁定文書: `reports/CLAUDE_HANDOFF_a1_a2_reload_return_pending_confirm_delivery_20260717.md`
+  sha256 `469ccc561cacaef916029bee77c20197915f6e1d9e31868f780694d4d61812f1`
+  (reports commit `08657e0`・branch claude/radar-batch-revision-lk9h56)。
+- 依頼(codex 提出・commander 実行): HOLD 復元後の A1 one-time bootstrap 完了 CONFIRM_ を添えて、
+  A1/A2 各レーンの `RELOAD ACCEPT`/bounded `RETURN` を個別照会。bootstrap 記録=exit0・ledger
+  `a76490f7…`/count=1/size=10336/head `03073ebe…` 不変・checkpoint `39888c50…`(schema v1・
+  actor=commander・UTC 01:09:51)・stable lock size=0・rc=113 ×2・POST=0・plist sha(analysis
+  `231622d8…`/guidance `964ed82c…`)。CONFIRM file=`CONFIRM_a1_hold_restore_bootstrap_20260717.md`
+  (canonical HEAD `e0362740`・sha `afce8e4d…`・初回 `08c5157`→時刻訂正 append-only)。
+- **照合**: 依頼アンカー(`19877fa`/`3a6fc619…`/parent `0638206`/STATE `9b74223`)= 発行と一致。
+  **bootstrap CONFIRM_ は reports 未配送を実体確認**(origin/main・governance branch とも不在)→
+  CONFIRM 記録内容は照合不能=未照合の口頭情報。
+- **判定 = A1 bounded RETURN / A2 bounded RETURN(単一ブロッカー・両レーン共通 = CONFIRM_ の F4 配送)**:
+  reload = HOLD 解除 = 解除/GO 側。恒久規律「未照合の口頭情報だけで解除・受理・GO を出さない・停止のみ
+  照合前可」。実 integrity 欠陥を持っていたレーンの HOLD 解除は、bootstrap が正しい ledger を正しい
+  checkpoint で anchor した事の照合が要 — CONFIRM_ は配送可能 artifact(file sha あり)につき canonical-only
+  では不足。先例 `q14r_post_release`(974d44b)も開示文書 `2f6f790`/`b6245ec7…` 照合後に PROCEED。
+  **差し戻し(再実装)ではない** — 実装/bootstrap/独立再検証に defect は認めず・唯一の不足は配送(照合可能化)。
+- **解除ブロッカー(単一)**: `radar-ops/reports/CONFIRM_a1_hold_restore_bootstrap_20260717.md`
+  (HEAD `e0362740`・sha `afce8e4d…`)を F4 で reports main へ配送(CONFIRM_ = 司令塔 prefix・
+  executed_by=commander 保持・transport は Codex 直送可)。推奨(非ブロッカー): rc=113 訂正 STATUS
+  (canonical `10d5846a`)も同便配送。配送後の照合5項目 = ①file sha `afce8e4d…` ②ledger `a76490f7…`
+  /count=1/size=10336/head `03073ebe…` 不変 ③checkpoint `39888c50…`(v1・commander・stable lock size=0)
+  ④rc=113 ×2/POST=0/痕跡なし/plist sha ⑤時刻訂正 append-only。
+- **照合成立後の RELOAD ACCEPT(予告・load-only)**: A1・A2 各レーン独立に `launchctl bootstrap gui/501
+  <installed plist>`(bootout の逆=登録のみ)。postcheck=`launchctl print` rc=0+登録+直後の自然発火/runs
+  増分なし+POST=0 不変+ledger 不変。**DO NOT(不変)**: kickstart/fire/POST/retry/state-advance/promote。
+  reload ≠ 性能昇格・R4 不変・live 証拠は reload 後の真に新規な自然入力のみ。
+- HOLD 継続(rc=113 ×2)・POST=0・R4 不変。commander の bootstrap 実行・独立再検証・時刻表記の
+  append-only 自己訂正を正しい様式として特記。
+- [writer: adjudicator]

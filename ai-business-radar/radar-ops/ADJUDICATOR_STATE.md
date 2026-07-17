@@ -21,7 +21,7 @@
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
 |---|---|---|
-| **新レーン2本** | A1・A2 fix2 とも最終受理済み(07-16・0638206)。**07-17 09:00 OS 再起動で2ラベル自動再登録(rc=0・runs=0・痕跡なし・POST=0・ledger 不変=汚染なし)→ PROCEED 発行(19877fa)**。rc=113 訂正受理: rc=113=domain 不在(launchctl print の rc)であり job exit ではない・HOLD=exact 2 bootout のみで成立。**受理≠reload(分離)** | **STEP1: 司令塔 exact 2 bootout で HOLD 復元(停止側・可)。STEP2: 直後に5条件(rc=113×2/POST=0/痕跡なし/ledger a76490f7·count=1 不変/checkpoint·lock 不在)再証明で A1 one-time bootstrap 1回→ 最小 CONFIRM_**。不一致=STOP・保全・報告・非修復。以後に A1/A2 reload 裁定 |
+| **新レーン2本** | A1・A2 fix2 受理(0638206)→ HOLD 復元+A1 bootstrap PROCEED(19877fa)→ **司令塔 bootstrap 実行済(checkpoint 39888c50・ledger a76490f7 不変・rc=113×2・POST=0)**。**07-17 reload 依頼 = A1・A2 とも bounded RETURN(08657e0)** — reload=解除/GO につき照合必須だが bootstrap CONFIRM_ が canonical-only(reports 未配送)で照合不能。defect ではなく配送ゲート | **単一ブロッカー: bootstrap CONFIRM_(`CONFIRM_a1_hold_restore_bootstrap_20260717.md`・HEAD e0362740・sha afce8e4d…)を F4 で reports main へ配送**→ 私が file sha/ledger/checkpoint/rc=113/POST=0/plist sha を照合→ **A1・A2 各 load-only RELOAD ACCEPT**(`launchctl bootstrap`・postcheck rc=0+無発火+POST=0)。kickstart/fire/POST/retry/state-advance/promote は禁止継続 |
 | **R1-2a** | **最終受理済み(07-16・168e2c9・matcher 132,496 PASS)**。b082… identity=non-retryable 恒久 | **司令塔: 040715a を mac/live へ着地(1ca4b8e ごと・即実行可)→ CONFIRM_ 申告**。着地で orchestrator LIVE-CONFIRM の偽陰性リスク解消 |
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
@@ -63,6 +63,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-17 | **A1/A2 reload = bounded RETURN**(bootstrap CONFIRM_ が reports 未配送=照合不能・解除は照合必須。単一ブロッカー=F4 配送) | `CLAUDE_HANDOFF_a1_a2_reload_return_pending_confirm_delivery_20260717.md` |
 | 07-17 | **再起動後 HOLD 復元(exact 2 bootout)+ A1 one-time bootstrap 継続 PROCEED**(条件付き・rc=113 訂正受理) | `CLAUDE_HANDOFF_a1_hold_restore_bootstrap_proceed_20260717.md` |
 | 07-16 | **A2 fix2 受理+A1 outcome-lane 是正 受理**(実装受理のみ・HOLD 継続・reload 分離・第3世代 初裁定) | `CLAUDE_HANDOFF_a1_a2fix2_acceptance_20260716.md` |
 | 07-15 | R1-3/R1-4 Codex 再割当+SPEC 確定・R1-5 非スコープ(壁打ち1/5) | `CLAUDE_HANDOFF_r1_3_4_demarcation_spec_20260715.md` |
