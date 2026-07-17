@@ -993,3 +993,28 @@
 - Codex が scripted な exact bootstrap を already-registered ラベルへ盲目実行せず STOP・照会した点を
   正しい開示・逸脱回避として特記。
 - [writer: adjudicator]
+
+### A1/A2 reload 完了確認 + R1-2a 着地 CONFIRM 完了(R1-2a 完全クローズ)(2026-07-17)
+- 確認文書: `reports/CLAUDE_HANDOFF_reload_and_r1_2a_landing_confirmation_20260717.md`
+  sha256 `09251305adf0b7467e3c3625fdd23c664455c9080f64782aa645ad43934c9e96`
+  (reports commit `962c70d`・branch claude/radar-batch-revision-lk9h56)。
+- **照合(F4・reports main)**: 線形チェーン `634bea7 → e0d1fd1 → d633edde`(各1ファイル・byte-for-byte・
+  origin/main tip=d633edde)。① reload CONFIRM `e0d1fd1`(parent 634bea7)file sha256 `1c293515…` 一致 /
+  ② R1-2a landing CONFIRM `d633edde`(parent e0d1fd1)file sha256 `ad32398e…` 一致。
+- **① A1/A2 load-only reload = 完了**: 機構=OS 再ログイン自動登録(bootstrap/bootout/kickstart/fire 未実行)。
+  end-state が ruling `d2d9460` §3 要件と全一致(A1/A2 rc=0・registered gui/501・not running・runs=0・
+  last exit=never・/tmp 4件 ABSENT・POST=0・ledger `a76490f7…`·size=10336 不変・checkpoint `39888c50…`·
+  size=576 不変・lock size=0・plist sha `231622d8…`·`964ed82c…`=受理実装)。exact bootstrap は superseded。
+  **両レーン=「reload 済・自然発火観測中」へ遷移**。
+- **② R1-2a 着地 CONFIRM = 完了 → R1-2a 完全クローズ**: ancestry(`1ca4b8e`・`040715a` は mac/live ancestor・
+  `040715a` 直接親=`1ca4b8e`・原ハッシュのまま=重複 cherry-pick なし)+ blob 等価(orchestrator_post.py
+  blob `69e93f09`・test blob `3165a7dc` が現 mac/live と厳密一致)+ `b082…` intent/partial sentinel
+  (`40ab354e…`)無変更・`DELIVERY_UNKNOWN`・non-retryable・当 CONFIRM_ は sentinel/cursor/quarantine/
+  POST/retry 不接触。R1-2a は 最終受理(168e2c9・matcher 132,496 PASS)+ 着地(040715a)+ 検証をもって
+  **完全クローズ**。orchestrator LIVE-CONFIRM の偽陰性リスク解消。
+- **標準ゲート(不変)**: kickstart/fire/POST/retry/state-advance/promote・cursor/sentinel/quarantine 変更・
+  POST=1 有効化はいずれも本確認で不許可(R1-2a CONFIRM §4 の別ルーリング=TASK B に係属)。R4 不変。
+- **次イベント**: 各レーンの最初の自然発火が LIVE 観測点(force しない・POST=0=外部送信なし)。A1 は初回
+  自然入力の checkpoint chain 整合(fail-closed 契約)を確認 → CONFIRM_。異常は STOP・報告。
+- commander の byte-for-byte 単独配送2件・honest provenance(再ログイン機構の明示)・独立再読を特記。
+- [writer: adjudicator]

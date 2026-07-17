@@ -21,8 +21,8 @@
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
 |---|---|---|
-| **新レーン2本** | RELOAD ACCEPT(load-only・0bf6f83)後、実行直前(07-17 18:33)に **OS 再ログインで両 plist 自動登録(gui/501・rc=0)**。Codex は bootstrap/bootout/fire 未実行・重複回避で STOP。**裁定: 選択肢1採用 — 自動登録を load-only reload の成立として ACCEPT(d2d9460)**(受入基準=end-state・全 postcheck 充足: rc=0+登録+無発火(runs=0/last exit=never)/POST=0/ledger a76490f7·size10336 不変/checkpoint 39888c50/lock size0/plist 231622d8·964ed82c=受理実装)。exact bootstrap は superseded=実行不要 | **司令塔: reload 完了 CONFIRM_(機構=再ログイン自動登録の明記+未発火 end-state)を F4 配送→ 私が照合し「reload 済・自然発火観測中」へ更新**。不一致(発火痕跡/POST≠0/ledger·checkpoint 変化/plist sha 不一致)=STOP・保全・報告(RETURN)。次イベント=各レーン初回自然発火(LIVE 観測点・force しない)。kickstart/fire/POST/retry/state-advance/promote・POST=1 は別裁定 |
-| **R1-2a** | **最終受理済み(07-16・168e2c9・matcher 132,496 PASS)**。b082… identity=non-retryable 恒久 | **司令塔: 040715a を mac/live へ着地(1ca4b8e ごと・即実行可)→ CONFIRM_ 申告**。着地で orchestrator LIVE-CONFIRM の偽陰性リスク解消 |
+| **新レーン2本** | **load-only reload 完了・自然発火観測中(07-17・962c70d)** — 再ログイン自動登録を reload 成立として ACCEPT(d2d9460)→ 完了 CONFIRM_(e0d1fd1・sha 1c293515)照合成立: 両レーン rc=0・registered・未発火(runs=0/last exit=never)・/tmp 4件 ABSENT・POST=0・ledger a76490f7·size10336 不変・checkpoint 39888c50·size576 不変・lock size0・plist 231622d8·964ed82c=受理実装。exact bootstrap superseded | **次イベント=各レーンの最初の自然発火(LIVE 観測点・force しない・POST=0=外部送信なし)。A1 初回自然入力の checkpoint chain 整合を確認→ CONFIRM_。異常(即時発火/POST 試行/state 破損/chain 不整合)=STOP・報告**。kickstart/fire/POST/retry/state-advance/promote・POST=1・cursor/sentinel/quarantine 変更は別裁定(TASK B 係属) |
+| **R1-2a** | **完全クローズ(07-17・962c70d)** — 最終受理(168e2c9・matcher 132,496 PASS)+ 着地 CONFIRM 完了(d633edde 照合: 040715a/1ca4b8e=mac/live ancestor 原ハッシュ・blob 一致・b082/sentinel 40ab354e 無変更 non-retryable)。orchestrator LIVE-CONFIRM の偽陰性リスク解消 | クローズ済(以後の処置なし) |
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
 | **R1-3/R1-4/Q14-R** | **全て着地・配備・解除完了(07-16)**: 着地 2bd87ba/59943b9/d6cd6a7・seed=2・reconcile→count=3→HOLD→manual_reset 3→0→reload。**deployment クローズ(974d44b)**。08:50 legacy DELIVERY_UNKNOWN=恒久 UNKNOWN(tripwire 付き・証拠不算入) | 司令塔残手順: d1c7f90 訂正追記+**cursor 境界一回実施(08:15:33〜09:15:42 の間)**→ 自然運用復帰。次の自然実行(fresh Kabutan のみ)が LIVE-CONFIRM 候補 — POSTED_OK+v2 receipt の CONFIRM_ で delivery 昇格裁定 |
@@ -63,6 +63,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-17 | **A1/A2 reload 完了確認 + R1-2a 着地 CONFIRM 完了(R1-2a 完全クローズ)**(両 CONFIRM_ F4 照合成立・A1/A2=自然発火観測フェーズ) | `CLAUDE_HANDOFF_reload_and_r1_2a_landing_confirmation_20260717.md` |
 | 07-17 | **A1/A2 再ログイン自動登録を load-only reload 成立として ACCEPT**(end-state 全 postcheck 充足・exact bootstrap superseded・完了 CONFIRM_ 要) | `CLAUDE_HANDOFF_a1_a2_reload_relogin_accept_20260717.md` |
 | 07-17 | **A1・A2 RELOAD ACCEPT(load-only)**(CONFIRM_ F4 配送 634bea7 を全5項目照合成立・逐次 bootstrap+postcheck・POST=0/昇格は別裁定) | `CLAUDE_HANDOFF_a1_a2_reload_accept_20260717.md` |
 | 07-17 | **A1/A2 reload = bounded RETURN**(bootstrap CONFIRM_ が reports 未配送=照合不能・解除は照合必須。単一ブロッカー=F4 配送) | `CLAUDE_HANDOFF_a1_a2_reload_return_pending_confirm_delivery_20260717.md` |
