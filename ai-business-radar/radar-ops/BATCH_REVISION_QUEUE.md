@@ -875,3 +875,32 @@
 - 第3世代の初裁定。A1/A2 の初回独立 FAIL→是正→PASS は「解除前検証」の制度目的が機能した証拠として維持。
   自己制限の明示開示(byte-identity 非主張)を正しい様式として特記。
 - [writer: adjudicator]
+
+### 再起動後 HOLD 復元 + A1 checkpoint bootstrap 継続 PROCEED(2026-07-17)
+- 裁定文書: `reports/CLAUDE_HANDOFF_a1_hold_restore_bootstrap_proceed_20260717.md`
+  sha256 `3a6fc619b7ac822e4e3919274ebae6c35f0bf9450da7849a2ecfbf79c28a6fb7`
+  (reports commit `19877fa`・branch claude/radar-batch-revision-lk9h56)。
+- 依頼(commander): 07-17T09:00:24+09:00 の OS 再起動で installed plist から2ラベル
+  (analysis-outcomes/guidance-revisions)が自動再登録(launchctl print rc=0・state=not running・
+  runs=0・実行痕跡なし)。POST=0・ledger `a76490f7…`/count=1/size=10336 不変・checkpoint/lock 不在。
+  既受理 HOLD 復元(exact 2 bootout)と、その後の A1 one-time bootstrap_checkpoint 継続可否を一問で照会。
+- **照合**: 依頼アンカー `0638206`/`fd0dea72…`/parent `168e2c9` = 前裁定と一致(実体確認)。rc=113 訂正の
+  一次証拠 `CODEX_NEW_LANES_REVERSIBLE_HOLD_EVIDENCE_20260716.md`(reports main)を実体確認 —
+  exact 2 bootout(各 rc=0)後、postcheck が両者 `113`/"Could not find service"。
+- **rc=113 セマンティクス訂正 受理(append-only)**: rc=113 = domain 不在 label に対する launchctl print/
+  postcheck 自身の終了値であり **job 内部 exit code ではない**。HOLD(既受理状態)= 両ラベル domain 不在 =
+  **exact 2 bootout のみで成立**。launchctl bootstrap/load は不要かつ禁止継続。前裁定・STATE の
+  「rc=113 ×2」表記はこの意味で有効(job exit の含意を訂正)。
+- **判定 = PROCEED(条件付き)**:
+  ①**HOLD 復元 = exact 2 bootout を許可**(停止側・区分E・照合前でも可・plist 非編集・可逆)。reboot 自動
+  再登録は既知挙動(再ログイン再ロードの実証既載)・runs=0・POST=0・ledger 不変につき汚染なし。
+  ②**bootout 直後に5条件を全再証明できた場合に限り**、既受理(0638206 §4)の Python one-time
+  `bootstrap_checkpoint` を **1回のみ**実行(actor=commander・code-gate: ledger `a76490f7…`+count=1)→
+  ledger bytes 不変証明 + checkpoint hash/head/count/time/actor 記録 → 最小 `CONFIRM_`。5条件=
+  {launchctl print rc=113 ×2 / POST=0 / runs 痕跡なし / ledger sha·count·bytes 不変 / checkpoint·lock 事前不在}。
+  ③いずれかの段階で不一致 → 即 **STOP・preserve・report**・非修復(delete/reseed/auto-repair 禁止・R1-4 原則)。
+- **DO NOT(不変)**: launchctl bootstrap/load・reload・kickstart・fire・POST・retry・state-advance・promote。
+  A1/A2 の reload 裁定は本 bootstrap `CONFIRM_` 後の**別依頼**。R4 性能主張不変。
+- 訂正 STATUS(canonical `10d5846a`・no_push・reports 未配送)は次便で F4 配送推奨(記録照合可能性のため・
+  ブロッカーではない)。commander の独立再現 + 自己訂正(rc=113 の意味づけ明確化)を正しい開示として特記。
+- [writer: adjudicator]

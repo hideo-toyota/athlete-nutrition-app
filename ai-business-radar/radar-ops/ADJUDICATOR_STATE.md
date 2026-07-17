@@ -21,7 +21,7 @@
 ## 1. いま動いているもの(実行中・監視中)
 | 項目 | 状態 | 次のイベント |
 |---|---|---|
-| **新レーン2本** | 両 LaunchAgent HOLD 継続(rc=113・投稿 OFF・性能昇格禁止)。**A1・A2 fix2 とも最終受理済み(07-16・第3世代 初裁定・0638206)** — A1=凍結7ファイル 85808a71・契約1〜7・O1-O12 12/12(原 probe 574a72 不在は honest-UNKNOWN)/ A2=69bb24d7・G4 lane=="live"/G6 carried baseline・原 probe 再実行 PASS。**受理≠reload(分離)** | **A1: 司令塔が HOLD 下で one-time bootstrap(gate ledger a76490f7+count=1)→ bytes 不変証明+checkpoint 記録→ 最小 CONFIRM_ → 別途 reload 裁定**。A2: bootstrap 不要・別途 reload 裁定のみ |
+| **新レーン2本** | A1・A2 fix2 とも最終受理済み(07-16・0638206)。**07-17 09:00 OS 再起動で2ラベル自動再登録(rc=0・runs=0・痕跡なし・POST=0・ledger 不変=汚染なし)→ PROCEED 発行(19877fa)**。rc=113 訂正受理: rc=113=domain 不在(launchctl print の rc)であり job exit ではない・HOLD=exact 2 bootout のみで成立。**受理≠reload(分離)** | **STEP1: 司令塔 exact 2 bootout で HOLD 復元(停止側・可)。STEP2: 直後に5条件(rc=113×2/POST=0/痕跡なし/ledger a76490f7·count=1 不変/checkpoint·lock 不在)再証明で A1 one-time bootstrap 1回→ 最小 CONFIRM_**。不一致=STOP・保全・報告・非修復。以後に A1/A2 reload 裁定 |
 | **R1-2a** | **最終受理済み(07-16・168e2c9・matcher 132,496 PASS)**。b082… identity=non-retryable 恒久 | **司令塔: 040715a を mac/live へ着地(1ca4b8e ごと・即実行可)→ CONFIRM_ 申告**。着地で orchestrator LIVE-CONFIRM の偽陰性リスク解消 |
 | **Q14 解除(2レーン)** | 両裁定発行済み(NewsPicks: `f2067dce…` / orchestrator: `807e0981…`)・司令塔の照合→解除操作待ち | **LIVE-CONFIRM ×2**(各レーン初回実投稿)→ 完了で Q14 全クローズ+暫定措置(2節降格)解除を同時判定 |
 | orchestrator 健全性チェック | 解除後3営業日投稿0なら FAIL パターン報告(07-15 投稿0を窓に算入)| 司令塔 |
@@ -63,6 +63,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-17 | **再起動後 HOLD 復元(exact 2 bootout)+ A1 one-time bootstrap 継続 PROCEED**(条件付き・rc=113 訂正受理) | `CLAUDE_HANDOFF_a1_hold_restore_bootstrap_proceed_20260717.md` |
 | 07-16 | **A2 fix2 受理+A1 outcome-lane 是正 受理**(実装受理のみ・HOLD 継続・reload 分離・第3世代 初裁定) | `CLAUDE_HANDOFF_a1_a2fix2_acceptance_20260716.md` |
 | 07-15 | R1-3/R1-4 Codex 再割当+SPEC 確定・R1-5 非スコープ(壁打ち1/5) | `CLAUDE_HANDOFF_r1_3_4_demarcation_spec_20260715.md` |
 | 07-15 | R1-1 自然実証1例目記録+R1-2 証拠未消費の分離(delivery=FAIL 不変) | `CLAUDE_HANDOFF_r1_natural_evidence_record_20260715.md` |
