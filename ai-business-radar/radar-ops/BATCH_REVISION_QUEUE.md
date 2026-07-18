@@ -1183,3 +1183,32 @@
   必須裁定事項として登録)**。前提=実装テスト+独立 resource PASS+F4。
 - codex の extra 世代開示(silent 38 化拒否)と NO-GO 自己申告を正しい保守開示として特記。DO NOT・R4 不変。
 - [writer: adjudicator]
+
+### resource gate exact6 受理 + preflight STOP 適正認定 + 選択肢A 再試行授権(2026-07-18)
+- 裁定文書: `reports/CLAUDE_HANDOFF_jquants_p0_gate_accept_one_retry_20260718.md`
+  sha256 `0246bfbad4f9590ad85a1d970d8eaa957a7754449fc1b16f975725a99a03d3a7`
+  (reports commit `560a728`・branch claude/radar-batch-revision-lk9h56)。
+- **照合**: F4 `981e76dc`(3ファイル単独・origin/main tip)= MANIFEST `06c6932b…`/RETURN `2be233cc…`/
+  VERIFY `751c46a1…` 3/3 一致。累積 diff `1792240`→`359e80c`→`fe48a89` = exact6 のみ・keepout/owner-dirty/
+  untracked 27 全不変(独立確認)。
+- **① exact6 実装+独立検証 = ACCEPT**: C-R1=800 randomized corpora + 58010 exact 等価 / C-R2=凍結閾値
+  無緩和・計測不能=STOP・**独立検証が stale-final-wall counterexample を発見→fe48a89(exact6 内追補)で
+  是正→STOP 再検証**(検証が実欠陥を検出・封鎖させた実例)/ C-R3=shadow 隔離・37+07-18 除外 untouched /
+  atomic publication fault injection PASS・P0/P1 なし・focused 64・full 1,190 PASS。
+- **② pilot = 適正 fail-closed PREFLIGHT STOP と認定**: run `full-train-20260718-fe48a89-01` が preflight 60s で
+  swapout delta 68,988 → 起動拒否(`not_started`・worker/shadow/canonical 影響ゼロ・event log 2件・
+  独立監査 PASS)。**ゲートが設計どおり機能した証拠**。zero peak 系=recorder 値であり計測でない、との
+  明示開示を模範開示として特記(偽 PASS 予防)。
+- **③ workload resource PASS = NOT OBTAINED 確認**: C-R4 未完・実 recompute/archive/promotion/brief 訂正/
+  attempts/07-18 処置の gate 閉鎖継続。事後 read-only 観測は governed preflight の代替にならない(自制適正)。
+- **④ 選択肢 A 採用**: 新規 bounded-shadow attempt **1回**授権 — コード `fe48a89` pin・閾値凍結・新 run-id・
+  単一プロセス・並走重量レーンなし・**起動は自身の fresh governed preflight 全 gate 通過時のみ**・同一
+  append-only log 継続。**追加条項**: 再び preflight STOP(workload 未起動)なら同一条件で**最大3回まで**
+  追加授権(preflight STOP=workload 影響ゼロ実証済み・往復空転回避)・全 attempt 次便報告。**起動後 STOP
+  (RSS/wall/disk breach)は以後の attempt 禁止・実測ログ付き即報告・新規裁定**。workload PASS 取得時=
+  C-R4 成立→実測付き F4→真の 5/5 裁定(実 recompute・v1 archive・atomic v2 promotion・brief append 訂正・
+  12 attempts・2026-07-18 処置)。
+- **DO NOT(不変)**: canonical recompute/archive/promotion/brief 訂正/attempts append/07-18 処置/reload/
+  kickstart/fire/POST/backfill/state-advance/promote 禁止。current-code NO-GO 拘束・BT-1=INVALIDATED・
+  3 claims=UNVERIFIED・sealed 封印・R4 不変。
+- [writer: adjudicator]

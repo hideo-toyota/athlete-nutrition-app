@@ -64,6 +64,7 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
+| 07-18 | **exact6 受理+preflight STOP 適正認定+選択肢A**(fe48a89 pin・凍結閾値・新 run-id・fresh preflight 通過時のみ起動・preflight STOP なら同条件最大3回・起動後 STOP は新規裁定・workload PASS→C-R4→F4→真の 5/5) | `CLAUDE_HANDOFF_jquants_p0_gate_accept_one_retry_20260718.md` |
 | 07-18 | **P0 recompute 前置(4/5): current-code full-train = NO-GO / streaming-spill+watchdog exact6 = GO(実装+shadow pilot のみ)**(C-R1 oracle 等価・C-R2 watchdog fail-closed・C-R3 shadow 隔離+07-18 v1 世代除外・C-R4 独立検証+F4→5/5。gates 凍結: mem50%/swap0/disk25G・RSS 1.5/2.0G・12h/12G) | `CLAUDE_HANDOFF_jquants_p0_resource_gate_go_20260718.md` |
 | 07-18 | **J-Quants P0: binding B + 改訂 C-B1 一体 ACCEPT(3/5・実装のみ)**(58010 oracle 12桁一致・exact30+1・full 1141 PASS・レーンは v2 世代存在まで fail-closed・recompute=resource gate 前置の別裁定・treasury 起案可・Premium spec-only 開放) | `CLAUDE_HANDOFF_jquants_p0_cb1_acceptance_20260718.md` |
 | 07-18 | **C-B1 補足 write set 改訂 — owner release で test_research_phase_d.py を fixture-only 編入**(申告 sha 5f86f421=F4 必須一致境界・dirty 差分保持必須・独立再検証+4項目) | `CLAUDE_HANDOFF_jquants_cb1_owner_release_amendment_20260718.md` |
