@@ -64,7 +64,8 @@
 ## 5. 直近の裁定索引(新しい順・詳細は各文書)
 | 日付 | 裁定 | 文書(reports/) |
 |---|---|---|
-| 07-18 | **J-Quants P0 C-B1 consumer-closure 補足 write set GO(2/5)**(共通契約4版数 assert・8 consumer+common.py 閉鎖・実装のみ・独立再検証+F4→受理・dirty keepout 除外・recompute 別裁定) | `CLAUDE_HANDOFF_jquants_cb1_consumer_closure_supplemental_go_20260718.md` |
+| 07-18 | **C-B1 補足 write set 改訂 — owner release で test_research_phase_d.py を fixture-only 編入**(申告 sha 5f86f421=F4 必須一致境界・dirty 差分保持必須・独立再検証+4項目) | `CLAUDE_HANDOFF_jquants_cb1_owner_release_amendment_20260718.md` |
+| 07-18 | **J-Quants P0 C-B1 consumer-closure 補足 write set GO(2/5)**(共通契約4版数 assert・8 consumer+common.py 閉鎖・実装のみ・独立再検証+F4→受理・dirty keepout 除外→同日改訂で編入・recompute 別裁定) | `CLAUDE_HANDOFF_jquants_cb1_consumer_closure_supplemental_go_20260718.md` |
 | 07-18 | *(索引)* J-Quants Bulk P0 binding ruling(1/5)ほか reports 先行7裁定 — 台帳 reconciliation 節参照 | `CLAUDE_HANDOFF_jquants_bulk_semantics_p0_ruling_20260718.md` ほか |
 | 07-17 | **Q14-R partial-delivery blocker 復旧一体裁定(D1〜D7)**(reconciled_evidence append-only/backlog quarantine+cursor cutover/sentinel archive-clear/reason_code DEFER/LIVE-CONFIRM=v2 POSTED_OK・実行時 hash gate) | `CLAUDE_HANDOFF_q14r_partial_delivery_recovery_ruling_20260717.md` |
 | 07-17 | **A1/A2 reload 完了確認 + R1-2a 着地 CONFIRM 完了(R1-2a 完全クローズ)**(両 CONFIRM_ F4 照合成立・A1/A2=自然発火観測フェーズ) | `CLAUDE_HANDOFF_reload_and_r1_2a_landing_confirmation_20260717.md` |

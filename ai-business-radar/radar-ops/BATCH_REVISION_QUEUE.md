@@ -1108,3 +1108,22 @@
   (binding §A)継続・BT-1=INVALIDATED・3 claims=UNVERIFIED・sealed 封印・A1/A2 ledger untouched・Q14-R LIVE-CONFIRM
   OPEN・frozen 22 untouched。R4 不変。
 - [writer: adjudicator]
+
+### C-B1 補足 write set 改訂 — owner release による test_research_phase_d.py 編入(2026-07-18)
+- 裁定文書: `reports/CLAUDE_HANDOFF_jquants_cb1_owner_release_amendment_20260718.md`
+  sha256 `969d4fcbb79f97cef2a5edf566970e7753c33a7ffd00d42bde0be6bf2f76529a`
+  (reports commit `7bb809e`・branch claude/radar-batch-revision-lk9h56)。
+- 事象: `a66babf` §3(owner-dirty keepout=owner 直接解放要)に対し、**オーナー本人が直接チャットで解放**
+  (fixture-only v2 metadata 更新・既存差分保持を許可)。更新は既適用・`tests.test_research_phase_d` 8 PASS・
+  new sha256 `5f86f4213a340cae5a16eb106c8deba962e4708787cc94aeaf862507f09f5a16` を申告。
+- **判定**: ①OWNER RELEASE=**有効・受理**(解放権者=オーナー本人・INTAKE_PROTOCOL §1 正規経路。既適用の
+  更新は owner authority による追認・逸脱ではない)。②`a66babf` を append-only 改訂 —
+  `tests/test_research_phase_d.py` を「除外(zero diff)」→「**補足 write set(fixture/metadata-only・
+  C-B1 4版数整合限定・既存 dirty 差分保持必須・ロジック/アサーション変更不可)**」へ移動。③事実主張は
+  canonical-only につき **UNVERIFIED-until-F4** — 申告 sha `5f86f421…` を F4 必須一致境界に固定(不一致=STOP)。
+- **独立再検証への追加4項目**: worktree sha==`5f86f421…` / 差分監査=fixture-only / 既存 dirty 差分保持 /
+  8 PASS 再現。他は `a66babf` の C-B3 同型要件どおり(investor_brief.py 除外継続・C-B1 契約テスト正本=
+  新 test_research_jquants_context.py も不変)。
+- **GO≠受理**(受理は独立再検証+F4 後)。reload/recompute/POST/state-advance/promote 禁止・
+  numeric-gen HOLD(binding §A)継続・R4 不変。形式記録: オーナー転記+hash あり(ROLES §2.4 準拠扱い)。
+- [writer: adjudicator]
