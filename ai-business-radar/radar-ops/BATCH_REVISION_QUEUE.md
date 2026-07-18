@@ -1127,3 +1127,32 @@
 - **GO≠受理**(受理は独立再検証+F4 後)。reload/recompute/POST/state-advance/promote 禁止・
   numeric-gen HOLD(binding §A)継続・R4 不変。形式記録: オーナー転記+hash あり(ROLES §2.4 準拠扱い)。
 - [writer: adjudicator]
+
+### J-Quants P0 — binding B + 改訂 C-B1 一体受理(FOLLOW-UP 3/5・2026-07-18)
+- 裁定文書: `reports/CLAUDE_HANDOFF_jquants_p0_cb1_acceptance_20260718.md`
+  sha256 `de952558b13a9e76b65846221318e3322c0093f48c0a71ff0a9244722b5fcfbb`
+  (reports commit `4e5c8f1`・branch claude/radar-batch-revision-lk9h56)。
+- **照合**: F4 `0d2f462`(parent `a5239147`・3ファイル単独・origin/main tip)— MANIFEST `56897c74…`/
+  RETURN_PACKET `1304e1e1…`/VERIFY `248d1d39…` = 3/3 一致。authority chain 実測: binding `ec7509ee…`/
+  GO `d5b564a6…`/改訂 `969d4fcb…` = 3/3 一致(双方向改竄検知)。
+- **判定 = binding B(exact 13)+ 改訂 C-B1(17 + owner fixture `eab23f8`)一体 ACCEPT(実装受理のみ)**:
+  B=full-day CumAdj 意味論 fail-closed(session 列不使用・implicit 1.0/fallback なし・versioning v2/
+  bt1-engine-v4)。C-B2=58010 probe OLD −93.886806596702% 拒否/NEW −38.868065967016% 独立 oracle PASS
+  (binding worked example 12桁一致)。C-B1=4版数契約を manifest+全消費 row で数値利用前に強制・9 surface 全接続・
+  旧世代 fallback なし(negative 26/26・実在旧世代の拒否+doctor available=False を実証)。C-B3=別 subagent・
+  `1792240`=正確30パス(parent `eab23f8`=phase_d fixture 1ファイルのみ)・keepout 固定 hash zero-diff・
+  full suite 1,141 PASS。owner-release 改訂4項目=worktree sha `5f86f421…` 一致/fixture-only/owner 2 hunk 保持/
+  8 PASS。2/5 の engine ID 補正(bt1-engine-v4)は B へ fold 受理。
+- 軽微所見(非ブロッカー): C-B4 挙動は VERIFY 個別叙述なし — jquants_evidence.py+test が exact 13 内で B 行列
+  61 PASS が被覆。dirty investor_brief.py の split 表示=binding 既定の別 pre-reload 裁定のまま。
+- **受理の効果**: §A HOLD の解除条件は形式充足 — ただし旧世代は C-B1 契約が構造的に拒否するため、数値レーンは
+  **有効な v2 世代が存在するまで fail-closed**(v2 世代は recompute 前に不存在)。実運用再開=resource-gated
+  recompute 裁定(別・streaming/spill か独立 resource gate 前置・範囲は binding 固定: 37-feature 世代・26 briefs・
+  derived 実行可能分・BT 12 v4 のみ・test 期間非開封・過去出力 append 訂正)。BT-1=INVALIDATED 恒久・
+  3 edge claims=UNVERIFIED 不変(再主張には v4 12系列の別途受理)。**treasury DEFER-C1=immediate-next 起案
+  受付可**(float=ShOutFY−TrShFY・≤0 fail-closed)。**Premium 4-family=spec-only design intake 開放**
+  (per-family 裁定・family 4 は DT-1c 解除別途)。
+- **DO NOT(不変)**: reload/kickstart/fire/POST/retry/backfill/state-advance/promote/recompute 禁止。
+  sealed test 封印・A1/A2 無変更(registered・not running・POST=0)・Q14-R LIVE-CONFIRM OPEN・frozen 22
+  untouched。R4 不変。
+- [writer: adjudicator]
