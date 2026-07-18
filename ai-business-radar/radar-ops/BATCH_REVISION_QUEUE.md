@@ -1057,3 +1057,54 @@
 - 裁定者は runtime 操作・POST・cursor/sentinel/quarantine 変更を実行しない(SPEC 発行のみ)。commander の
   fail-safe 認識・honest intake(count 増加可能性の開示・bounded 本文非再現)を正しい様式として特記。
 - [writer: adjudicator]
+
+### 台帳 reconciliation — reports gov branch 先行8裁定の索引(2026-07-17〜18・append-only 索引)
+- 事象: 文脈要約中の継続裁定で、reports gov branch(`claude/radar-batch-revision-lk9h56`)が本台帳の
+  Q14-R D1〜D7 ノード相当(reports `16395f0`)以降 **8件前進**したが、対応する台帳ノードが未 append だった
+  (「台帳へ毎裁定 append」規律の同期遅延)。**再裁定はせず・reports 実体を index として append-only 追補**し
+  trail を復旧する(各文書は reports gov branch に実在・sha は各文書末尾/コミットで照合可)。
+- 索引(commit / 文書):
+  1. `4d750a3` `CLAUDE_HANDOFF_q14r_recovery_manifest_boundary_reauth_20260717.md`(Q14-R recovery STOP →
+     3.1 manifest を新境界として ACCEPT・STEP0-5 再授権)
+  2. `1866291` `CLAUDE_HANDOFF_q14r_recovery_accept_live_confirm_gate_20260717.md`(Q14-R recovery ACCEPT +
+     F4 ACCEPT・blocker CLOSED・LIVE-CONFIRM gate 定義)
+  3. `3fd9124` `CLAUDE_HANDOFF_q14r_recovery_accept_corrigendum_20260717.md`(eligible=0 証明完了・tripwire 方向・
+     preflight scope の corrigendum)
+  4. `2daef62` `CLAUDE_HANDOFF_news_close_synthesis_go_20260718.md`(N1/N2/N3a news-materiality & close-synthesis GO)
+  5. `3e85a7d` `CLAUDE_HANDOFF_news_close_synthesis_n1n2n3a_accept_n3b_go_20260718.md`(N1/N2/N3a ACCEPT + N3b 実装 GO)
+  6. `ba2dc34` `CLAUDE_HANDOFF_tactical_discovery_desk_v1_ruling_20260718.md`(Tactical Discovery Desk minimal
+     contract v1・items 1-10 ACCEPT/AMEND + dissent)
+  7. `39e49ad` `CLAUDE_HANDOFF_fast_swing_trade_consideration_v1_ruling_20260718.md`(Fast/Swing trade-consideration
+     contract v1・items 1-10 ACCEPT・item 3/9 境界明示)
+  8. `3b14c42` `CLAUDE_HANDOFF_jquants_bulk_semantics_p0_ruling_20260718.md`(**J-Quants Bulk 日足意味論 P0
+     binding ruling** — HOLD ACCEPT+AMEND / 13-file GO 実装のみ / C-B1〜C-B4 / treasury DEFER-C1 / Premium spec-only D)
+- 以後の台帳同期を厳守。各裁定の詳細・条件は該当 reports 文書が正本(本索引は目次)。
+- [writer: adjudicator]
+
+### J-Quants P0 C-B1 consumer-closure 補足 write set GO(FOLLOW-UP 2/5・2026-07-18)
+- 裁定文書: `reports/CLAUDE_HANDOFF_jquants_cb1_consumer_closure_supplemental_go_20260718.md`
+  sha256 `d5b564a64cb444ab275d861fdaa18a73fffe8d6d57a80fa325157654d2804df9`
+  (reports commit `a66babf`・branch claude/radar-batch-revision-lk9h56)。
+- authority: binding ruling `3b14c42b`(J-Quants Bulk P0・1/5・全読照合)§B / C-B1。区分C(実装授権・実装のみ・
+  独立再検証+F4 → 受理の二段)。数値 cross-check: 58010 r20=-38.868066%(C=3262)= binding worked example 一致。
+- **① engine train/full-train ID → `bt1-engine-v4` 補正 = 13-file GO 内・受理確認**(engine.py・GO 済み versioning
+  整合・scope 拡大でない・legacy bytes 不変 PASS 整合。受理は C-B3+F4 後に B へ fold)。
+- **② C-B1 consumer-closure = GO(実装のみ)**: 現状 `common.py` が feature_set のみ確認・8 consumer が共通 loader
+  迂回 = C-B1 未閉鎖の実 fail-closed ギャップ。共通契約 ACCEPT(feature_set==jquants_equity_v1 / schema_version==2 /
+  feature_registry_version==2 / input.normalization_version==2 を manifest と全消費 row で確認・missing/mismatch は
+  数値利用前 fail-closed・古い generation fallback 禁止)。exact 補足 write set 凍結: prod=common.py+doctor.py+
+  kabutan_{fundamentals_capture,analysis_packet,calibration,post_validate}.py+orchestrator_post_validate.py+
+  {kabutan_observer,kabutan_fundamentals_capture}.sh(shell は検証済みパス経由)/ tests=test_research_jquants_context.py
+  (new)+audit_report/investor_brief※/daily_update/kabutan_lane/kabutan_post_validate/doctor/orchestrator_post_validate。
+  除外 zero-diff=dirty investor_brief.py・dirty test_research_phase_d.py・B の 13-file・scratch/CODEX・market_stress・
+  market_close_synthesis・REST。独立再検証(C-B3 同型・別 subagent・git diff --stat=exact・除外 zero diff・full suite)
+  +F4 → 受理。**GO≠受理・reload 別裁定**。
+- **③ owner-dirty keepout `test_research_phase_d.py` = 除外(zero diff)**・触れるには owner 直接解放要(本 codex 依頼
+  では解放せず・裁定者も代理解放しない)。research 側 C-B1 は common.py+新 test_research_jquants_context.py で被覆 →
+  **B 受理を阻害しない**。
+- **④ recompute + full-train(14,829,359 行/~7.2GB)= 別裁定**。recompute 前に streaming/spill か独立 resource gate を
+  別途要求。本補足は実装のみ。
+- **DO NOT(不変)**: reload/kickstart/fire/POST/retry/backfill/state-advance/promote/recompute 禁止。numeric-gen HOLD
+  (binding §A)継続・BT-1=INVALIDATED・3 claims=UNVERIFIED・sealed 封印・A1/A2 ledger untouched・Q14-R LIVE-CONFIRM
+  OPEN・frozen 22 untouched。R4 不変。
+- [writer: adjudicator]
