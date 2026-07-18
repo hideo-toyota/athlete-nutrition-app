@@ -1156,3 +1156,30 @@
   sealed test 封印・A1/A2 無変更(registered・not running・POST=0)・Q14-R LIVE-CONFIRM OPEN・frozen 22
   untouched。R4 不変。
 - [writer: adjudicator]
+
+### J-Quants P0 recompute 前置 — NO-GO + streaming/spill exact6 GO(FOLLOW-UP 4/5・2026-07-18)
+- 裁定文書: `reports/CLAUDE_HANDOFF_jquants_p0_resource_gate_go_20260718.md`
+  sha256 `f13684186916470216a14ae9d30fad494f6cfaf86b94cbb1b8490b9783dc9f5c`
+  (reports commit `fa6a39c`・branch claude/radar-batch-revision-lk9h56)。
+- **判定**: ①**current-code full-train recompute = NO-GO(拘束・停止側)** — 8GiB RAM vs ~7.2GB 単純比・
+  全量 materialize+pickle 一時 bytes・非 atomic writer(中断=半書き世代の corruption 経路)。解除には別裁定。
+  ②**streaming/spill + resource watchdog exact6 = GO(実装+bounded shadow pilot のみ)** — exact6:
+  jquants_bulk_adjustment.py / precompute.py(いずれも B 受理済みファイルの再編集を本裁定で新規授権)/
+  jquants_p0_recompute_gate.py(new)+ tests 3(1 new)。除外 zero-diff: engine.py・cache.py・features・brief・
+  owner-dirty・scratch。実装契約 ACCEPT(SQLite spill (code,date)・duplicate=fail-closed・code,date DESC で
+  future-side CumAdj・code 単位書出し・date-level spill・same-volume shadow root・staging/log 保全)。
+  ③実行境界=実装+bounded shadow resource pilot のみ。④canonical recompute/promotion=5/5 まで禁止継続。
+- **裁定者追加条件**: C-R1=streaming 経路は受理済み oracle と probe corpus 全件で値一致(58010 込み・
+  committed 等価テスト・等価未証明なら 5/5 不可)/ C-R2=watchdog 自体 fail-closed(計測不能=STOP)・
+  gate 閾値凍結(変更=新裁定)・log append-only / C-R3=shadow 隔離(canonical read-only・canonical/state/
+  queue/lane 書込みゼロ・**2026-07-18 extra v1 世代は preserve・untouched・pilot 除外=37 は 37 のまま**・
+  単一プロセス)/ C-R4=独立再検証+F4(resource pilot 実測: RSS peak/swap/disk delta/wall 同梱)→ 5/5。
+- **resource gates 凍結(依頼どおり)**: 開始=mem free ≥50%+60s swapout 0+disk ≥25GiB / RSS hard stop
+  1.5GiB(feature)・2.0GiB(train/full-train precompute)/ 即時 STOP=mem<20%・swapout・hash drift・契約不一致・
+  disk 超過 / full-train pilot=wall 12h・disk delta 12GiB / TERM→30s KILL。現況 free ~46%=開始条件未達は
+  gate が遅延させる設計どおり。
+- **5/5 予約(本裁定で不許可)**: 実 recompute・immutable v1 archive・atomic v2 promotion・brief append-only
+  訂正・12 attempts append・**2026-07-18 世代の archive/rebuild 処置(newest-invalid trap 解消=reactivation 前の
+  必須裁定事項として登録)**。前提=実装テスト+独立 resource PASS+F4。
+- codex の extra 世代開示(silent 38 化拒否)と NO-GO 自己申告を正しい保守開示として特記。DO NOT・R4 不変。
+- [writer: adjudicator]
